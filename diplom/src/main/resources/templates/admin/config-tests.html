@@ -386,6 +386,7 @@
                         <option value="/profile" data-name="Профиль пользователя">/profile — Профиль</option>
                         <option value="/cart" data-name="Корзина">/cart — Корзина</option>
                         <option value="/orders" data-name="История заказов">/orders — Заказы</option>
+                        <option value="/button-test" data-name="Тест кнопок">/button-test — Тест кнопок 🔴🟢</option>
                     </select>
                 </div>
             </div>
@@ -979,6 +980,40 @@
                 <div class="chart-box"><h4>Распределение участников A/B</h4><canvas id="sc-dist" height="200"></canvas></div>
                 <div class="chart-box"><h4>${variants.length ? 'Ключевые метрики вариантов' : 'Нет данных метрик'}</h4><canvas id="sc-metrics" height="200"></canvas></div>
             </div>`;
+
+            // ── button clicks breakdown (only for button-test variants)
+            const hasButtonClicks = variants.some(v => v.buttonClicks && Object.keys(v.buttonClicks).length > 0);
+            if (hasButtonClicks) {
+                const CMAP   = {red:'#ef4444', green:'#22c55e', blue:'#3b82f6', orange:'#f97316', purple:'#8b5cf6', teal:'#14b8a6', pink:'#ec4899'};
+                const CNAMES = {red:'Красный', green:'Зелёный', blue:'Синий', orange:'Оранжевый', purple:'Фиолетовый', teal:'Бирюзовый', pink:'Розовый'};
+                const bcBoxes = variants
+                    .filter(v => v.buttonClicks && Object.keys(v.buttonClicks).length > 0)
+                    .map(v => {
+                        const bc    = v.buttonClicks;
+                        const total = Object.values(bc).reduce((s, n) => s + n, 0);
+                        const bars  = Object.entries(bc)
+                            .sort((a, b) => b[1] - a[1])
+                            .map(([color, count]) => {
+                                const pct      = total > 0 ? (count * 100 / total).toFixed(1) : '0.0';
+                                const barColor = CMAP[color]  || '#667eea';
+                                const nm       = CNAMES[color] || color;
+                                return `<div style="margin-bottom:.6rem">
+                                    <div style="display:flex;justify-content:space-between;font-size:.82rem;margin-bottom:.25rem;color:#374151">
+                                        <span>${nm}</span>
+                                        <span style="font-weight:600">${count} (${pct}%)</span>
+                                    </div>
+                                    <div style="background:#e2e8f0;border-radius:99px;height:10px">
+                                        <div style="background:${barColor};border-radius:99px;height:10px;width:${pct}%"></div>
+                                    </div>
+                                </div>`;
+                            }).join('');
+                        return `<div class="chart-box"><h4>Вариант ${v.variant} — ${total} кликов</h4>${bars}</div>`;
+                    }).join('');
+                html += `<div style="margin:1rem 0 1.5rem">
+                    <h3 style="font-size:.95rem;margin-bottom:.75rem;color:#374151">🎯 Нажатия на кнопки</h3>
+                    <div class="charts-row" style="margin:0">${bcBoxes}</div>
+                </div>`;
+            }
 
             // ── participants table
             if (participants && participants.length > 0) {

@@ -95,6 +95,7 @@ public class MetricsService {
                 m.put("uniqueUsers", new HashSet<String>());
                 m.put("pageViews", 0);
                 m.put("clicks", 0);
+                m.put("buttonClicks", new LinkedHashMap<String, Integer>());
                 m.put("scrollAvg", new ArrayList<Double>());
                 m.put("sessionDurations", new ArrayList<Long>());
                 m.put("pageCounts", new LinkedHashMap<String, Integer>());
@@ -115,6 +116,14 @@ public class MetricsService {
                 case "TIME_ON_PAGE" -> {
                     Object dur = e.getEventData() != null ? e.getEventData().get("durationMs") : null;
                     if (dur instanceof Number n) ((List<Long>) vm.get("sessionDurations")).add(n.longValue());
+                }
+                case "BUTTON_CLICK" -> {
+                    Object color = e.getEventData() != null ? e.getEventData().get("buttonColor") : null;
+                    if (color instanceof String s) {
+                        @SuppressWarnings("unchecked")
+                        Map<String, Integer> bc = (Map<String, Integer>) vm.get("buttonClicks");
+                        bc.merge(s, 1, Integer::sum);
+                    }
                 }
             }
             if (e.getPage() != null) {
