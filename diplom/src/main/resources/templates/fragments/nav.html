@@ -8,57 +8,57 @@
     <div class="container">
         <a th:href="@{/}" class="navbar-brand">DiplomShop</a>
         <ul class="navbar-links">
-            <li><a th:href="@{/}" title="Homepage">Home</a></li>
-            <li><a th:href="@{/products}" title="Product catalog">Catalog</a></li>
+            <li><a th:href="@{/}" title="Главная">Главная</a></li>
+            <li><a th:href="@{/products}" title="Каталог товаров">Каталог</a></li>
 
             <li sec:authorize="isAuthenticated()">
-                <a th:href="@{/profile}" title="User profile">
+                <a th:href="@{/profile}" title="Профиль пользователя">
                     <span sec:authentication="name" style="font-weight: var(--font-weight-semibold)"></span>
                 </a>
             </li>
 
             <li sec:authorize="hasRole('ADMIN')">
-                <a th:href="@{/admin/products}" title="Manage products">
-                    Products <span class="nav-badge">P</span>
+                <a th:href="@{/admin/products}" title="Управление товарами">
+                    Товары <span class="nav-badge">Т</span>
                 </a>
             </li>
 
             <li sec:authorize="hasRole('ADMIN')">
-                <a th:href="@{/admin/config-tests}" title="A/B testing">
-                    Tests <span class="nav-badge">T</span>
+                <a th:href="@{/admin/config-tests}" title="A/B тестирование">
+                    Тесты <span class="nav-badge">Т</span>
                 </a>
             </li>
 
             <li sec:authorize="hasRole('ADMIN')">
-                <a th:href="@{/admin/metrics}" title="Analytics">
-                    Analytics <span class="nav-badge">A</span>
+                <a th:href="@{/admin/metrics}" title="Аналитика">
+                    Аналитика <span class="nav-badge">А</span>
                 </a>
             </li>
 
             <li sec:authorize="hasRole('ADMIN')">
-                <a th:href="@{/admin/notifications}" title="Notifications">
-                    Notifications <span class="nav-badge">N</span>
+                <a th:href="@{/admin/notifications}" title="Уведомления">
+                    Уведомления <span class="nav-badge">У</span>
                 </a>
             </li>
 
             <li sec:authorize="isAuthenticated()">
-                <a th:href="@{/cart}" title="Shopping cart">
-                    Cart <span class="nav-badge" id="cart-count-badge"
+                <a th:href="@{/cart}" title="Корзина покупок">
+                    Корзина <span class="nav-badge" id="cart-count-badge"
                         th:text="${_cartCount != null ? _cartCount : 0}">0</span>
                 </a>
             </li>
 
             <li sec:authorize="isAuthenticated()">
-                <a th:href="@{/orders}" title="My orders">Orders</a>
+                <a th:href="@{/orders}" title="Мои заказы">Заказы</a>
             </li>
 
             <li sec:authorize="!isAuthenticated()">
-                <a th:href="@{/auth/login}" class="btn btn-primary btn-sm" title="Sign in">Sign In</a>
+                <a th:href="@{/auth/login}" class="btn btn-primary btn-sm" title="Вход">Вход</a>
             </li>
 
             <li sec:authorize="isAuthenticated()">
                 <form th:action="@{/auth/logout}" method="post" style="margin: 0; display: inline">
-                    <button type="submit" class="btn btn-secondary btn-sm" title="Sign out" aria-label="Sign out">Sign Out</button>
+                    <button type="submit" class="btn btn-secondary btn-sm" title="Выход" aria-label="Выход">Выход</button>
                 </form>
             </li>
         </ul>

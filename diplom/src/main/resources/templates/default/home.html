@@ -15,13 +15,13 @@
 <!-- Hero Section -->
 <section style="background: linear-gradient(to bottom, #e3f0fa 0%, #ccdff1 100%); padding: 5rem 1.5rem; text-align: center; position: relative; overflow: hidden">    <div style="position: relative; z-index: 1; max-width: 700px; margin: 0 auto">
         <h1 style="font-size: clamp(2.5rem, 6vw, 4rem); font-weight: 700; margin: 0 0 1rem; letter-spacing: -0.03em; font-family: var(--font-heading); color: var(--color-primary)">
-            Welcome to DiplomShop
+            Добро пожаловать в DiplomShop
         </h1>
         <p style="font-size: 1.1rem; color: var(--color-secondary); max-width: 600px; margin: 0 auto 2.5rem; line-height: 1.7">
-            Experience modern e-commerce with integrated A/B testing. Discover products tailored to your preferences.
+            Современный магазин с интегрированным A/B тестированием. Откройте товары, подобранные под ваши предпочтения.
         </p>
         <a th:href="@{/products}" class="btn btn-primary" style="font-size: 1.05rem; padding: 0.85rem 2.5rem; min-height: 50px">
-            Explore Catalog
+            Смотреть каталог
         </a>
     </div>
 </section>
@@ -31,25 +31,25 @@
     <form th:action="@{/products}" method="get" class="search-bar" style="margin-top: 3rem">
         <input type="text"
                name="search"
-               placeholder="Search products..."
+               placeholder="Поиск товаров..."
                th:value="${search}"
-               aria-label="Search products"
+               aria-label="Поиск товаров"
                style="background: white;"/>
-        <button type="submit" class="btn btn-primary">Search</button>
+        <button type="submit" class="btn btn-primary">Искать</button>
     </form>
 
     <!-- Section Title -->
     <div style="display: flex; align-items: baseline; justify-content: space-between; margin: 3rem 0 2rem; gap: 1rem">
-        <h2 class="page-title" style="margin: 0">Featured Products</h2>
-        <a th:href="@{/products}" style="font-size: 0.9rem; color: var(--color-primary); font-weight: 600; transition: all var(--duration-fast); border-bottom: 2px solid transparent" onmouseover="this.style.borderBottomColor='var(--color-primary)'" onmouseout="this.style.borderBottomColor='transparent'">View all →</a>
+        <h2 class="page-title" style="margin: 0">Рекомендуемые товары</h2>
+        <a th:href="@{/products}" style="font-size: 0.9rem; color: var(--color-primary); font-weight: 600; transition: all var(--duration-fast); border-bottom: 2px solid transparent" onmouseover="this.style.borderBottomColor='var(--color-primary)'" onmouseout="this.style.borderBottomColor='transparent'">Все товары →</a>
     </div>
 
     <!-- Empty State -->
     <div th:if="${#lists.isEmpty(products)}" class="empty-state">
         <div class="empty-state__icon">📦</div>
-        <h3 class="empty-state__title">No products yet</h3>
-        <p class="empty-state__message">Check back later or contact support</p>
-        <a th:href="@{/}" class="btn btn-secondary">Return Home</a>
+        <h3 class="empty-state__title">Товаров нет</h3>
+        <p class="empty-state__message">Заглядывайте позже или свяжитесь с поддержкой</p>
+        <a th:href="@{/}" class="btn btn-secondary">На главную</a>
     </div>
 
     <!-- Товары с glassmorphism дизайном -->
@@ -91,10 +91,26 @@
         </div>
     </div>
 
+    <!-- A/B Test Card - Button Preference -->
+    <div sec:authorize="isAuthenticated()" style="margin-top: 4rem; padding: 2.5rem; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: var(--radius-lg); text-align: center; box-shadow: var(--shadow-lg); color: white">
+        <h3 style="margin: 0 0 1rem; font-size: 1.4rem; font-weight: 700">
+            🧪 Участвуйте в исследовании цвета
+        </h3>
+        <p style="margin: 0 0 1.5rem; font-size: 0.95rem; opacity: 0.95; line-height: 1.6">
+            Помогите нам понять предпочтения в отношении цветов в дизайне интерфейса. Нажмите ниже, чтобы участвовать в нашем быстром тесте.
+        </p>
+        <a th:href="@{/button-test}" style="display: inline-block; background: white; color: #667eea; padding: 0.75rem 2rem; border-radius: var(--radius-md); font-weight: 700; text-decoration: none; transition: all var(--duration-fast); border: 2px solid white">
+            Пройти тест →
+        </a>
+        <p style="margin: 1rem 0 0; font-size: 0.8rem; opacity: 0.85">
+            Займет меньше минуты • Результаты помогают улучшить DiplomShop
+        </p>
+    </div>
+
     <!-- Info Banner -->
-    <div style="margin-top: 4rem; padding: 2rem; background: var(--color-muted); border-radius: var(--radius-lg); border-left: 3px solid var(--color-primary); text-align: center">
+    <div style="margin-top: 3rem; padding: 2rem; background: var(--color-muted); border-radius: var(--radius-lg); border-left: 3px solid var(--color-primary); text-align: center">
         <p style="margin: 0; color: var(--color-secondary); font-size: 0.95rem">
-            <strong>Notice:</strong> You are viewing this shop as part of an A/B test. Some interface elements may differ.
+            <strong>Примечание:</strong> Вы просматриваете этот магазин как часть A/B теста. Некоторые элементы интерфейса могут отличаться.
         </p>
     </div>
 </div>

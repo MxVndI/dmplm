@@ -10,12 +10,12 @@
   --color-primary-dark: #1F2937;
   --color-on-primary: #FFFFFF;
 
-  --color-secondary: #6B7280;
+  --color-secondary: #1F2937;
   --color-accent: #b8d9e8;
-  --color-background: #ccdff1;
+  --color-background: #f3f4f6;
   --color-foreground: #000000;
-  --color-muted: #d9e9f5;
-  --color-border: #b8d9e8;
+  --color-muted: #e5e7eb;
+  --color-border: #d1d5db;
 
   /* Semantic Colors */
   --color-success: #059669;
@@ -92,8 +92,8 @@ body {
   font-family: var(--font-body);
   font-size: 1rem;
   line-height: 1.6;
-  color: #000000;
-  background: #ccdff1;
+  color: #1F2937;
+  background: #f9fafb;
   transition: background-color var(--duration-normal) var(--ease-in-out);
 }
 
@@ -497,7 +497,7 @@ img {
   font-weight: var(--font-weight-bold);
   font-size: 1.05rem;
   margin-bottom: var(--space-sm);
-  color: #000000;
+  color: #000000 !important;
   line-height: 1.4;
   font-family: var(--font-heading);
 }
@@ -505,14 +505,14 @@ img {
 .product-card-price {
   font-size: 1.35rem;
   font-weight: var(--font-weight-bold);
-  color: #000000;
+  color: #000000 !important;
   margin-bottom: var(--space-md);
   font-family: 'Courier New', monospace;
 }
 
 .product-card-desc {
   font-size: 0.9rem;
-  color: #6B7280;
+  color: #1F2937 !important;
   flex: 1;
   margin-bottom: var(--space-md);
   line-height: 1.5;
@@ -525,12 +525,12 @@ img {
 .product-card-qty {
   font-size: 0.85rem;
   font-weight: var(--font-weight-semibold);
-  color: var(--color-success);
+  color: #059669 !important;
   padding: var(--space-sm) 0;
 }
 
 .product-card-qty.out {
-  color: var(--color-error);
+  color: #DC2626 !important;
 }
 
 .product-card-footer {
@@ -1495,6 +1495,213 @@ a:focus-visible {
   .vd-countdown__num {
     font-size: 1.5rem;
   }
+}
+
+/* =========================================================
+   Button Test Styles — A/B Color Preference Test
+   ========================================================= */
+
+.btn-test-red,
+.btn-test-green,
+.btn-test-blue,
+.btn-test-orange,
+.btn-test-purple,
+.btn-test-teal,
+.btn-test-pink {
+  min-width: 200px;
+  padding: 1rem 2rem;
+  font-size: 1.1rem;
+  font-weight: 700;
+  border: none;
+  border-radius: var(--radius-lg);
+  cursor: pointer;
+  transition: all var(--duration-normal) var(--ease-in-out);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  box-shadow: var(--shadow-md);
+  font-family: var(--font-heading);
+}
+
+.btn-test-red {
+  background: #DC2626;
+  color: #ffffff;
+}
+
+.btn-test-red:hover {
+  background: #B91C1C;
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-lg);
+}
+
+.btn-test-green {
+  background: #059669;
+  color: #ffffff;
+}
+
+.btn-test-green:hover {
+  background: #047857;
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-lg);
+}
+
+.btn-test-blue {
+  background: #0891B2;
+  color: #ffffff;
+}
+
+.btn-test-blue:hover {
+  background: #0369A1;
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-lg);
+}
+
+.btn-test-orange {
+  background: #FF8906;
+  color: #ffffff;
+}
+
+.btn-test-orange:hover {
+  background: #E67E04;
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-lg);
+}
+
+.btn-test-purple {
+  background: #7C3AED;
+  color: #ffffff;
+}
+
+.btn-test-purple:hover {
+  background: #6D28D9;
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-lg);
+}
+
+.btn-test-teal {
+  background: #14B8A6;
+  color: #ffffff;
+}
+
+.btn-test-teal:hover {
+  background: #0D9488;
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-lg);
+}
+
+.btn-test-pink {
+  background: #EC4899;
+  color: #ffffff;
+}
+
+.btn-test-pink:hover {
+  background: #DB2777;
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-lg);
+}
+
+/* =========================================================
+   Body Variant Scoping — Fixes CSS conflicts
+   ========================================================= */
+
+/* VARIANT A — Dark background, orange accent */
+body.variant-a {
+  background: #1f2937;
+  color: #ffffff;
+}
+
+body.variant-a .navbar {
+  background: #111827;
+  border-bottom-color: #374151;
+}
+
+body.variant-a .navbar-brand {
+  color: #ffffff;
+}
+
+body.variant-a .navbar-links a {
+  color: #ffffff;
+}
+
+body.variant-a .navbar-links a:hover {
+  border-color: #4b5563;
+  color: #ff8906;
+}
+
+body.variant-a .page-wrapper {
+  background: #1f2937;
+}
+
+/* VARIANT B — Light background, emerald accent */
+body.variant-b {
+  background: #ffffff;
+  color: #1f2937;
+}
+
+body.variant-b .navbar {
+  background: #f8fafc;
+}
+
+body.variant-b .navbar-brand,
+body.variant-b .navbar-links a {
+  color: #1f2937;
+}
+
+body.variant-b .page-wrapper {
+  background: #ffffff;
+  color: #1f2937;
+}
+
+body.variant-b h1, body.variant-b h2, body.variant-b h3,
+body.variant-b p, body.variant-b div {
+  color: #1f2937;
+}
+
+/* VARIANT C — Light purple/indigo accent */
+body.variant-c {
+  background: #ffffff;
+  color: #1f2937;
+}
+
+body.variant-c .navbar {
+  background: #f9f5ff;
+}
+
+body.variant-c .navbar-brand,
+body.variant-c .navbar-links a {
+  color: #1f2937;
+}
+
+body.variant-c .page-wrapper {
+  background: #ffffff;
+  color: #1f2937;
+}
+
+body.variant-c h1, body.variant-c h2, body.variant-c h3,
+body.variant-c p, body.variant-c div {
+  color: #1f2937;
+}
+
+/* VARIANT D — Dark background, red accent */
+body.variant-d {
+  background: #0f172a;
+  color: #ffffff;
+}
+
+body.variant-d .navbar {
+  background: #020617;
+  border-bottom-color: #1e293b;
+}
+
+body.variant-d .navbar-brand {
+  color: #ffffff;
+}
+
+body.variant-d .navbar-links a {
+  color: #ffffff;
+}
+
+body.variant-d .page-wrapper {
+  background: #0f172a;
 }
 
 /* --- Print Styles --- */

@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security" lang="ru">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Button Test — DiplomShop A/B</title>
+    <link rel="stylesheet" th:href="@{/css/styles.css}"/>
+</head>
+<body>
+<div th:replace="~{fragments/nav :: navbar}"></div>
+
+<div class="page-wrapper" style="max-width: 800px; margin: 5rem auto; text-align: center">
+    <h1 style="font-size: 2.5rem; margin-bottom: 1rem">Button Preference Test</h1>
+    <p style="font-size: 1.1rem; color: var(--color-secondary); margin-bottom: 3rem">
+        Please choose your preferred button color and observe which one you naturally click.
+    </p>
+    <p style="font-size: 0.9rem; color: var(--color-secondary); margin-bottom: 4rem">
+        We're measuring which color captures your attention better.
+    </p>
+
+    <div id="button-test-container" style="display: flex; gap: 3rem; justify-content: center; flex-wrap: wrap; margin: 4rem 0">
+        <!-- Buttons will be rendered by variant template -->
+    </div>
+
+    <div style="margin-top: 4rem; padding: 2rem; background: var(--color-muted); border-radius: var(--radius-lg)">
+        <p style="color: var(--color-secondary); font-size: 0.95rem">
+            <strong>Note:</strong> You're participating in an A/B color preference test.
+            Your interaction data helps us optimize the user experience.
+        </p>
+    </div>
+</div>
+
+<script th:src="@{/js/button-test.js}"></script>
+<script th:src="@{/js/main.js}"></script>
+</body>
+</html>

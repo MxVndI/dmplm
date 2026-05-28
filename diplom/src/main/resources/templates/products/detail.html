@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<html xmlns:th="http://www.thymeleaf.org" lang="ru">
 <head>
     <meta charset="UTF-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <meta name="description" th:content="${product.description}"/>
-    <title th:text="${product.name} + ' — DiplomShop'">Product</title>
+    <title th:text="${product.name} + ' — DiplomShop'">Товар</title>
     <link rel="stylesheet" th:href="@{/css/styles.css}"/>
     <link rel="preconnect" href="https://fonts.googleapis.com"/>
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
@@ -20,8 +20,8 @@
            style="color: var(--color-secondary); text-decoration: none; font-weight: 600; display: flex; align-items: center; gap: 0.5rem; transition: all var(--duration-fast)"
            onmouseover="this.style.color='var(--color-primary)'"
            onmouseout="this.style.color='var(--color-secondary)'"
-           title="Back to catalog">
-           Catalog
+           title="Вернуться в каталог">
+           Каталог
         </a>
         <span style="color: var(--color-border)">/</span>
         <span th:text="${product.name}" style="color: var(--color-secondary); font-weight: 600; max-width: 300px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap"></span>
@@ -48,7 +48,7 @@
         <div th:attr="data-product-id=${product.id}, data-product-name=${product.name}, data-product-price=${product.price}">
             <!-- Title -->
             <h1 style="font-size: 2.5rem; font-weight: 700; margin: 0 0 1rem; line-height: 1.2; letter-spacing: -0.02em; font-family: var(--font-heading); color: var(--color-primary)" th:text="${product.name}">
-                Product Name
+                Название товара
             </h1>
 
             <!-- Price -->
@@ -62,19 +62,19 @@
                 <div th:if="${product.availableQuantity > 0}"
                      style="display: flex; align-items: center; gap: 0.5rem; color: var(--color-success); font-weight: 700; font-size: 1.1rem">
                     <span>✓</span>
-                    <span th:text="'In stock: ' + ${product.availableQuantity} + ' units'">In stock</span>
+                    <span th:text="'В наличии: ' + ${product.availableQuantity} + ' шт.'">В наличии</span>
                 </div>
                 <div th:unless="${product.availableQuantity > 0}"
                      style="display: flex; align-items: center; gap: 0.5rem; color: var(--color-error); font-weight: 700; font-size: 1.1rem">
                     <span>✕</span>
-                    <span>Out of stock</span>
+                    <span>Нет в наличии</span>
                 </div>
             </div>
 
             <!-- Description -->
             <p style="font-size: 1.05rem; line-height: 1.7; color: var(--color-secondary); margin-bottom: 2rem; padding: 1.5rem; background: var(--color-muted); border-radius: var(--radius-md); border-left: 3px solid var(--color-primary)"
                th:text="${product.description}">
-                Product description
+                Описание товара
             </p>
 
             <!-- Add to Cart Form -->
@@ -82,7 +82,7 @@
                 <form th:action="@{/cart/add}" method="post" style="display: flex; gap: 1rem; margin-bottom: 2rem">
                     <input type="hidden" name="productId" th:value="${product.id}"/>
                     <div style="display: flex; align-items: center; gap: 0.5rem">
-                        <label for="quantity" style="font-weight: 600; color: var(--color-primary); white-space: nowrap">Quantity:</label>
+                        <label for="quantity" style="font-weight: 600; color: var(--color-primary); white-space: nowrap">Количество:</label>
                         <input type="number"
                                id="quantity"
                                name="quantity"
@@ -100,8 +100,8 @@
                             th:data-product-id="${product.id}"
                             th:data-product-name="${product.name}"
                             th:data-product-price="${product.price}"
-                            th:aria-label="'Add ' + ${product.name} + ' to cart'">
-                        Add to Cart
+                            th:aria-label="'Добавить ' + ${product.name} + ' в корзину'">
+                        Добавить в корзину
                     </button>
                 </form>
             </div>
@@ -110,17 +110,17 @@
             <a th:href="@{/products}"
                class="btn btn-secondary btn-full"
                style="font-size: 1rem; padding: 0.75rem 1.5rem; min-height: 48px"
-               title="Back to catalog">
-                Continue Shopping
+               title="Вернуться в каталог">
+                Продолжить покупки
             </a>
 
             <!-- Info Section -->
             <div style="margin-top: 3rem; padding: 1.5rem; background: var(--color-muted); border-radius: var(--radius-md); border: 1px solid var(--color-border); color: var(--color-secondary); font-size: 0.95rem; line-height: 1.6">
                 <p style="margin: 0 0 0.5rem 0">
-                    <strong>Notice:</strong> This product is part of an A/B testing experiment. Your experience may differ from other users.
+                    <strong>Примечание:</strong> Этот товар является частью A/B тестирования. Ваш опыт может отличаться от других пользователей.
                 </p>
                 <p style="margin: 0">
-                    Your interaction helps us improve the shopping experience for everyone.
+                    Ваше взаимодействие помогает нам улучшить покупательский опыт для всех.
                 </p>
             </div>
         </div>

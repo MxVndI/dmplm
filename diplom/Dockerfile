@@ -8,7 +8,7 @@ WORKDIR /app
 COPY diplom/pom.xml .
 RUN mvn dependency:go-offline -q
 
-COPY diplom/src ./src
+COPY diplom/src/ ./src
 RUN mvn clean package -DskipTests -q
 # Переименовываем собранный JAR (Spring Boot сделал его исполняемым)
 RUN cp target/*.jar app.jar

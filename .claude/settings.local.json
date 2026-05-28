@@ -60,7 +60,26 @@
       "Bash(taskkill /PID 25296 /F)",
       "PowerShell($env:SITE_DIR = \"C:\\\\Users\\\\LesunVo\\\\Desktop\\\\landings\\\\ege\"; $env:PORT = \"4876\"; Start-Process node -ArgumentList \"C:\\\\Users\\\\LesunVo\\\\Desktop\\\\landings\\\\ege\\\\scripts\\\\serve-cms.mjs\" -NoNewWindow -RedirectStandardOutput \"C:\\\\Users\\\\LesunVo\\\\AppData\\\\Local\\\\Temp\\\\ege-server.log\" -RedirectStandardError \"C:\\\\Users\\\\LesunVo\\\\AppData\\\\Local\\\\Temp\\\\ege-server-err.log\")",
       "Read(//c/Users/LesunVo/AppData/Local/Temp/**)",
-      "PowerShell(Get-Process node -ErrorAction SilentlyContinue | Where-Object { $_.MainWindowTitle -eq '' } | Stop-Process -Force; Start-Sleep -Seconds 1; netstat -ano | findstr 4876)"
+      "PowerShell(Get-Process node -ErrorAction SilentlyContinue | Where-Object { $_.MainWindowTitle -eq '' } | Stop-Process -Force; Start-Sleep -Seconds 1; netstat -ano | findstr 4876)",
+      "Bash(xargs grep -l \"metrics/event\\\\|/api/metrics\")",
+      "Bash(grep -E \"\\\\.java$\")",
+      "Bash(mvn clean *)",
+      "Bash(cd /c/Users/v.taran/Desktop/dmplm && find . -name \"styles.css\" -type f 2>/dev/null | head -5)",
+      "Bash(docker-compose exec *)",
+      "Bash(docker-compose logs *)",
+      "Bash(docker-compose rm *)",
+      "Bash(docker rm *)",
+      "Bash(docker-compose restart *)",
+      "Bash(docker-compose build *)",
+      "Bash(docker-compose stop *)",
+      "Bash(docker-compose ps *)",
+      "Bash(curl -s http://localhost:8080)",
+      "Bash(curl -v http://localhost:8081/health)",
+      "Bash(curl -s http://localhost:8081/api/tests)",
+      "Bash(curl -s http://localhost:8080/api/products)",
+      "Bash(curl -s http://localhost:8081/health)",
+      "Bash(curl -s http://localhost:8081/actuator/health)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:8080/)"
     ]
   }
 }

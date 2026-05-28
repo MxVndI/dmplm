@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<html xmlns:th="http://www.thymeleaf.org" lang="ru">
 <head>
     <meta charset="UTF-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    <meta name="description" content="Sign in to DiplomShop"/>
-    <title>Sign In — DiplomShop</title>
+    <meta name="description" content="Вход в DiplomShop"/>
+    <title>Вход — DiplomShop</title>
     <link rel="stylesheet" th:href="@{/css/styles.css}"/>
     <link rel="preconnect" href="https://fonts.googleapis.com"/>
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
@@ -15,57 +15,57 @@
     <div class="auth-card">
         <div style="text-align: center; margin-bottom: 2rem">
             <h1 style="font-size: 2.2rem; margin: 0 0 0.5rem; color: var(--color-primary); font-family: var(--font-heading); font-weight: 700">DiplomShop</h1>
-            <p style="margin: 0; color: var(--color-secondary); font-size: 0.95rem">E-commerce with A/B Testing</p>
+            <p style="margin: 0; color: var(--color-secondary); font-size: 0.95rem">E-commerce с A/B тестированием</p>
         </div>
 
-        <h2 class="auth-title">Sign In</h2>
+        <h2 class="auth-title">Вход</h2>
 
         <div th:if="${error}" class="alert alert-error" role="alert" th:text="${error}"></div>
         <div th:if="${message}" class="alert alert-success" role="alert" th:text="${message}"></div>
 
         <form th:action="@{/auth/login}" method="post" novalidate>
             <div class="form-group">
-                <label for="username">Username</label>
+                <label for="username">Имя пользователя</label>
                 <input type="text"
                        id="username"
                        name="username"
                        required
                        autocomplete="username"
-                       placeholder="Enter your username"
+                       placeholder="Введите имя пользователя"
                        aria-describedby="username-help"/>
                 <small id="username-help" style="color: var(--color-secondary); display: block; margin-top: 0.25rem; font-size: 0.8rem">
-                    Demo: admin
+                    Демо: admin
                 </small>
             </div>
 
             <div class="form-group">
-                <label for="password">Password</label>
+                <label for="password">Пароль</label>
                 <input type="password"
                        id="password"
                        name="password"
                        required
                        autocomplete="current-password"
-                       placeholder="Enter your password"
+                       placeholder="Введите пароль"
                        aria-describedby="password-help"/>
                 <small id="password-help" style="color: var(--color-secondary); display: block; margin-top: 0.25rem; font-size: 0.8rem">
-                    Demo: Admin1234!
+                    Демо: Admin1234!
                 </small>
             </div>
 
             <button type="submit" class="btn btn-primary btn-full" style="margin-top: 1.5rem; min-height: 48px">
-                Sign In
+                Вход
             </button>
         </form>
 
         <hr style="margin: 1.5rem 0; border: none; border-top: 1px solid var(--color-border)">
 
         <p class="auth-link">
-            New user?
-            <a th:href="@{/auth/register}">Create account</a>
+            Новый пользователь?
+            <a th:href="@{/auth/register}">Создать аккаунт</a>
         </p>
 
         <div style="margin-top: 1.5rem; padding: 1rem; background: var(--color-muted); border-radius: var(--radius-md); font-size: 0.85rem; color: var(--color-secondary); border: 1px solid var(--color-border)">
-            <strong>Security:</strong> Your credentials are protected with HTTPS and BCrypt encryption.
+            <strong>Безопасность:</strong> Ваши данные защищены HTTPS и шифрованием BCrypt.
         </div>
     </div>
 </div>

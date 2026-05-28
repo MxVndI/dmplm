@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<html xmlns:th="http://www.thymeleaf.org" lang="ru">
 <head>
     <meta charset="UTF-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    <meta name="description" content="Shopping cart — DiplomShop"/>
-    <title>Shopping Cart — DiplomShop</title>
+    <meta name="description" content="Корзина покупок — DiplomShop"/>
+    <title>Корзина — DiplomShop</title>
     <link rel="stylesheet" th:href="@{/css/styles.css}"/>
     <link rel="preconnect" href="https://fonts.googleapis.com"/>
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
@@ -20,7 +20,7 @@
            onmouseover="this.style.color='var(--color-primary)'"
            onmouseout="this.style.color='var(--color-secondary)'"
            title="Home"></a>
-        <h1 class="page-title" style="margin: 0">Shopping Cart</h1>
+        <h1 class="page-title" style="margin: 0">Корзина</h1>
     </div>
 
     <!-- Messages -->
@@ -30,9 +30,9 @@
     <!-- Empty Cart -->
     <div th:if="${#lists.isEmpty(cartItems)}" class="empty-state">
         <div class="empty-state__icon">🛒</div>
-        <h2 class="empty-state__title">Your cart is empty</h2>
-        <p class="empty-state__message">Browse our catalog and add items to start shopping</p>
-        <a th:href="@{/products}" class="btn btn-primary">Browse Catalog</a>
+        <h2 class="empty-state__title">Ваша корзина пуста</h2>
+        <p class="empty-state__message">Посмотрите каталог и добавьте товары для покупки</p>
+        <a th:href="@{/products}" class="btn btn-primary">Смотреть каталог</a>
     </div>
 
     <!-- Cart with Items -->
@@ -42,10 +42,10 @@
             <table style="width: 100%">
                 <thead>
                     <tr style="background: var(--color-muted); border-bottom: 2px solid var(--color-border)">
-                        <th style="padding: var(--space-md); text-align: left; font-weight: 600; color: var(--color-primary)">Product</th>
-                        <th style="padding: var(--space-md); text-align: center; font-weight: 600; color: var(--color-primary)">Price</th>
-                        <th style="padding: var(--space-md); text-align: center; font-weight: 600; color: var(--color-primary)">Quantity</th>
-                        <th style="padding: var(--space-md); text-align: right; font-weight: 600; color: var(--color-primary)">Total</th>
+                        <th style="padding: var(--space-md); text-align: left; font-weight: 600; color: var(--color-primary)">Товар</th>
+                        <th style="padding: var(--space-md); text-align: center; font-weight: 600; color: var(--color-primary)">Цена</th>
+                        <th style="padding: var(--space-md); text-align: center; font-weight: 600; color: var(--color-primary)">Количество</th>
+                        <th style="padding: var(--space-md); text-align: right; font-weight: 600; color: var(--color-primary)">Итого</th>
                         <th style="padding: var(--space-md); text-align: center; font-weight: 600; color: var(--color-primary)"></th>
                     </tr>
                 </thead>
@@ -79,9 +79,9 @@
                                         class="btn btn-danger btn-sm"
                                         data-track="remove-from-cart"
                                         th:data-product-id="${item.productId()}"
-                                        onclick="return confirm('Remove item from cart?')"
-                                        th:aria-label="'Remove ' + ${item.productName()}">
-                                    Remove
+                                        onclick="return confirm('Удалить товар из корзины?')"
+                                        th:aria-label="'Удалить ' + ${item.productName()}">
+                                    Удалить
                                 </button>
                             </form>
                         </td>
@@ -95,10 +95,10 @@
             <!-- Left: Actions -->
             <div>
                 <a th:href="@{/products}" class="btn btn-secondary btn-full" style="margin-bottom: 1rem; min-height: 48px">
-                    Continue Shopping
+                    Продолжить покупки
                 </a>
                 <a th:href="@{/orders}" class="btn btn-outline btn-full" style="min-height: 48px">
-                    View Orders
+                    Мои заказы
                 </a>
             </div>
 
@@ -107,15 +107,15 @@
                 <!-- Summary Box -->
                 <div style="padding: 2rem; background: var(--color-muted); border-radius: var(--radius-lg); border-left: 3px solid var(--color-primary); border: 1px solid var(--color-border)">
                     <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 1.5rem">
-                        <span style="font-size: 1.05rem; color: var(--color-secondary); font-weight: 600">Total Items:</span>
+                        <span style="font-size: 1.05rem; color: var(--color-secondary); font-weight: 600">Всего товаров:</span>
                         <span style="font-size: 1.2rem; color: var(--color-primary); font-weight: 700" th:text="${#lists.size(cartItems)}">0</span>
                     </div>
                     <div style="display: flex; justify-content: space-between; align-items: baseline; padding: 1.5rem 0; border-top: 1px solid var(--color-border); border-bottom: 1px solid var(--color-border)">
-                        <span style="font-size: 1.3rem; color: var(--color-primary); font-weight: 700">Total:</span>
+                        <span style="font-size: 1.3rem; color: var(--color-primary); font-weight: 700">Итого:</span>
                         <span style="font-size: 2rem; font-weight: 700; color: var(--color-primary); font-family: 'Courier New', monospace" th:text="'$' + ${#numbers.formatDecimal(cartTotal, 1, 2)}">$0.00</span>
                     </div>
                     <p style="margin: 1rem 0 0; font-size: 0.9rem; color: var(--color-secondary)">
-                        Shipping calculated at checkout
+                        Доставка рассчитывается при оформлении
                     </p>
                 </div>
 
@@ -127,14 +127,14 @@
                     <button type="submit"
                             class="btn btn-primary btn-full"
                             style="font-size: 1.05rem; padding: 1rem; min-height: 50px; margin-bottom: 0.75rem"
-                            onclick="return confirm('Confirm order for $' + document.querySelector('[data-cart-total]').getAttribute('data-cart-total') + '?')"
-                            th:aria-label="'Checkout for $' + ${#numbers.formatDecimal(cartTotal, 1, 2)}">
-                        Proceed to Checkout
+                            onclick="return confirm('Подтвердить заказ на $' + document.querySelector('[data-cart-total]').getAttribute('data-cart-total') + '?')"
+                            th:aria-label="'Оформить заказ на $' + ${#numbers.formatDecimal(cartTotal, 1, 2)}">
+                        Оформить заказ
                     </button>
                 </form>
 
                 <p style="text-align: center; font-size: 0.85rem; color: var(--color-secondary)">
-                    Secure & encrypted checkout
+                    Безопасное и зашифрованное оформление
                 </p>
             </div>
         </div>

@@ -16,8 +16,14 @@
         "SITE_DIR": "C:/Users/LesunVo/Desktop/landings/ege",
         "PORT": "4876"
       }
-    }
-    ,{
+    },
+    {
+      "name": "diplom-shop",
+      "runtimeExecutable": "mvn",
+      "runtimeArgs": ["spring-boot:run"],
+      "port": 8080
+    },
+    {
       "name": "remont-landing",
       "runtimeExecutable": "node",
       "runtimeArgs": ["C:/Users/LesunVo/Desktop/landings/remont/scripts/serve-cms.mjs"],

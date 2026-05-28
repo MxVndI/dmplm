@@ -37,9 +37,16 @@ management:
       base-path: /actuator
   endpoint:
     health:
-      show-details: never
+      show-details: always
     prometheus:
+      enabled: true
+  health:
+    livenessState:
+      enabled: true
+    readinessState:
       enabled: true
   metrics:
     tags:
       application: diplom-test-service
+  server:
+    port: 8081

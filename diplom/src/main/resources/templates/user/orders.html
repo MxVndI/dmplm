@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<html xmlns:th="http://www.thymeleaf.org" lang="ru">
 <head>
     <meta charset="UTF-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    <title>My Orders — DiplomShop</title>
+    <title>Мои заказы — DiplomShop</title>
     <link rel="stylesheet" th:href="@{/css/styles.css}"/>
     <link rel="preconnect" href="https://fonts.googleapis.com"/>
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
@@ -13,12 +13,12 @@
 <div th:replace="~{fragments/nav :: navbar}"></div>
 
 <div class="page-wrapper" style="max-width: 1000px">
-    <h1 class="page-title">My Orders</h1>
+    <h1 class="page-title">Мои заказы</h1>
 
     <!-- Empty State -->
     <div th:if="${orders == null or #lists.isEmpty(orders)}" class="admin-section">
-        <p class="text-muted">You haven't placed any orders yet.</p>
-        <a th:href="@{/products}" class="btn btn-primary">Browse Products</a>
+        <p class="text-muted">Вы еще не разместили ни одного заказа.</p>
+        <a th:href="@{/products}" class="btn btn-primary">Смотреть товары</a>
     </div>
 
     <!-- Orders List -->
@@ -32,12 +32,12 @@
                 <span class="badge"
                       style="background-color: white;"
                       th:classappend="${order.status == 'COMPLETED'} ? 'badge-active' : 'badge-inactive'"
-                      th:text="${order.status == 'COMPLETED'} ? 'Completed' : ${order.status}">Status</span>
+                      th:text="${order.status == 'COMPLETED'} ? 'Завершён' : ${order.status}">Статус</span>
                 <span style="font-weight: 700; color: var(--color-primary); font-family: 'Courier New', monospace; font-size: 1.1rem; background: white;" th:text="'$' + ${order.totalPrice}">$0</span>
                 <span style="font-size: 0.85rem; color: var(--color-secondary); background: white;"
                       th:text="${order.createdAt != null ? #temporals.format(order.createdAt, 'dd MMM yyyy HH:mm') : ''}">Date</span>
-                <span th:if="${order.variant != null}" class="badge badge-a" style="background-color: white;" th:text="'Variant ' + ${order.variant}">Variant</span>
-                <span style="font-family: monospace; font-size: 0.8rem; color: var(--color-secondary); margin-left: auto; background: white;" th:text="'Order #' + ${order.id}">Order #</span>
+                <span th:if="${order.variant != null}" class="badge badge-a" style="background-color: white;" th:text="'Вариант ' + ${order.variant}">Вариант</span>
+                <span style="font-family: monospace; font-size: 0.8rem; color: var(--color-secondary); margin-left: auto; background: white;" th:text="'Заказ №' + ${order.id}">Заказ №</span>
             </div>
 
             <ul style="margin: 0; padding-left: 1.5rem; font-size: 0.9rem; color: var(--color-secondary); line-height: 1.7; background: white;">

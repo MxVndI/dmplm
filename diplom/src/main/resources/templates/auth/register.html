@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<html xmlns:th="http://www.thymeleaf.org" lang="ru">
 <head>
     <meta charset="UTF-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    <meta name="description" content="Create account on DiplomShop"/>
-    <title>Register — DiplomShop</title>
+    <meta name="description" content="Регистрация на DiplomShop"/>
+    <title>Регистрация — DiplomShop</title>
     <link rel="stylesheet" th:href="@{/css/styles.css}"/>
     <link rel="preconnect" href="https://fonts.googleapis.com"/>
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
@@ -15,72 +15,72 @@
     <div class="auth-card">
         <div style="text-align: center; margin-bottom: 2rem">
             <h1 style="font-size: 2.2rem; margin: 0 0 0.5rem; color: var(--color-primary); font-family: var(--font-heading); font-weight: 700">DiplomShop</h1>
-            <p style="margin: 0; color: var(--color-secondary); font-size: 0.95rem">Join our platform</p>
+            <p style="margin: 0; color: var(--color-secondary); font-size: 0.95rem">Присоединитесь к нашей платформе</p>
         </div>
 
-        <h2 class="auth-title">Create Account</h2>
+        <h2 class="auth-title">Создать аккаунт</h2>
 
         <div th:if="${error}" class="alert alert-error" role="alert" th:text="${error}"></div>
 
         <form th:action="@{/auth/register}" method="post" th:object="${dto}" novalidate>
             <!-- Basic Information -->
             <fieldset>
-                <legend style="font-size: 0.9rem; font-weight: var(--font-weight-semibold); color: var(--color-primary); margin-bottom: 1rem; border-bottom: 1px solid var(--color-border); padding-bottom: 0.5rem">Basic Information</legend>
+                <legend style="font-size: 0.9rem; font-weight: var(--font-weight-semibold); color: var(--color-primary); margin-bottom: 1rem; border-bottom: 1px solid var(--color-border); padding-bottom: 0.5rem">Основная информация</legend>
 
                 <div class="form-row">
                     <div class="form-group">
-                        <label for="firstName">First Name <span style="color: var(--color-error)">*</span></label>
-                        <input type="text" id="firstName" th:field="*{firstName}" placeholder="John" required/>
+                        <label for="firstName">Имя <span style="color: var(--color-error)">*</span></label>
+                        <input type="text" id="firstName" th:field="*{firstName}" placeholder="Иван" required/>
                         <span class="field-error" th:if="${#fields.hasErrors('firstName')}" th:errors="*{firstName}"></span>
                     </div>
                     <div class="form-group">
-                        <label for="lastName">Last Name <span style="color: var(--color-error)">*</span></label>
-                        <input type="text" id="lastName" th:field="*{lastName}" placeholder="Doe" required/>
+                        <label for="lastName">Фамилия <span style="color: var(--color-error)">*</span></label>
+                        <input type="text" id="lastName" th:field="*{lastName}" placeholder="Петров" required/>
                         <span class="field-error" th:if="${#fields.hasErrors('lastName')}" th:errors="*{lastName}"></span>
                     </div>
                 </div>
 
                 <div class="form-group">
-                    <label for="login">Username <span style="color: var(--color-error)">*</span></label>
-                    <input type="text" id="login" th:field="*{login}" placeholder="john_doe" required autocomplete="username"/>
+                    <label for="login">Имя пользователя <span style="color: var(--color-error)">*</span></label>
+                    <input type="text" id="login" th:field="*{login}" placeholder="ivan_petrov" required autocomplete="username"/>
                     <span class="field-error" th:if="${#fields.hasErrors('login')}" th:errors="*{login}"></span>
                 </div>
 
                 <div class="form-group">
                     <label for="email">Email <span style="color: var(--color-error)">*</span></label>
-                    <input type="email" id="email" th:field="*{email}" placeholder="john@example.com" required/>
+                    <input type="email" id="email" th:field="*{email}" placeholder="ivan@example.com" required/>
                     <span class="field-error" th:if="${#fields.hasErrors('email')}" th:errors="*{email}"></span>
                 </div>
 
                 <div class="form-group">
-                    <label for="password">Password <span style="color: var(--color-error)">*</span></label>
-                    <input type="password" id="password" th:field="*{password}" placeholder="Min. 8 characters" required autocomplete="new-password"/>
+                    <label for="password">Пароль <span style="color: var(--color-error)">*</span></label>
+                    <input type="password" id="password" th:field="*{password}" placeholder="Минимум 8 символов" required autocomplete="new-password"/>
                     <span class="field-error" th:if="${#fields.hasErrors('password')}" th:errors="*{password}"></span>
                     <small style="color: var(--color-secondary); display: block; margin-top: 0.5rem; font-size: 0.8rem">
-                        Requires: uppercase, number, special character
+                        Требуется: заглавная буква, цифра, спецсимвол
                     </small>
                 </div>
             </fieldset>
 
             <!-- Contact Information -->
             <fieldset style="margin-top: 1.5rem">
-                <legend style="font-size: 0.9rem; font-weight: var(--font-weight-semibold); color: var(--color-primary); margin-bottom: 1rem; border-bottom: 1px solid var(--color-border); padding-bottom: 0.5rem">Contact (Optional)</legend>
+                <legend style="font-size: 0.9rem; font-weight: var(--font-weight-semibold); color: var(--color-primary); margin-bottom: 1rem; border-bottom: 1px solid var(--color-border); padding-bottom: 0.5rem">Контактная информация (Необязательно)</legend>
 
                 <div class="form-group">
-                    <label for="phone">Phone</label>
-                    <input type="tel" id="phone" th:field="*{phone}" placeholder="+1 (555) 123-4567"/>
+                    <label for="phone">Телефон</label>
+                    <input type="tel" id="phone" th:field="*{phone}" placeholder="+7 (999) 123-45-67"/>
                     <span class="field-error" th:if="${#fields.hasErrors('phone')}" th:errors="*{phone}"></span>
                 </div>
 
                 <div class="form-row">
                     <div class="form-group">
-                        <label for="country">Country</label>
-                        <input type="text" id="country" th:field="*{country}" placeholder="United States"/>
+                        <label for="country">Страна</label>
+                        <input type="text" id="country" th:field="*{country}" placeholder="Россия"/>
                         <span class="field-error" th:if="${#fields.hasErrors('country')}" th:errors="*{country}"></span>
                     </div>
                     <div class="form-group">
-                        <label for="language">Language</label>
-                        <input type="text" id="language" th:field="*{language}" placeholder="English"/>
+                        <label for="language">Язык</label>
+                        <input type="text" id="language" th:field="*{language}" placeholder="Русский"/>
                         <span class="field-error" th:if="${#fields.hasErrors('language')}" th:errors="*{language}"></span>
                     </div>
                 </div>
@@ -88,21 +88,21 @@
 
             <!-- Demographics (Optional) -->
             <fieldset style="margin-top: 1.5rem">
-                <legend style="font-size: 0.9rem; font-weight: var(--font-weight-semibold); color: var(--color-primary); margin-bottom: 1rem; border-bottom: 1px solid var(--color-border); padding-bottom: 0.5rem">Demographics (Optional)</legend>
+                <legend style="font-size: 0.9rem; font-weight: var(--font-weight-semibold); color: var(--color-primary); margin-bottom: 1rem; border-bottom: 1px solid var(--color-border); padding-bottom: 0.5rem">Демография (Необязательно)</legend>
 
                 <div class="form-row">
                     <div class="form-group">
-                        <label for="gender">Gender</label>
+                        <label for="gender">Пол</label>
                         <select id="gender" th:field="*{gender}">
-                            <option value="">Not specified</option>
-                            <option value="MALE">Male</option>
-                            <option value="FEMALE">Female</option>
-                            <option value="OTHER">Other</option>
+                            <option value="">Не указано</option>
+                            <option value="MALE">Мужской</option>
+                            <option value="FEMALE">Женский</option>
+                            <option value="OTHER">Другое</option>
                         </select>
                         <span class="field-error" th:if="${#fields.hasErrors('gender')}" th:errors="*{gender}"></span>
                     </div>
                     <div class="form-group">
-                        <label for="age">Age</label>
+                        <label for="age">Возраст</label>
                         <input type="number" id="age" th:field="*{age}" min="13" max="150" placeholder="25"/>
                         <span class="field-error" th:if="${#fields.hasErrors('age')}" th:errors="*{age}"></span>
                     </div>
@@ -111,59 +111,59 @@
                 <!-- Additional Fields (Expandable) -->
                 <details style="cursor: pointer; margin-top: 1rem">
                     <summary style="font-weight: var(--font-weight-semibold); color: var(--color-primary); padding: 0.5rem 0; user-select: none">
-                        ▶ Advanced Demographics
+                        ▶ Дополнительная демография
                     </summary>
                     <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--color-border)">
                         <div class="form-row">
                             <div class="form-group">
-                                <label for="incomeLevel">Income Level</label>
+                                <label for="incomeLevel">Уровень дохода</label>
                                 <select id="incomeLevel" th:field="*{incomeLevel}">
-                                    <option value="">Not specified</option>
-                                    <option value="LOW">Low</option>
-                                    <option value="MEDIUM">Medium</option>
-                                    <option value="HIGH">High</option>
+                                    <option value="">Не указано</option>
+                                    <option value="LOW">Низкий</option>
+                                    <option value="MEDIUM">Средний</option>
+                                    <option value="HIGH">Высокий</option>
                                 </select>
                             </div>
                             <div class="form-group">
-                                <label for="educationLevel">Education</label>
+                                <label for="educationLevel">Образование</label>
                                 <select id="educationLevel" th:field="*{educationLevel}">
-                                    <option value="">Not specified</option>
-                                    <option value="BASIC">Basic</option>
-                                    <option value="SECONDARY">Secondary</option>
-                                    <option value="HIGHER">Higher</option>
-                                    <option value="ACADEMIC">Graduate / PhD</option>
+                                    <option value="">Не указано</option>
+                                    <option value="BASIC">Начальное</option>
+                                    <option value="SECONDARY">Среднее</option>
+                                    <option value="HIGHER">Высшее</option>
+                                    <option value="ACADEMIC">Магистратура / PhD</option>
                                 </select>
                             </div>
                         </div>
                         <div class="form-group">
-                            <label for="occupation">Occupation</label>
+                            <label for="occupation">Род занятий</label>
                             <select id="occupation" th:field="*{occupation}">
-                                <option value="">Not specified</option>
-                                <option value="STUDENT">Student</option>
-                                <option value="EMPLOYED">Employed</option>
-                                <option value="SELF_EMPLOYED">Self-employed</option>
-                                <option value="UNEMPLOYED">Unemployed</option>
-                                <option value="RETIRED">Retired</option>
+                                <option value="">Не указано</option>
+                                <option value="STUDENT">Студент</option>
+                                <option value="EMPLOYED">Наемный работник</option>
+                                <option value="SELF_EMPLOYED">Самозанятый</option>
+                                <option value="UNEMPLOYED">Безработный</option>
+                                <option value="RETIRED">На пенсии</option>
                             </select>
                         </div>
                         <div class="form-group">
-                            <label for="interestsRaw">Interests</label>
-                            <input type="text" id="interestsRaw" th:field="*{interestsRaw}" placeholder="e.g. technology, sports, music"/>
+                            <label for="interestsRaw">Интересы</label>
+                            <input type="text" id="interestsRaw" th:field="*{interestsRaw}" placeholder="например: технология, спорт, музыка"/>
                         </div>
                     </div>
                 </details>
             </fieldset>
 
             <button type="submit" class="btn btn-primary btn-full" style="margin-top: 2rem; min-height: 48px">
-                Create Account
+                Создать аккаунт
             </button>
         </form>
 
         <hr style="margin: 1.5rem 0; border: none; border-top: 1px solid var(--color-border)">
 
         <p class="auth-link">
-            Already have an account?
-            <a th:href="@{/auth/login}">Sign In</a>
+            Уже есть аккаунт?
+            <a th:href="@{/auth/login}">Вход</a>
         </p>
     </div>
 </div>
