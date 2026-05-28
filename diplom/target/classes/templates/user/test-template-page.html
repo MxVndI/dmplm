@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security" lang="ru">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title th:text="${templateName} + ' — Магазин'">Шаблон — Магазин</title>
+    <link rel="stylesheet" th:href="@{/css/styles.css}"/>
+</head>
+<body>
+
+<div th:replace="~{fragments/nav :: navbar}"></div>
+
+<!-- Содержимое загруженного HTML шаблона -->
+<div th:utext="${templateHtml}"><!-- содержимое шаблона --></div>
+
+<script th:src="@{/js/main.js}"></script>
+
+</body>
+</html>

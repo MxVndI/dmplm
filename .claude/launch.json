@@ -1,0 +1,31 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "portfolio",
+      "runtimeExecutable": "node",
+      "runtimeArgs": ["C:/Users/LesunVo/Desktop/landings/portfolio/scripts/serve-cms.mjs"],
+      "port": 4874
+    },
+    {
+      "name": "ege-landing",
+      "runtimeExecutable": "node",
+      "runtimeArgs": ["C:/Users/LesunVo/Desktop/landings/ege/scripts/serve-cms.mjs"],
+      "port": 4876,
+      "env": {
+        "SITE_DIR": "C:/Users/LesunVo/Desktop/landings/ege",
+        "PORT": "4876"
+      }
+    }
+    ,{
+      "name": "remont-landing",
+      "runtimeExecutable": "node",
+      "runtimeArgs": ["C:/Users/LesunVo/Desktop/landings/remont/scripts/serve-cms.mjs"],
+      "port": 4877,
+      "env": {
+        "SITE_DIR": "C:/Users/LesunVo/Desktop/landings/remont",
+        "PORT": "4877"
+      }
+    }
+  ]
+}

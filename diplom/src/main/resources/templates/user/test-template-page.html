@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security" lang="ru">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title th:text="${templateName} + ' — DiplomShop'">Шаблон — DiplomShop</title>
+    <link rel="stylesheet" th:href="@{/css/styles.css}"/>
+    <style>
+        /* Wrapper around an admin-uploaded HTML template. Resets margins/paddings
+           so presets and uploaded files render with predictable spacing regardless
+           of what styles they bring along. */
+        .ab-template-host {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem 1.5rem 3rem;
+            box-sizing: border-box;
+        }
+        .ab-template-host > *:first-child { margin-top: 0; }
+        .ab-template-host > *:last-child  { margin-bottom: 0; }
+        /* Make sure injected content can't blow out the page horizontally. */
+        .ab-template-host img,
+        .ab-template-host video,
+        .ab-template-host iframe { max-width: 100%; height: auto; }
+        @media (max-width: 640px) {
+            .ab-template-host { padding: 1rem 1rem 2rem; }
+        }
+    </style>
+</head>
+<body>
+
+<div th:replace="~{fragments/nav :: navbar}"></div>
+
+<main class="ab-template-host" th:utext="${templateHtml}">
+    <!-- содержимое загруженного HTML шаблона -->
+</main>
+
+<script th:src="@{/js/main.js}"></script>
+
+</body>
+</html>

@@ -1,0 +1,30 @@
+{
+  "annotations": {"list": []},
+  "editable": true,
+  "gnetId": null,
+  "id": null,
+  "panels": [
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": {"defaults": {"color": {"mode": "palette-classic"}}, "overrides": []},
+      "gridPos": {"h": 8, "w": 24, "x": 0, "y": 0},
+      "id": 1,
+      "targets": [
+        {
+          "expr": "kafka_consumer_lag{topic=~\"test-selection-requests|user-events|user-segment-changes|test-participants-result\"}",
+          "legendFormat": "{{topic}} - {{partition}}",
+          "refId": "A"
+        }
+      ],
+      "title": "Kafka Consumer Lag",
+      "type": "timeseries"
+    }
+  ],
+  "refresh": "30s",
+  "schemaVersion": 36,
+  "tags": ["kafka"],
+  "time": {"from": "now-1h", "to": "now"},
+  "title": "Kafka Metrics",
+  "uid": "kafka-metrics",
+  "version": 1
+}

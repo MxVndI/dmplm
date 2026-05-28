@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ru">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Шаблоны страниц — Админ</title>
+    <link rel="stylesheet" th:href="@{/css/styles.css}"/>
+    <meta id="csrf-token"  th:content="${_csrf.token}"      content=""/>
+    <meta id="csrf-header" th:content="${_csrf.headerName}" content="X-CSRF-TOKEN"/>
+    <style>
+        /* ── layout ── */
+        .tpl-grid{display:grid;grid-template-columns:1fr 1fr;gap:2rem}
+        @media(max-width:900px){.tpl-grid{grid-template-columns:1fr}}
+
+        /* ── tabs ── */
+        .tabs{display:flex;gap:.25rem;background:#f1f5f9;border-radius:.6rem;padding:.3rem;margin-bottom:1.5rem;width:fit-content}
+        .tab-btn{background:none;border:none;padding:.5rem 1.25rem;border-radius:.4rem;cursor:pointer;font-size:.9rem;color:#64748b;font-weight:500;transition:all .15s}
+        .tab-btn.active{background:#fff;color:#0f172a;box-shadow:0 1px 4px rgba(0,0,0,.1)}
+
+        /* ── preset gallery ── */
+        .preset-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:1rem}
+        .preset-card{border:2px solid #e2e8f0;border-radius:.75rem;padding:1.25rem;cursor:pointer;transition:all .18s;position:relative;background:#fff}
+        .preset-card:hover{border-color:#6366f1;box-shadow:0 4px 16px rgba(99,102,241,.12)}
+        .preset-card.selected{border-color:#6366f1;background:#eef2ff}
+        .preset-thumb{font-size:2.25rem;margin-bottom:.6rem;display:block}
+        .preset-card h4{margin:0 0 .25rem;font-size:.95rem;color:#0f172a}
+        .preset-card p{margin:0;font-size:.8rem;color:#64748b;line-height:1.4}
+        .preset-badge{display:inline-block;background:#e0e7ff;color:#3730a3;font-size:.7rem;font-weight:600;padding:.2rem .55rem;border-radius:9999px;margin-top:.5rem}
+        .preset-check{position:absolute;top:.75rem;right:.75rem;background:#6366f1;color:#fff;border-radius:50%;width:20px;height:20px;display:none;align-items:center;justify-content:center;font-size:.75rem}
+        .preset-card.selected .preset-check{display:flex}
+
+        /* ── upload form ── */
+        .form-card{background:#f8fafc;border:1px solid #e2e8f0;border-radius:.75rem;padding:1.5rem}
+        .form-row{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+        @media(max-width:600px){.form-row{grid-template-columns:1fr}}
+
+        /* ── page selector ── */
+        .page-options{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:.6rem;margin-top:.5rem}
+        .page-opt{border:1.5px solid #e2e8f0;border-radius:.5rem;padding:.65rem .75rem;cursor:pointer;transition:all .15s;display:flex;align-items:center;gap:.5rem;font-size:.85rem;color:#475569;background:#fff}
+        .page-opt:hover{border-color:#6366f1;color:#4338ca}
+        .page-opt.active{border-color:#6366f1;background:#eef2ff;color:#4338ca;font-weight:600}
+        .page-opt .opt-icon{font-size:1rem}
+
+        /* ── table ── */
+        .variant-badge{display:inline-block;padding:.2rem .55rem;border-radius:9999px;font-size:.75rem;font-weight:700}
+        .badge-a{background:#dbeafe;color:#1e40af}
+        .badge-b{background:#fce7f3;color:#9d174d}
+        .badge-c{background:#dcfce7;color:#166534}
+        .badge-d{background:#fef9c3;color:#854d0e}
+
+        /* ── modal ── */
+        .modal-backdrop{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:999;align-items:center;justify-content:center}
+        .modal-backdrop.open{display:flex}
+        .modal{background:#fff;border-radius:.75rem;padding:2rem;width:100%;max-width:520px;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.3);position:relative}
+        .modal-close{position:absolute;top:.9rem;right:1rem;background:none;border:none;font-size:1.4rem;cursor:pointer;color:#94a3b8}
+        .modal-close:hover{color:#0f172a}
+
+        /* ── misc ── */
+        #toast{position:fixed;bottom:1.5rem;right:1.5rem;z-index:9999;background:#1e1e2e;color:#fff;padding:.75rem 1.25rem;border-radius:.5rem;font-size:.9rem;display:none;box-shadow:0 4px 20px rgba(0,0,0,.3)}
+        .section-title{font-size:1rem;font-weight:700;color:#0f172a;margin:0 0 .75rem}
+        .hint{font-size:.8rem;color:#94a3b8;margin:.25rem 0 0}
+        iframe.preview-frame{width:100%;height:340px;border:1px solid #e2e8f0;border-radius:.5rem;margin-top:1rem}
+    </style>
+</head>
+<body>
+<div th:replace="~{fragments/nav :: navbar}"></div>
+<div id="toast"></div>
+
+<!-- ── Apply preset modal ── -->
+<div class="modal-backdrop" id="presetModal">
+    <div class="modal">
+        <button class="modal-close" onclick="closePresetModal()">&#x2715;</button>
+        <h2 style="margin-top:0">Применить пресет</h2>
+        <p id="pm-desc" style="color:#64748b;font-size:.9rem;margin-bottom:1.25rem"></p>
+
+        <div class="form-group">
+            <label>ID A/B теста *</label>
+            <input type="text" id="pm-testid" placeholder="Вставьте ID теста со страницы A/B Тесты"/>
+        </div>
+        <div class="form-row">
+            <div class="form-group">
+                <label>Вариант *</label>
+                <select id="pm-variant">
+                    <option value="A">Вариант A</option>
+                    <option value="B">Вариант B</option>
+                    <option value="C">Вариант C</option>
+                    <option value="D">Вариант D</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Страница</label>
+                <input type="text" id="pm-page" readonly style="background:#f8fafc;cursor:default"/>
+                <p class="hint" id="pm-pagename"></p>
+            </div>
+        </div>
+
+        <div style="display:flex;gap:.75rem;margin-top:1.5rem">
+            <button class="btn btn-primary" onclick="submitPreset()">Применить пресет</button>
+            <button class="btn btn-outline" onclick="closePresetModal()">Отмена</button>
+        </div>
+    </div>
+</div>
+
+<div class="page-wrapper">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem;flex-wrap:wrap;gap:1rem">
+        <h1 class="page-title" style="margin:0">Шаблоны страниц</h1>
+        <button class="btn btn-primary" onclick="showTab('upload')">+ Загрузить шаблон</button>
+    </div>
+
+    <p style="color:#64748b;margin-bottom:1.5rem;max-width:680px">
+        Назначайте пользовательские HTML-страницы участникам A/B тестов.
+        Шаблон может переопределить <strong>любую страницу</strong> магазина — главную, товары, профиль и другие.
+        Выберите готовый пресет или загрузите собственный файл.
+    </p>
+
+    <!-- tabs -->
+    <div class="tabs">
+        <button class="tab-btn active" id="tab-presets" onclick="showTab('presets')">🎨 Пресеты</button>
+        <button class="tab-btn" id="tab-upload" onclick="showTab('upload')">⬆ Загрузить</button>
+        <button class="tab-btn" id="tab-list" onclick="showTab('list')">📋 Мои шаблоны</button>
+    </div>
+
+    <!-- ══ PRESETS TAB ══ -->
+    <div id="pane-presets">
+        <p class="section-title">Готовые шаблоны — нажмите, чтобы применить</p>
+        <div class="preset-grid" id="preset-grid">
+            <div style="color:#94a3b8">Загрузка пресетов…</div>
+        </div>
+    </div>
+
+    <!-- ══ UPLOAD TAB ══ -->
+    <div id="pane-upload" style="display:none">
+        <div class="tpl-grid">
+            <div>
+                <p class="section-title">Загрузить HTML файл</p>
+                <div class="form-card">
+                    <div class="form-group">
+                        <label>Название шаблона *</label>
+                        <input type="text" id="u-name" placeholder="напр. Летняя распродажа"/>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>ID A/B теста *</label>
+                            <input type="text" id="u-testid" placeholder="ID теста"/>
+                        </div>
+                        <div class="form-group">
+                            <label>Вариант *</label>
+                            <select id="u-variant">
+                                <option value="A">Вариант A</option>
+                                <option value="B">Вариант B</option>
+                                <option value="C">Вариант C</option>
+                                <option value="D">Вариант D</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Страница для замены *</label>
+                        <p class="hint" style="margin-bottom:.5rem">Выберите на какой странице магазина будет показан шаблон</p>
+                        <div class="page-options" id="page-options">
+                            <div class="page-opt active" data-pattern="/" data-name="Главная страница" onclick="selectPage(this)">
+                                <span class="opt-icon">🏠</span> Главная
+                            </div>
+                            <div class="page-opt" data-pattern="/products" data-name="Список товаров" onclick="selectPage(this)">
+                                <span class="opt-icon">🛍️</span> Каталог
+                            </div>
+                            <div class="page-opt" data-pattern="/products/*" data-name="Страница товара" onclick="selectPage(this)">
+                                <span class="opt-icon">📦</span> Товар
+                            </div>
+                            <div class="page-opt" data-pattern="/profile" data-name="Профиль" onclick="selectPage(this)">
+                                <span class="opt-icon">👤</span> Профиль
+                            </div>
+                            <div class="page-opt" data-pattern="/profile/edit" data-name="Редактирование профиля" onclick="selectPage(this)">
+                                <span class="opt-icon">✏️</span> Редакт. профиля
+                            </div>
+                            <div class="page-opt" data-pattern="/cart" data-name="Корзина" onclick="selectPage(this)">
+                                <span class="opt-icon">🛒</span> Корзина
+                            </div>
+                        </div>
+                        <input type="hidden" id="u-pattern" value="/"/>
+                        <input type="hidden" id="u-pagename" value="Главная страница"/>
+                    </div>
+
+                    <div class="form-group">
+                        <label>HTML файл *</label>
+                        <input type="file" id="u-file" accept=".html" onchange="previewFile(this)"/>
+                        <p class="hint">Загрузите .html файл. Содержимое будет вставлено внутрь страницы магазина (после навбара).</p>
+                    </div>
+
+                    <div style="display:flex;gap:.75rem;margin-top:1.5rem">
+                        <button class="btn btn-primary" onclick="submitUpload()">Загрузить шаблон</button>
+                        <button class="btn btn-outline" onclick="resetUpload()">Очистить</button>
+                    </div>
+                </div>
+            </div>
+            <div>
+                <p class="section-title">Предпросмотр файла</p>
+                <div style="background:#f8fafc;border:1px dashed #cbd5e1;border-radius:.75rem;height:400px;display:flex;align-items:center;justify-content:center;color:#94a3b8;font-size:.9rem" id="preview-placeholder">
+                    Выберите HTML файл для предпросмотра
+                </div>
+                <iframe id="preview-iframe" class="preview-frame" style="display:none"></iframe>
+            </div>
+        </div>
+    </div>
+
+    <!-- ══ LIST TAB ══ -->
+    <div id="pane-list" style="display:none">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;flex-wrap:wrap;gap:.5rem">
+            <p class="section-title" style="margin:0">Загруженные шаблоны</p>
+            <div style="display:flex;gap:.5rem;align-items:center">
+                <span id="filter-badge" style="display:none;background:#e0e7ff;color:#3730a3;padding:.3rem .8rem;border-radius:9999px;font-size:.8rem"></span>
+                <a href="/admin/templates" id="clear-filter" style="display:none;font-size:.8rem;color:#64748b;text-decoration:underline">Показать все</a>
+            </div>
+        </div>
+        <div id="templates-container">
+            <table class="admin-table" id="templates-table" style="display:none">
+                <thead>
+                <tr>
+                    <th>Название</th>
+                    <th>Страница</th>
+                    <th>ID теста</th>
+                    <th>Вариант</th>
+                    <th>Файл</th>
+                    <th>Дата</th>
+                    <th>Действия</th>
+                </tr>
+                </thead>
+                <tbody id="templates-body"></tbody>
+            </table>
+            <div id="empty-msg" class="alert alert-success" style="display:none">Шаблонов пока нет.</div>
+        </div>
+    </div>
+</div>
+
+<script>
+const csrf = {
+    token: document.getElementById('csrf-token').content,
+    header: document.getElementById('csrf-header').content
+};
+
+// ── toast ──────────────────────────────────────────────────
+function toast(msg, ok = true) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.style.background = ok ? '#1e1e2e' : '#dc2626';
+    t.style.display = 'block';
+    setTimeout(() => t.style.display = 'none', 3500);
+}
+
+// ── tabs ───────────────────────────────────────────────────
+function showTab(name) {
+    ['presets','upload','list'].forEach(n => {
+        document.getElementById('pane-' + n).style.display = n === name ? '' : 'none';
+        document.getElementById('tab-' + n).classList.toggle('active', n === name);
+    });
+    if (name === 'list') loadTemplates();
+    if (name === 'presets') loadPresets();
+}
+
+// ── page selector ─────────────────────────────────────────
+function selectPage(el) {
+    document.querySelectorAll('.page-opt').forEach(o => o.classList.remove('active'));
+    el.classList.add('active');
+    document.getElementById('u-pattern').value = el.dataset.pattern;
+    document.getElementById('u-pagename').value = el.dataset.name;
+}
+
+// ── file preview ──────────────────────────────────────────
+function previewFile(input) {
+    const file = input.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = e => {
+        const iframe = document.getElementById('preview-iframe');
+        document.getElementById('preview-placeholder').style.display = 'none';
+        iframe.style.display = '';
+        iframe.srcdoc = e.target.result;
+    };
+    reader.readAsText(file);
+}
+
+// ── upload form ───────────────────────────────────────────
+async function submitUpload() {
+    const name      = document.getElementById('u-name').value.trim();
+    const testId    = document.getElementById('u-testid').value.trim();
+    const variant   = document.getElementById('u-variant').value;
+    const pattern   = document.getElementById('u-pattern').value;
+    const pageName  = document.getElementById('u-pagename').value;
+    const file      = document.getElementById('u-file').files[0];
+
+    if (!name || !testId || !file) { toast('Заполните все обязательные поля', false); return; }
+
+    const fd = new FormData();
+    fd.append('name', name);
+    fd.append('testId', testId);
+    fd.append('variant', variant);
+    fd.append('pagePattern', pattern);
+    fd.append('pageName', pageName);
+    fd.append('file', file);
+
+    const res = await fetch('/admin/api/templates', {
+        method: 'POST',
+        headers: { [csrf.header]: csrf.token },
+        body: fd
+    });
+
+    if (res.ok) {
+        toast('Шаблон загружен!');
+        resetUpload();
+        showTab('list');
+    } else {
+        toast('Ошибка загрузки: ' + res.status, false);
+    }
+}
+
+function resetUpload() {
+    document.getElementById('u-name').value = '';
+    document.getElementById('u-testid').value = '';
+    document.getElementById('u-variant').value = 'A';
+    document.getElementById('u-file').value = '';
+    document.getElementById('preview-iframe').style.display = 'none';
+    document.getElementById('preview-placeholder').style.display = '';
+    document.querySelectorAll('.page-opt').forEach((o,i) => o.classList.toggle('active', i === 0));
+    document.getElementById('u-pattern').value = '/';
+    document.getElementById('u-pagename').value = 'Главная страница';
+}
+
+// ── preset gallery ────────────────────────────────────────
+let presetsData = [];
+let selectedPreset = null;
+
+async function loadPresets() {
+    const grid = document.getElementById('preset-grid');
+    if (presetsData.length) { renderPresets(); return; }
+    const res = await fetch('/admin/api/presets');
+    if (!res.ok) { grid.innerHTML = '<div style="color:#dc2626">Не удалось загрузить пресеты</div>'; return; }
+    presetsData = await res.json();
+    renderPresets();
+}
+
+function renderPresets() {
+    const grid = document.getElementById('preset-grid');
+    grid.innerHTML = presetsData.map(p => `
+        <div class="preset-card" id="pc-${p.id}" onclick="selectPreset('${p.id}')">
+            <div class="preset-check">✓</div>
+            <span class="preset-thumb">${p.thumbnail}</span>
+            <h4>${esc(p.name)}</h4>
+            <p>${esc(p.description)}</p>
+            <span class="preset-badge">${esc(p.pageName)}</span>
+        </div>
+    `).join('');
+}
+
+function selectPreset(id) {
+    document.querySelectorAll('.preset-card').forEach(c => c.classList.remove('selected'));
+    document.getElementById('pc-' + id).classList.add('selected');
+    selectedPreset = presetsData.find(p => p.id === id);
+    openPresetModal(selectedPreset);
+}
+
+function openPresetModal(p) {
+    document.getElementById('pm-desc').textContent = p.description;
+    document.getElementById('pm-page').value = p.pagePattern;
+    document.getElementById('pm-pagename').textContent = '📄 ' + p.pageName;
+    document.getElementById('pm-testid').value = '';
+    document.getElementById('pm-variant').value = 'A';
+    document.getElementById('presetModal').classList.add('open');
+}
+
+function closePresetModal() {
+    document.getElementById('presetModal').classList.remove('open');
+    document.querySelectorAll('.preset-card').forEach(c => c.classList.remove('selected'));
+    selectedPreset = null;
+}
+
+async function submitPreset() {
+    if (!selectedPreset) return;
+    const testId  = document.getElementById('pm-testid').value.trim();
+    const variant = document.getElementById('pm-variant').value;
+    if (!testId) { toast('Введите ID теста', false); return; }
+
+    // Fetch HTML from preset endpoint
+    const htmlRes = await fetch('/admin/api/presets/' + selectedPreset.id + '/html');
+    if (!htmlRes.ok) { toast('Не удалось загрузить пресет', false); return; }
+    const html = await htmlRes.text();
+
+    const res = await fetch('/admin/api/templates/apply-preset', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', [csrf.header]: csrf.token },
+        body: JSON.stringify({
+            testId,
+            variant,
+            pagePattern: selectedPreset.pagePattern,
+            pageName:    selectedPreset.pageName,
+            name:        selectedPreset.name,
+            html
+        })
+    });
+
+    if (res.ok) {
+        toast('Пресет применён!');
+        closePresetModal();
+        showTab('list');
+    } else {
+        toast('Ошибка применения пресета: ' + res.status, false);
+    }
+}
+
+// ── templates list ────────────────────────────────────────
+const urlTestId = new URLSearchParams(location.search).get('testId');
+if (urlTestId) {
+    document.getElementById('u-testid').value = urlTestId;
+    document.getElementById('filter-badge').textContent = 'Тест: ' + urlTestId.substring(0, 12) + '…';
+    document.getElementById('filter-badge').style.display = '';
+    document.getElementById('clear-filter').style.display = '';
+}
+
+async function loadTemplates() {
+    const url = urlTestId
+        ? '/admin/api/templates/by-test/' + encodeURIComponent(urlTestId)
+        : '/admin/api/templates';
+    const res = await fetch(url);
+    if (!res.ok) { toast('Не удалось загрузить шаблоны', false); return; }
+    const data = await res.json();
+    const body = document.getElementById('templates-body');
+    body.innerHTML = data.map(renderRow).join('');
+    document.getElementById('templates-table').style.display = data.length ? '' : 'none';
+    document.getElementById('empty-msg').style.display = data.length ? 'none' : '';
+}
+
+function renderRow(t) {
+    const varBadge = `<span class="variant-badge badge-${(t.variant||'a').toLowerCase()}">${t.variant || '—'}</span>`;
+    const date = t.uploadedAt ? t.uploadedAt.replace('T',' ').substring(0,16) : '—';
+    const pageName = esc(t.pageName || '—');
+    const pagePattern = `<code style="font-size:.75rem;color:#475569">${esc(t.pagePattern || '/')}</code>`;
+    return `<tr>
+        <td>${esc(t.name)}</td>
+        <td>${pageName}<br>${pagePattern}</td>
+        <td style="font-family:monospace;font-size:.78rem">${esc(t.testId)}</td>
+        <td>${varBadge}</td>
+        <td style="font-size:.8rem">${esc(t.originalFileName || '—')}</td>
+        <td style="font-size:.8rem">${date}</td>
+        <td style="display:flex;gap:.35rem;flex-wrap:wrap">
+            <a href="/admin/api/templates/${t.id}/preview" target="_blank"
+               class="btn btn-outline" style="padding:.3rem .7rem;font-size:.78rem">Просмотр</a>
+            <button class="btn btn-outline" style="color:#dc2626;border-color:#fca5a5;padding:.3rem .7rem;font-size:.78rem"
+                    onclick="deleteTemplate('${t.id}','${esc(t.name)}')">Удалить</button>
+        </td>
+    </tr>`;
+}
+
+async function deleteTemplate(id, name) {
+    if (!confirm('Удалить шаблон "' + name + '"?')) return;
+    const res = await fetch('/admin/api/templates/' + id, {
+        method: 'DELETE',
+        headers: { [csrf.header]: csrf.token }
+    });
+    if (res.ok) { toast('Шаблон удалён'); loadTemplates(); }
+    else toast('Ошибка удаления', false);
+}
+
+function esc(s) {
+    if (!s) return '';
+    return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// init
+loadPresets();
+</script>
+</body>
+</html>

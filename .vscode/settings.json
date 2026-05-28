@@ -1,0 +1,63 @@
+{
+    "chat.tools.terminal.autoApprove": {
+        "ConvertFrom-Json": true,
+        "ForEach-Object": true,
+        "ConvertTo-Json": true,
+        "/^python -c \"\nimport json\n\nfile = r'c:\\\\Users\\\\LesunVo\\\\Desktop\\\\BIGGEST\\\\diplom\\\\n8n\\\\metrics-ai-analyst-workflow\\.json'\nwith open\\(file, 'r', encoding='utf-8'\\) as f:\n    wf = json\\.load\\(f\\)\n\nprint\\('Nodes count:', len\\(wf\\['nodes'\\]\\)\\)\nprint\\('Last node:', wf\\['nodes'\\]\\[-1\\]\\['name'\\]\\)\nprint\\('Connections keys:', list\\(wf\\['connections'\\]\\.keys\\(\\)\\)\\)\n\"\n$/": {
+            "approve": true,
+            "matchCommandLine": true
+        },
+        "\\$json.action": true,
+        "\\$env.TEST_SERVICE_INTERNAL_URL": true,
+        "\\$input.first().json.testId;\\nreturn": true,
+        "json:": true,
+        "participants": true,
+        "send_tg": true,
+        "pc_main": true,
+        "pc_main.append({'node':": true,
+        "with": true,
+        "json.dump(wf,": true,
+        "print('Done!": true,
+        "wf[": true,
+        "/^python c:\\\\Users\\\\LesunVo\\\\Desktop\\\\BIGGEST\\\\fix_workflow\\.py$/": {
+            "approve": true,
+            "matchCommandLine": true
+        },
+        "docker build": true,
+        "/^python -c \"\nimport urllib\\.request, json\n\n# Try listing workflows to see what API is available\nreq = urllib\\.request\\.Request\\('http://localhost:5678/api/v1/workflows', headers=\\{'Content-Type': 'application/json'\\}\\)\ntry:\n    with urllib\\.request\\.urlopen\\(req, timeout=5\\) as r:\n        data = json\\.loads\\(r\\.read\\(\\)\\)\n        print\\('Workflows:', \\[w\\.get\\('id'\\) \\+ '/' \\+ w\\.get\\('name',''\\) for w in data\\.get\\('data',\\[\\]\\)\\]\\)\nexcept urllib\\.error\\.HTTPError as e:\n    print\\('HTTP Error:', e\\.code, e\\.read\\(\\)\\.decode\\(\\)\\[:500\\]\\)\nexcept Exception as ex:\n    print\\('Error:', ex\\)\n\"$/": {
+            "approve": true,
+            "matchCommandLine": true
+        },
+        "docker exec": true,
+        "docker cp": true,
+        "/^python -c \"\nimport pathlib, json\nsrc = pathlib\\.Path\\(r'c:\\\\Users\\\\LesunVo\\\\Desktop\\\\BIGGEST\\\\diplom\\\\n8n\\\\telegram-ab-test-workflow\\.json'\\)\nwf = json\\.loads\\(src\\.read_text\\(encoding='utf-8-sig'\\)\\)\nout = pathlib\\.Path\\(r'c:\\\\Users\\\\LesunVo\\\\Desktop\\\\BIGGEST\\\\workflow_nobom\\.json'\\)\nout\\.write_text\\(json\\.dumps\\(wf\\), encoding='utf-8'\\)\nprint\\('Written without BOM'\\)\n\"$/": {
+            "approve": true,
+            "matchCommandLine": true
+        },
+        "Get-Item": true,
+        "/^cmd /c \"curl -s http://localhost:9090/-/ready 2>&1\" ; cmd /c \"curl -s http://localhost:3000/api/health 2>&1\"$/": {
+            "approve": true,
+            "matchCommandLine": true
+        },
+        "/^Start-Sleep -Seconds 30 ; cmd /c \"curl -s http://localhost:8080/actuator/prometheus 2>&1 \\| findstr ab_test_events_total\"$/": {
+            "approve": true,
+            "matchCommandLine": true
+        },
+        "/^cmd /c \"cd C:\\\\Users\\\\LesunVo\\\\Desktop\\\\BIGGEST\\\\diplom && docker compose logs app --tail=30 2>&1\"$/": {
+            "approve": true,
+            "matchCommandLine": true
+        },
+        "/^cmd /c \"cd C:\\\\Users\\\\LesunVo\\\\Desktop\\\\BIGGEST\\\\diplom && docker compose build app 2>&1\"$/": {
+            "approve": true,
+            "matchCommandLine": true
+        },
+        "/^cmd /c \"cd C:\\\\Users\\\\LesunVo\\\\Desktop\\\\BIGGEST\\\\diplom && docker compose up -d app 2>&1\"$/": {
+            "approve": true,
+            "matchCommandLine": true
+        },
+        "/^Start-Sleep -Seconds 15 ; cmd /c \"curl -s http://localhost:8080/actuator/health 2>&1\"$/": {
+            "approve": true,
+            "matchCommandLine": true
+        }
+    }
+}

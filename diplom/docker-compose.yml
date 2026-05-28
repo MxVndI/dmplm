@@ -1,0 +1,346 @@
+services:
+
+  # ── MongoDB ──────────────────────────────────────────────────────────────
+  mongo:
+    image: mongo:7
+    container_name: diplom-mongo
+    restart: unless-stopped
+    ports:
+      - "${MONGO_PORT}:27017"
+    volumes:
+      - mongo_data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ── Apache Kafka (KRaft mode, no Zookeeper) ───────────────────────────────
+  kafka:
+    image: bitnami/kafka:3.7
+    container_name: diplom-kafka
+    restart: unless-stopped
+    ports:
+      - "9094:9094"   # External access from host (e.g. for local dev tools)
+    environment:
+      KAFKA_CFG_NODE_ID: "1"
+      KAFKA_CFG_PROCESS_ROLES: "controller,broker"
+      KAFKA_CFG_LISTENERS: "PLAINTEXT://:9092,CONTROLLER://:9093,EXTERNAL://:9094"
+      KAFKA_CFG_ADVERTISED_LISTENERS: "PLAINTEXT://kafka:9092,EXTERNAL://localhost:9094"
+      KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP: "PLAINTEXT:PLAINTEXT,CONTROLLER:PLAINTEXT,EXTERNAL:PLAINTEXT"
+      KAFKA_CFG_CONTROLLER_QUORUM_VOTERS: "1@kafka:9093"
+      KAFKA_CFG_CONTROLLER_LISTENER_NAMES: "CONTROLLER"
+      KAFKA_CFG_INTER_BROKER_LISTENER_NAME: "PLAINTEXT"
+      KAFKA_CFG_LOG_DIRS: "/bitnami/kafka/data"
+      KAFKA_CFG_AUTO_CREATE_TOPICS_ENABLE: "true"
+      KAFKA_CFG_NUM_PARTITIONS: "3"
+      KAFKA_CFG_DEFAULT_REPLICATION_FACTOR: "1"
+      KAFKA_CFG_OFFSETS_TOPIC_REPLICATION_FACTOR: "1"
+      KAFKA_CFG_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: "1"
+      KAFKA_CFG_TRANSACTION_STATE_LOG_MIN_ISR: "1"
+      ALLOW_PLAINTEXT_LISTENER: "yes"
+    volumes:
+      - kafka_data:/bitnami/kafka
+    healthcheck:
+      test: ["CMD", "kafka-topics.sh", "--bootstrap-server", "localhost:9092", "--list"]
+      interval: 15s
+      timeout: 10s
+      retries: 10
+      start_period: 30s
+
+  # ── MinIO (S3-compatible storage) ────────────────────────────────────────
+  minio:
+    image: minio/minio:latest
+    container_name: diplom-minio
+    restart: unless-stopped
+    ports:
+      - "9000:9000"   # S3 API
+      - "9001:9001"   # Web Console  →  http://localhost:9001
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
+    command: server /data --console-address ":9001"
+    volumes:
+      - minio_data:/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ── MinIO bucket initializer (run once, then exit) ───────────────────────
+  minio-init:
+    image: minio/mc:latest
+    container_name: diplom-minio-init
+    depends_on:
+      minio:
+        condition: service_healthy
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
+      S3_BUCKET: ${S3_BUCKET}
+    entrypoint: >
+      /bin/sh -c "
+        mc alias set local http://minio:9000 $$MINIO_ROOT_USER $$MINIO_ROOT_PASSWORD &&
+        mc mb --ignore-existing local/$$S3_BUCKET &&
+        mc anonymous set download local/$$S3_BUCKET &&
+        echo 'Bucket ready.'
+      "
+    restart: "no"
+
+  # ── diplom-shop (Spring Boot) ─────────────────────────────────────────────
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: diplom-app
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      MONGO_URI: mongodb://${MONGO_HOST}:${MONGO_PORT}/${MONGO_DB_SHOP}
+      S3_ENDPOINT: ${S3_ENDPOINT}
+      S3_ACCESS_KEY: ${S3_ACCESS_KEY}
+      S3_SECRET_KEY: ${S3_SECRET_KEY}
+      S3_REGION: ${S3_REGION}
+      S3_BUCKET: ${S3_BUCKET}
+      S3_PUBLIC_URL: ${S3_PUBLIC_URL}
+      SERVER_PORT: "8080"
+      KAFKA_BOOTSTRAP_SERVERS: ${KAFKA_BOOTSTRAP_SERVERS}
+      TEST_SERVICE_URL: ${TEST_SERVICE_URL}
+      TEST_SERVICE_ADMIN_USERNAME: ${TEST_SERVICE_ADMIN_USERNAME}
+      TEST_SERVICE_ADMIN_PASSWORD: ${TEST_SERVICE_ADMIN_PASSWORD}
+      NOTIFICATION_SERVICE_URL: ${NOTIFICATION_SERVICE_URL}
+      DEMOGRAPHIC_SERVICE_URL: ${DEMOGRAPHIC_SERVICE_URL}
+      ASSIGNMENT_SERVICE_URL: ${SELECTOR_SERVICE_URL}
+    depends_on:
+      mongo:
+        condition: service_healthy
+      minio-init:
+        condition: service_completed_successfully
+      kafka:
+        condition: service_healthy
+      selector-service:
+        condition: service_started
+
+  # ── diplom-test-service ───────────────────────────────────────────────────
+  test-service:
+    build:
+      context: ..
+      dockerfile: diplom-test-service/Dockerfile
+    container_name: diplom-test-service
+    restart: unless-stopped
+    ports:
+      - "8081:8081"
+    environment:
+      MONGO_URI: mongodb://${MONGO_HOST}:${MONGO_PORT}/${MONGO_DB_TESTS}
+      KAFKA_BOOTSTRAP_SERVERS: ${KAFKA_BOOTSTRAP_SERVERS}
+      SERVER_PORT: "8081"
+      TEST_SERVICE_ADMIN_USERNAME: ${TEST_SERVICE_ADMIN_USERNAME}
+      TEST_SERVICE_ADMIN_PASSWORD: ${TEST_SERVICE_ADMIN_PASSWORD}
+    depends_on:
+      mongo:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+      demographic-service:
+        condition: service_started
+
+  # ── diplom-selector-service (Kafka Streams) ───────────────────────────────
+  selector-service:
+    build:
+      context: ..
+      dockerfile: diplom-selector-service/Dockerfile
+    container_name: diplom-selector-service
+    restart: unless-stopped
+    ports:
+      - "8082:8082"
+    environment:
+      MONGO_URI: mongodb://${MONGO_HOST}:${MONGO_PORT}/${MONGO_DB_TESTS}
+      KAFKA_BOOTSTRAP_SERVERS: ${KAFKA_BOOTSTRAP_SERVERS}
+      DEMOGRAPHIC_SERVICE_URL: ${DEMOGRAPHIC_SERVICE_URL}
+      CLUSTERING_SERVICE_URL: http://clustering-service:8085
+      SERVER_PORT: "8082"
+    depends_on:
+      mongo:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+
+  # ── Clustering Service (k-means for variant assignment) ──────────────────
+  clustering-service:
+    build:
+      context: ..
+      dockerfile: diplom-clustering-service/Dockerfile
+    container_name: diplom-clustering-service
+    restart: unless-stopped
+    ports:
+      - "8085:8085"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8085/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+
+  # ── Demographic Service ──────────────────────────────────────────────────
+  demographic-service:
+    build:
+      context: ..
+      dockerfile: diplom-demographic-service/Dockerfile
+    container_name: diplom-demographic-service
+    restart: unless-stopped
+    ports:
+      - "8084:8084"
+    environment:
+      MONGO_URI: mongodb://${MONGO_HOST}:${MONGO_PORT}/${MONGO_DB_DEMOGRAPHICS}
+      SERVER_PORT: "8084"
+    depends_on:
+      mongo:
+        condition: service_healthy
+
+  # ── n8n (low-code automation, Telegram bot + AI workflow) ─────────────────
+  # Workflow is auto-imported on first start from ./n8n/*.json. The marker file
+  # /home/node/.n8n/.workflow-imported prevents re-import on subsequent restarts.
+  # Telegram & Groq tokens are read directly from $env in the workflow nodes —
+  # no n8n credentials needed (the workflow uses HTTP Request nodes everywhere).
+  n8n:
+    image: n8nio/n8n:latest
+    container_name: diplom-n8n
+    restart: unless-stopped
+    ports:
+      - "${N8N_PORT}:5678"
+    environment:
+      N8N_PORT: "5678"
+      N8N_PROTOCOL: ${N8N_PROTOCOL}
+      N8N_HOST: ${N8N_HOST}
+      WEBHOOK_URL: "${N8N_PROTOCOL}://${N8N_HOST}:${N8N_PORT}/"
+      N8N_EDITOR_BASE_URL: "${N8N_PROTOCOL}://${N8N_HOST}:${N8N_PORT}/"
+      GENERIC_TIMEZONE: ${N8N_TIMEZONE}
+      TZ: ${N8N_TIMEZONE}
+      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN}
+      GROQ_API_KEY: ${GROQ_API_KEY}
+      TEST_SERVICE_INTERNAL_URL: ${TEST_SERVICE_URL}
+      SHOP_BASE_URL: ${SHOP_URL}
+      TELEGRAM_ADMIN_CHAT_IDS: ${TELEGRAM_ADMIN_CHAT_IDS}
+      N8N_RUNNERS_ENABLED: "true"
+      N8N_BLOCK_ENV_ACCESS_IN_NODE: "false"
+      DB_SQLITE_POOL_SIZE: "5"
+    user: "node"
+    volumes:
+      - n8n_data:/home/node/.n8n
+      - ./n8n:/workflows:ro
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        set -e
+        MARKER=/home/node/.n8n/.workflow-imported
+        if [ ! -f "$$MARKER" ]; then
+          echo "[init] Importing workflows from /workflows ..."
+          for wf in /workflows/*.json; do
+            [ -e "$$wf" ] || continue
+            echo "[init]  → $$wf"
+            n8n import:workflow --input="$$wf" || echo "[init] import failed for $$wf (continuing)"
+          done
+          touch "$$MARKER"
+          echo "[init] Done."
+        else
+          echo "[init] Workflows already imported (marker present)."
+        fi
+        exec n8n start
+    depends_on:
+      - test-service
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5678/api/v1/health"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 10s
+
+  # ── n8n Init (create credentials & import workflows on startup) ──────────
+  n8n-init:
+    image: node:18-alpine
+    container_name: diplom-n8n-init
+    depends_on:
+      n8n:
+        condition: service_healthy
+    environment:
+      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN}
+      GROQ_API_KEY: ${GROQ_API_KEY}
+      N8N_URL: "http://n8n:5678"
+    volumes:
+      - ./scripts/n8n-init.js:/app/n8n-init.js:ro
+      - ./n8n:/workflows:ro
+    working_dir: /app
+    entrypoint: ["node", "n8n-init.js"]
+    restart: "no"
+
+  # ── Notification Service (email + Telegram broadcasts) ───────────────────
+  notification-service:
+    image: diplom-notification-service:latest
+    container_name: diplom-notification-service
+    restart: unless-stopped
+    ports:
+      - "8083:8083"
+    environment:
+      MONGO_URI: mongodb://${MONGO_HOST}:${MONGO_PORT}/${MONGO_DB_NOTIFICATIONS}
+      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN}
+      TELEGRAM_ADMIN_CHAT_IDS: ${TELEGRAM_ADMIN_CHAT_IDS}
+      MAIL_HOST: ${MAIL_HOST}
+      MAIL_PORT: ${MAIL_PORT}
+      MAIL_USERNAME: ${MAIL_USERNAME}
+      MAIL_PASSWORD: ${MAIL_PASSWORD}
+      MAIL_FROM: ${MAIL_FROM}
+      SHOP_URL: ${SHOP_URL}
+      TEST_SERVICE_URL: ${TEST_SERVICE_URL}
+      NOTIFICATION_EMAIL_ENABLED: ${NOTIFICATION_EMAIL_ENABLED}
+      NOTIFICATION_TELEGRAM_ENABLED: ${NOTIFICATION_TELEGRAM_ENABLED}
+    depends_on:
+      - mongo
+      - app
+      - test-service
+
+  # ── Prometheus ────────────────────────────────────────────────────────────
+  prometheus:
+    image: prom/prometheus:v2.51.2
+    container_name: diplom-prometheus
+    restart: unless-stopped
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--storage.tsdb.retention.time=30d'
+      - '--web.enable-lifecycle'
+    depends_on:
+      - app
+
+  # ── Grafana ───────────────────────────────────────────────────────────────
+  grafana:
+    image: grafana/grafana:10.4.2
+    container_name: diplom-grafana
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      GF_SECURITY_ADMIN_USER: ${GRAFANA_USER}
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_PASSWORD}
+      GF_USERS_ALLOW_SIGN_UP: "false"
+      GF_ANALYTICS_REPORTING_ENABLED: "false"
+      GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH: /etc/grafana/provisioning/dashboards/ab-tests.json
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning
+    depends_on:
+      - prometheus
+
+volumes:
+  mongo_data:
+  minio_data:
+  kafka_data:
+  n8n_data:
+  prometheus_data:
+  grafana_data:

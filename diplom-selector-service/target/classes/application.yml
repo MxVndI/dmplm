@@ -1,0 +1,46 @@
+spring:
+  application:
+    name: diplom-selector-service
+  data:
+    mongodb:
+      uri: ${MONGO_URI:mongodb://localhost:27017/diplom_tests}
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    # Kafka Streams configuration
+    streams:
+      application-id: diplom-selector
+      properties:
+        default.key.serde: org.apache.kafka.common.serialization.Serdes$StringSerde
+        default.value.serde: org.apache.kafka.common.serialization.Serdes$StringSerde
+        # State store local directory inside the container
+        state.dir: /tmp/kafka-streams/diplom-selector
+        # Ensure all messages are read from the beginning on first start
+        auto.offset.reset: earliest
+    # Producer (for forwarding results to test-participants-result)
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      properties:
+        spring.json.add.type.headers: false
+  jackson:
+    serialization:
+      write-dates-as-timestamps: false
+
+server:
+  port: ${SERVER_PORT:8082}
+
+app:
+  demographic-service-url: ${DEMOGRAPHIC_SERVICE_URL:http://localhost:8084}
+  selector:
+    fail-open-on-demographic-error: ${SELECTOR_FAIL_OPEN_ON_DEMOGRAPHIC_ERROR:false}
+
+logging:
+  level:
+    com.diplom: DEBUG
+    org.apache.kafka.streams: INFO
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,prometheus

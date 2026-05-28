@@ -1,0 +1,24 @@
+spring:
+  application:
+    name: diplom-participant-service
+  data:
+    mongodb:
+      uri: ${MONGO_URI:mongodb://localhost:27017/diplom_tests}
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+  jackson:
+    serialization:
+      write-dates-as-timestamps: false
+
+server:
+  port: ${SERVER_PORT:8085}
+
+logging:
+  level:
+    com.diplom: DEBUG
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,prometheus

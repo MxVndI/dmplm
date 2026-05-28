@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<body>
+
+<!-- Navigation Bar -->
+<nav th:fragment="navbar" class="navbar" role="navigation" aria-label="Main navigation">
+    <div class="container">
+        <a th:href="@{/}" class="navbar-brand">DiplomShop</a>
+        <ul class="navbar-links">
+            <li><a th:href="@{/}" title="Homepage">Home</a></li>
+            <li><a th:href="@{/products}" title="Product catalog">Catalog</a></li>
+
+            <li sec:authorize="isAuthenticated()">
+                <a th:href="@{/profile}" title="User profile">
+                    <span sec:authentication="name" style="font-weight: var(--font-weight-semibold)"></span>
+                </a>
+            </li>
+
+            <li sec:authorize="hasRole('ADMIN')">
+                <a th:href="@{/admin/products}" title="Manage products">
+                    Products <span class="nav-badge">P</span>
+                </a>
+            </li>
+
+            <li sec:authorize="hasRole('ADMIN')">
+                <a th:href="@{/admin/config-tests}" title="A/B testing">
+                    Tests <span class="nav-badge">T</span>
+                </a>
+            </li>
+
+            <li sec:authorize="hasRole('ADMIN')">
+                <a th:href="@{/admin/metrics}" title="Analytics">
+                    Analytics <span class="nav-badge">A</span>
+                </a>
+            </li>
+
+            <li sec:authorize="hasRole('ADMIN')">
+                <a th:href="@{/admin/notifications}" title="Notifications">
+                    Notifications <span class="nav-badge">N</span>
+                </a>
+            </li>
+
+            <li sec:authorize="isAuthenticated()">
+                <a th:href="@{/cart}" title="Shopping cart">
+                    Cart <span class="nav-badge" id="cart-count-badge"
+                        th:text="${_cartCount != null ? _cartCount : 0}">0</span>
+                </a>
+            </li>
+
+            <li sec:authorize="isAuthenticated()">
+                <a th:href="@{/orders}" title="My orders">Orders</a>
+            </li>
+
+            <li sec:authorize="!isAuthenticated()">
+                <a th:href="@{/auth/login}" class="btn btn-primary btn-sm" title="Sign in">Sign In</a>
+            </li>
+
+            <li sec:authorize="isAuthenticated()">
+                <form th:action="@{/auth/logout}" method="post" style="margin: 0; display: inline">
+                    <button type="submit" class="btn btn-secondary btn-sm" title="Sign out" aria-label="Sign out">Sign Out</button>
+                </form>
+            </li>
+        </ul>
+    </div>
+
+    <!--/* Inject tracking context for main.js — never visible to the user */-->
+    <script th:inline="javascript">
+    window.__tracking = {
+        userId:  /*[[${_trackUserId}]]*/ null,
+        testId:  /*[[${_trackTestId}]]*/ null,
+        variant: /*[[${_trackVariant}]]*/ null
+    };
+    </script>
+</nav>
+
+</body>
+</html>

@@ -1,0 +1,66 @@
+spring:
+  application:
+    name: diplom-selector-service
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    streams:
+      application-id: diplom-selector
+      properties:
+        default.key.serde: org.apache.kafka.common.serialization.Serdes$StringSerde
+        default.value.serde: org.apache.kafka.common.serialization.Serdes$StringSerde
+        # RocksDB state store local directory
+        state.dir: /tmp/kafka-streams/diplom-selector
+        # Read full history on first start so all users get their state bootstrapped
+        auto.offset.reset: earliest
+        # Changelog topic replication (State Store fault-tolerance)
+        replication.factor: 1
+        # Wait up to 5 minutes for source topics to appear before failing during rebalance
+        default.deserialization.exception.handler: org.apache.kafka.streams.errors.LogAndContinueExceptionHandler
+  jackson:
+    serialization:
+      write-dates-as-timestamps: false
+
+server:
+  port: ${SERVER_PORT:8082}
+
+# ── Sliding-window and segment thresholds ───────────────────────────────────
+app:
+  windows:
+    # Number of days for the visit-count sliding window
+    visit-days: ${VISIT_WINDOW_DAYS:7}
+
+  segments:
+    # Hours after cart-add with no purchase → CART_ABANDONER
+    cart-abandonment-hours: ${CART_ABANDONMENT_HOURS:1}
+    # Days of inactivity → INACTIVE
+    inactive-days: ${INACTIVE_DAYS:30}
+    # Minimum page visits in the 7-day window to qualify as ACTIVE_BUYER / REGULAR_VISITOR
+    active-buyer-visits: ${ACTIVE_BUYER_VISITS:5}
+    # Minimum lifetime spend (any currency) to qualify as HIGH_VALUE
+    high-value-threshold: ${HIGH_VALUE_THRESHOLD:5000}
+
+  # ── Legacy A/B test enrolment pipeline ────────────────────────────────────
+  demographic-service-url: ${DEMOGRAPHIC_SERVICE_URL:http://localhost:8084}
+  clustering-service-url: ${CLUSTERING_SERVICE_URL:http://localhost:8085}
+  selector:
+    fail-open-on-demographic-error: ${SELECTOR_FAIL_OPEN_ON_DEMOGRAPHIC_ERROR:true}
+
+logging:
+  level:
+    com.diplom: DEBUG
+    org.apache.kafka.streams: INFO
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,prometheus
+      base-path: /actuator
+  endpoint:
+    health:
+      show-details: never
+    prometheus:
+      enabled: true
+  metrics:
+    tags:
+      application: diplom-selector-service

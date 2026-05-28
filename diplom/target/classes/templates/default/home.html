@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security" lang="ru">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Главная — Магазин</title>
+    <link rel="stylesheet" th:href="@{/css/styles.css}"/>
+</head>
+<body>
+
+<div th:replace="~{fragments/nav :: navbar}"></div>
+
+<!-- Hero -->
+<section style="background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;padding:3rem 1.5rem;text-align:center">
+    <h1 style="font-size:2.5rem;font-weight:900;margin:0 0 .5rem">
+        Добро пожаловать, <span th:text="${user.firstName}">Пользователь</span>!
+    </h1>
+    <p style="font-size:1.1rem;opacity:.9;max-width:500px;margin:0 auto">
+        Просматривайте наш каталог и найдите что-нибудь, что вам понравится.
+    </p>
+    <a th:href="@{/products}" class="btn" style="margin-top:1.25rem;background:#fff;color:#764ba2;font-weight:700">
+        Перейти в каталог &rarr;
+    </a>
+</section>
+
+<div class="page-wrapper">
+
+    <!-- Поиск -->
+    <form th:action="@{/products}" method="get" class="search-bar">
+        <input type="text" name="search" placeholder="Поиск товаров..." th:value="${search}"/>
+        <button type="submit" class="btn btn-primary">Найти</button>
+    </form>
+
+    <!-- Товары -->
+    <h2 class="page-title">Все товары</h2>
+
+    <div th:if="${#lists.isEmpty(products)}" class="alert alert-success">
+        Товары ещё не добавлены.
+    </div>
+
+    <div class="products-grid" th:unless="${#lists.isEmpty(products)}">
+        <div class="product-card" th:each="p : ${products}">
+            <a th:href="@{/products/{id}(id=${p.id})}">
+                <img th:if="${p.photoUrl != null and !p.photoUrl.isEmpty()}"
+                     th:src="${p.photoUrl}" th:alt="${p.name}"/>
+                <div class="product-card-no-img" th:unless="${p.photoUrl != null and !p.photoUrl.isEmpty()}">&#128247;</div>
+            </a>
+            <div class="product-card-body">
+                <div class="product-card-name" th:text="${p.name}">Товар</div>
+                <div class="product-card-price" th:text="'$' + ${p.price}">$0.00</div>
+                <div class="product-card-desc" th:text="${p.description}">Описание</div>
+                <div class="product-card-qty"
+                     th:classappend="${p.availableQuantity == 0} ? 'out' : ''"
+                     th:text="${p.availableQuantity > 0} ? 'В наличии: ' + ${p.availableQuantity} + ' шт.' : 'Нет в наличии'">
+                </div>
+            </div>
+            <div class="product-card-footer">
+                <a th:href="@{/products/{id}(id=${p.id})}" class="btn btn-primary btn-sm btn-full">Подробнее</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script th:src="@{/js/main.js}"></script>
+</body>
+</html>

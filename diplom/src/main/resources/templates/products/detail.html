@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <meta name="description" th:content="${product.description}"/>
+    <title th:text="${product.name} + ' — DiplomShop'">Product</title>
+    <link rel="stylesheet" th:href="@{/css/styles.css}"/>
+    <link rel="preconnect" href="https://fonts.googleapis.com"/>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@300;400;500;600;700&family=Rubik:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+</head>
+<body>
+<div th:replace="~{fragments/nav :: navbar}"></div>
+
+<div class="page-wrapper" style="max-width: 1200px">
+    <!-- Navigation -->
+    <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 3rem">
+        <a th:href="@{/products}"
+           style="color: var(--color-secondary); text-decoration: none; font-weight: 600; display: flex; align-items: center; gap: 0.5rem; transition: all var(--duration-fast)"
+           onmouseover="this.style.color='var(--color-primary)'"
+           onmouseout="this.style.color='var(--color-secondary)'"
+           title="Back to catalog">
+           Catalog
+        </a>
+        <span style="color: var(--color-border)">/</span>
+        <span th:text="${product.name}" style="color: var(--color-secondary); font-weight: 600; max-width: 300px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap"></span>
+    </div>
+
+    <!-- Main Content -->
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 4rem; align-items: start">
+
+        <!-- Left: Product Image -->
+        <div>
+            <div style="background: var(--color-background); border-radius: var(--radius-lg); overflow: hidden; box-shadow: var(--shadow-md); aspect-ratio: 1; border: 1px solid var(--color-border)">
+                <img th:if="${product.photoKey != null and !product.photoKey.isEmpty()}"
+                     th:src="@{'/images/' + ${product.photoKey}}"
+                     th:alt="${product.name}"
+                     style="width: 100%; height: 100%; object-fit: cover; transition: transform var(--duration-normal) var(--ease-in-out);"
+                     loading="eager"/>
+                <div th:unless="${product.photoKey != null and !product.photoKey.isEmpty()}"
+                     style="width: 100%; height: 100%; background: linear-gradient(135deg, var(--color-muted), var(--color-secondary)); display: flex; align-items: center; justify-content: center; font-size: 5rem">
+                </div>
+            </div>
+        </div>
+
+        <!-- Right: Product Info -->
+        <div th:attr="data-product-id=${product.id}, data-product-name=${product.name}, data-product-price=${product.price}">
+            <!-- Title -->
+            <h1 style="font-size: 2.5rem; font-weight: 700; margin: 0 0 1rem; line-height: 1.2; letter-spacing: -0.02em; font-family: var(--font-heading); color: var(--color-primary)" th:text="${product.name}">
+                Product Name
+            </h1>
+
+            <!-- Price -->
+            <div style="font-size: 2.5rem; font-weight: 700; color: var(--color-primary); margin-bottom: 2rem; font-family: 'Courier New', monospace"
+                 th:text="'$' + ${#numbers.formatDecimal(product.price, 1, 2)}">
+                $0.00
+            </div>
+
+            <!-- Stock Status -->
+            <div style="margin-bottom: 2rem">
+                <div th:if="${product.availableQuantity > 0}"
+                     style="display: flex; align-items: center; gap: 0.5rem; color: var(--color-success); font-weight: 700; font-size: 1.1rem">
+                    <span>✓</span>
+                    <span th:text="'In stock: ' + ${product.availableQuantity} + ' units'">In stock</span>
+                </div>
+                <div th:unless="${product.availableQuantity > 0}"
+                     style="display: flex; align-items: center; gap: 0.5rem; color: var(--color-error); font-weight: 700; font-size: 1.1rem">
+                    <span>✕</span>
+                    <span>Out of stock</span>
+                </div>
+            </div>
+
+            <!-- Description -->
+            <p style="font-size: 1.05rem; line-height: 1.7; color: var(--color-secondary); margin-bottom: 2rem; padding: 1.5rem; background: var(--color-muted); border-radius: var(--radius-md); border-left: 3px solid var(--color-primary)"
+               th:text="${product.description}">
+                Product description
+            </p>
+
+            <!-- Add to Cart Form -->
+            <div th:if="${product.availableQuantity > 0}">
+                <form th:action="@{/cart/add}" method="post" style="display: flex; gap: 1rem; margin-bottom: 2rem">
+                    <input type="hidden" name="productId" th:value="${product.id}"/>
+                    <div style="display: flex; align-items: center; gap: 0.5rem">
+                        <label for="quantity" style="font-weight: 600; color: var(--color-primary); white-space: nowrap">Quantity:</label>
+                        <input type="number"
+                               id="quantity"
+                               name="quantity"
+                               value="1"
+                               min="1"
+                               th:max="${product.availableQuantity}"
+                               style="width: 80px; padding: 0.625rem 1rem; border: 2px solid var(--color-border); border-radius: var(--radius-md); font-size: 1rem; text-align: center; color: var(--color-primary); background: var(--color-background); transition: all var(--duration-fast)"
+                               onfocus="this.style.borderColor='var(--color-primary)'; this.style.boxShadow='0 0 12px rgba(255, 255, 255, 0.2)'"
+                               onblur="this.style.borderColor='var(--color-border)'; this.style.boxShadow='none'"/>
+                    </div>
+                    <button type="submit"
+                            class="btn btn-primary"
+                            style="flex: 1; font-size: 1.05rem; padding: 0.75rem 2rem; min-height: 48px"
+                            data-track="add-to-cart"
+                            th:data-product-id="${product.id}"
+                            th:data-product-name="${product.name}"
+                            th:data-product-price="${product.price}"
+                            th:aria-label="'Add ' + ${product.name} + ' to cart'">
+                        Add to Cart
+                    </button>
+                </form>
+            </div>
+
+            <!-- Continue Shopping -->
+            <a th:href="@{/products}"
+               class="btn btn-secondary btn-full"
+               style="font-size: 1rem; padding: 0.75rem 1.5rem; min-height: 48px"
+               title="Back to catalog">
+                Continue Shopping
+            </a>
+
+            <!-- Info Section -->
+            <div style="margin-top: 3rem; padding: 1.5rem; background: var(--color-muted); border-radius: var(--radius-md); border: 1px solid var(--color-border); color: var(--color-secondary); font-size: 0.95rem; line-height: 1.6">
+                <p style="margin: 0 0 0.5rem 0">
+                    <strong>Notice:</strong> This product is part of an A/B testing experiment. Your experience may differ from other users.
+                </p>
+                <p style="margin: 0">
+                    Your interaction helps us improve the shopping experience for everyone.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Responsive Adjustments -->
+    <style>
+        @media (max-width: 768px) {
+            .page-wrapper > div:first-of-type {
+                grid-template-columns: 1fr !important;
+                gap: 2rem !important;
+            }
+        }
+    </style>
+</div>
+
+<script th:src="@{/js/main.js}"></script>
+</body>
+</html>

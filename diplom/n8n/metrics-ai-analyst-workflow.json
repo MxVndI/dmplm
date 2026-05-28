@@ -1,0 +1,758 @@
+{
+  "name": "DiplomShop → Metrics AI Analyst",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "seconds",
+              "secondsInterval": 5
+            }
+          ]
+        }
+      },
+      "id": "node-poll-schedule",
+      "name": "Poll Every 5s",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -1200,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const staticData = $getWorkflowStaticData('global');\nconst offset = staticData.telegramOffset ?? 0;\nreturn [{ json: { offset: String(offset) } }];"
+      },
+      "id": "node-prepare-offset",
+      "name": "Prepare Offset",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -980,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "url": "={{ 'https://api.telegram.org/bot' + $env.TELEGRAM_BOT_TOKEN + '/getUpdates?offset=' + $json.offset + '&limit=10&timeout=0' }}",
+        "options": {}
+      },
+      "id": "node-get-updates",
+      "name": "Get Telegram Updates",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -760,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const body = $input.first().json;\nconst updates = body.result ?? [];\nif (!updates.length) return [];\n\nconst staticData = $getWorkflowStaticData('global');\nstaticData.telegramOffset = updates[updates.length - 1].update_id + 1;\n\nconst results = [];\nfor (const upd of updates) {\n  const msg = upd.message;\n  if (!msg || !msg.text) continue;\n  const chatId = String(msg.chat.id);\n  const text   = msg.text.trim();\n  const parts  = text.split(/\\s+/);\n  const cmd    = parts[0].toLowerCase();\n\n  if (cmd === '/start') {\n    results.push({ json: { action: 'reply', chatId, text: '👋 DiplomShop Bot\\n\\nAvailable commands:\\n/metrics <testId> — AI analysis of A/B test\\n/test_summary <testId> — raw metrics\\n/link <phone> — link your phone to your account\\n/start_test <testId> — activate a test\\n/stop_test <testId> — deactivate a test' } });\n  } else if (cmd === '/metrics' && parts[1]) {\n    results.push({ json: { action: 'ai_metrics', chatId, testId: parts[1] } });\n  } else if (cmd === '/test_summary' && parts[1]) {\n    results.push({ json: { action: 'raw_metrics', chatId, testId: parts[1] } });\n  } else if (cmd === '/link' && parts[1]) {\n    results.push({ json: { action: 'link_phone', chatId, phone: parts[1] } });\n  } else if (cmd === '/start_test' && parts[1]) {\n    results.push({ json: { action: 'start_test', chatId, testId: parts[1] } });\n  } else if (cmd === '/stop_test' && parts[1]) {\n    results.push({ json: { action: 'stop_test', chatId, testId: parts[1] } });\n  } else if (text.startsWith('/')) {\n    results.push({ json: { action: 'reply', chatId, text: '❓ Unknown command. Send /start for help.' } });\n  }\n}\nreturn results;"
+      },
+      "id": "node-parse-commands",
+      "name": "Parse Commands",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -540,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": false
+          },
+          "conditions": [
+            {
+              "id": "cond-ai",
+              "leftValue": "={{ $json.action }}",
+              "rightValue": "ai_metrics",
+              "operator": {
+                "name": "filter.operator.equals"
+              }
+            }
+          ]
+        },
+        "combineOperation": "any"
+      },
+      "id": "node-is-ai-metrics",
+      "name": "Is AI Metrics?",
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.2,
+      "position": [
+        -320,
+        80
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": false
+          },
+          "conditions": [
+            {
+              "id": "cond-raw",
+              "leftValue": "={{ $json.action }}",
+              "rightValue": "raw_metrics",
+              "operator": {
+                "name": "filter.operator.equals"
+              }
+            }
+          ]
+        },
+        "combineOperation": "any"
+      },
+      "id": "node-is-raw-metrics",
+      "name": "Is Raw Metrics?",
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.2,
+      "position": [
+        -320,
+        260
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": false
+          },
+          "conditions": [
+            {
+              "id": "cond-link",
+              "leftValue": "={{ $json.action }}",
+              "rightValue": "link_phone",
+              "operator": {
+                "name": "filter.operator.equals"
+              }
+            }
+          ]
+        },
+        "combineOperation": "any"
+      },
+      "id": "node-is-link-phone",
+      "name": "Is Link Phone?",
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.2,
+      "position": [
+        -320,
+        440
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": false
+          },
+          "conditions": [
+            {
+              "id": "cond-reply",
+              "leftValue": "={{ $json.action }}",
+              "rightValue": "reply",
+              "operator": {
+                "name": "filter.operator.equals"
+              }
+            }
+          ]
+        },
+        "combineOperation": "any"
+      },
+      "id": "node-is-reply",
+      "name": "Is Direct Reply?",
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.2,
+      "position": [
+        -320,
+        620
+      ]
+    },
+    {
+      "parameters": {
+        "url": "={{ $env.SHOP_BASE_URL + '/api/metrics/test/' + $json.testId }}",
+        "options": {}
+      },
+      "id": "node-fetch-metrics",
+      "name": "Fetch Metrics from Shop",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -80,
+        80
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const metricsData = $input.first().json;\nconst variants = metricsData.variants ?? [];\n\nlet summary = `A/B Test Report — Test ID: ${metricsData.testId}\\nTotal events: ${metricsData.totalEvents}\\n\\n`;\nfor (const v of variants) {\n  summary += `=== Variant ${v.variant} ===\\n`;\n  summary += `  Unique users:   ${v.uniqueUserCount}\\n`;\n  summary += `  Page views:     ${v.pageViews}\\n`;\n  summary += `  Clicks:         ${v.clicks}\\n`;\n  if (v.avgScrollDepth != null) summary += `  Avg scroll:     ${v.avgScrollDepth.toFixed(1)}%\\n`;\n  if (v.avgSessionMs != null)   summary += `  Avg time/page:  ${(v.avgSessionMs/1000).toFixed(1)}s\\n`;\n  summary += `  Orders:         ${v.orders ?? 0}\\n`;\n  if (v.orderRevenue != null)   summary += `  Revenue:        $${v.orderRevenue}\\n`;\n  if (v.uniqueUserCount > 0 && v.orderUsers != null)\n    summary += `  Conversion:     ${((v.orderUsers / v.uniqueUserCount) * 100).toFixed(1)}%\\n`;\n  if (v.topPages && v.topPages.length)\n    summary += `  Top pages:      ${v.topPages.slice(0,3).map(p => p.page + '×' + p.count).join(', ')}\\n`;\n  summary += `\\n`;\n}\n\nreturn [{ json: {\n  chatId:  $('node-parse-commands').first().json.chatId,\n  testId:  metricsData.testId,\n  summary,\n  metricsData\n} }];"
+      },
+      "id": "node-format-for-ai",
+      "name": "Format Metrics Summary",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        140,
+        80
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://api.groq.com/openai/v1/chat/completions",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "={{ 'Bearer ' + $env.GROQ_API_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "={{ JSON.stringify({ model: 'llama-3.3-70b-versatile', messages: [ { role: 'system', content: 'You are a UX analyst expert in A/B testing for e-commerce shops. Analyse the provided metrics and give actionable concise conclusions in 3-5 bullet points. Focus on: which variant performed better, key behavioural differences, conversion impact, and recommendations. Answer in the same language as the metrics data (Russian/English ok).' }, { role: 'user', content: 'Here are the A/B test metrics:\\n\\n' + $json.summary } ], max_tokens: 600, temperature: 0.3 }) }}",
+        "options": {}
+      },
+      "id": "node-openai-analysis",
+      "name": "OpenAI AI Analysis",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        360,
+        80
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const openaiResponse = $input.first().json;\nconst metricsNode = $('node-format-for-ai').first().json;\nconst aiText = openaiResponse.choices?.[0]?.message?.content ?? 'AI analysis unavailable.';\n\nconst out = `📊 *A/B Test Analysis*\\n\\n*Raw Summary:*\\n${metricsNode.summary}\\n🤖 *AI Insights:*\\n${aiText}`;\n\nreturn [{ json: { chatId: metricsNode.chatId, text: out } }];"
+      },
+      "id": "node-compose-ai-reply",
+      "name": "Compose AI Reply",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        580,
+        80
+      ]
+    },
+    {
+      "parameters": {
+        "url": "={{ $env.SHOP_BASE_URL + '/api/metrics/test/' + $json.testId }}",
+        "options": {}
+      },
+      "id": "node-fetch-raw-metrics",
+      "name": "Fetch Raw Metrics",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -80,
+        260
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const data = $input.first().json;\nconst variants = (data.variants ?? []).map(v =>\n  `Variant ${v.variant}: ${v.uniqueUserCount} users, ${v.pageViews} views, ${v.clicks} clicks, ${v.orders ?? 0} orders`\n).join('\\n');\nconst chatId = $('node-parse-commands').first().json.chatId;\nconst text = `📈 Raw Metrics — Test ${data.testId}\\nTotal: ${data.totalEvents} events\\n\\n${variants}`;\nreturn [{ json: { chatId, text } }];"
+      },
+      "id": "node-format-raw",
+      "name": "Format Raw Metrics",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        140,
+        260
+      ]
+    },
+    {
+      "parameters": {
+        "url": "={{ $env.SHOP_BASE_URL + '/internal/users/by-phone/' + encodeURIComponent($json.phone) }}",
+        "options": {}
+      },
+      "id": "node-lookup-phone",
+      "name": "Lookup User by Phone",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -80,
+        440
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const user = $input.first().json;\nconst chatId = $('node-parse-commands').first().json.chatId;\n\nif (!user || !user.id) {\n  return [{ json: { chatId, text: '❌ No account found with that phone number. Please check and try again.' } }];\n}\n\n// If already linked, just confirm\nif (user.telegramChatId && user.telegramChatId === chatId) {\n  return [{ json: { chatId, text: '✅ Your Telegram is already linked to account: ' + user.login, skip_link: true } }];\n}\n\nreturn [{ json: { chatId, userId: user.id, login: user.login, skip_link: false } }];"
+      },
+      "id": "node-check-phone-result",
+      "name": "Check Phone Lookup",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        140,
+        440
+      ]
+    },
+    {
+      "parameters": {
+        "url": "={{ $env.SHOP_BASE_URL + '/internal/users/' + $json.userId + '/telegram/' + $json.chatId }}",
+        "method": "PATCH",
+        "options": {}
+      },
+      "id": "node-link-telegram",
+      "name": "Link Telegram to User",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        360,
+        440
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const linked = $input.first();\nconst chatId = $('node-parse-commands').first().json.chatId;\nconst login  = $('node-check-phone-result').first().json.login ?? '?';\nreturn [{ json: { chatId, text: '✅ Telegram linked to account *' + login + '*! You can now receive test notifications.' } }];"
+      },
+      "id": "node-link-success",
+      "name": "Link Success Reply",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        580,
+        440
+      ]
+    },
+    {
+      "parameters": {
+        "url": "={{ 'https://api.telegram.org/bot' + $env.TELEGRAM_BOT_TOKEN + '/sendMessage' }}",
+        "method": "POST",
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "={{ JSON.stringify({ chat_id: $json.chatId, text: $json.text, parse_mode: 'Markdown' }) }}",
+        "options": {}
+      },
+      "id": "node-send-message",
+      "name": "Send Telegram Message",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        820,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": false
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $json.action }}",
+              "rightValue": "start_test",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ]
+        }
+      },
+      "id": "node-is-start-test",
+      "name": "Is Start Test?",
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2,
+      "position": [
+        -320,
+        800
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.TEST_SERVICE_INTERNAL_URL + '/api/tests/' + $json.testId + '/trigger' }}",
+        "options": {}
+      },
+      "id": "node-trigger-test-api",
+      "name": "Trigger Test API",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -80,
+        800
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const chatId = $input.first().json.chatId;\nconst testId = $input.first().json.testId;\nreturn [{ json: { chatId, text: 'Selection triggered for test ' + testId + '.' } }];"
+      },
+      "id": "node-start-test-reply",
+      "name": "Start Test Reply",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        140,
+        800
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": false
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $json.action }}",
+              "rightValue": "stop_test",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ]
+        }
+      },
+      "id": "node-is-stop-test",
+      "name": "Is Stop Test?",
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2,
+      "position": [
+        -320,
+        980
+      ]
+    },
+    {
+      "parameters": {
+        "method": "PATCH",
+        "url": "={{ $env.TEST_SERVICE_INTERNAL_URL + '/api/tests/' + $json.testId + '/complete' }}",
+        "options": {}
+      },
+      "id": "node-complete-test-api",
+      "name": "Complete Test API",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -80,
+        980
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const chatId = $input.first().json.chatId;\nconst testId = $input.first().json.testId;\nreturn [{ json: { chatId, text: 'Test ' + testId + ' marked as completed. Participants cleared.' } }];"
+      },
+      "id": "node-stop-test-reply",
+      "name": "Stop Test Reply",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        140,
+        980
+      ]
+    }
+  ],
+  "connections": {
+    "Poll Every 5s": {
+      "main": [
+        [
+          {
+            "node": "Prepare Offset",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Offset": {
+      "main": [
+        [
+          {
+            "node": "Get Telegram Updates",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Telegram Updates": {
+      "main": [
+        [
+          {
+            "node": "Parse Commands",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Commands": {
+      "main": [
+        [
+          {
+            "node": "Is AI Metrics?",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Is Raw Metrics?",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Is Link Phone?",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Is Direct Reply?",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Is Start Test?",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Is Stop Test?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Is AI Metrics?": {
+      "main": [
+        [
+          {
+            "node": "Fetch Metrics from Shop",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Metrics from Shop": {
+      "main": [
+        [
+          {
+            "node": "Format Metrics Summary",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Metrics Summary": {
+      "main": [
+        [
+          {
+            "node": "OpenAI AI Analysis",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI AI Analysis": {
+      "main": [
+        [
+          {
+            "node": "Compose AI Reply",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Compose AI Reply": {
+      "main": [
+        [
+          {
+            "node": "Send Telegram Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Is Raw Metrics?": {
+      "main": [
+        [
+          {
+            "node": "Fetch Raw Metrics",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Raw Metrics": {
+      "main": [
+        [
+          {
+            "node": "Format Raw Metrics",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Raw Metrics": {
+      "main": [
+        [
+          {
+            "node": "Send Telegram Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Is Link Phone?": {
+      "main": [
+        [
+          {
+            "node": "Lookup User by Phone",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Lookup User by Phone": {
+      "main": [
+        [
+          {
+            "node": "Check Phone Lookup",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Phone Lookup": {
+      "main": [
+        [
+          {
+            "node": "Link Telegram to User",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Link Telegram to User": {
+      "main": [
+        [
+          {
+            "node": "Link Success Reply",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Link Success Reply": {
+      "main": [
+        [
+          {
+            "node": "Send Telegram Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Is Direct Reply?": {
+      "main": [
+        [
+          {
+            "node": "Send Telegram Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Is Start Test?": {
+      "main": [
+        [
+          {
+            "node": "Trigger Test API",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Trigger Test API": {
+      "main": [
+        [
+          {
+            "node": "Start Test Reply",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Start Test Reply": {
+      "main": [
+        [
+          {
+            "node": "Send Telegram Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Is Stop Test?": {
+      "main": [
+        [
+          {
+            "node": "Complete Test API",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Complete Test API": {
+      "main": [
+        [
+          {
+            "node": "Stop Test Reply",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Stop Test Reply": {
+      "main": [
+        [
+          {
+            "node": "Send Telegram Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {}
+}

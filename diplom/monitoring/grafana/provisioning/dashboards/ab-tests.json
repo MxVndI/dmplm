@@ -1,0 +1,415 @@
+{
+  "uid": "ab-test-analytics",
+  "title": "A/B Test Analytics",
+  "description": "Real-time A/B test metrics: conversion, events, engagement and revenue by variant",
+  "tags": ["ab-test", "diplom"],
+  "schemaVersion": 38,
+  "version": 1,
+  "editable": true,
+  "graphTooltip": 1,
+  "time": { "from": "now-3h", "to": "now" },
+  "refresh": "30s",
+  "templating": {
+    "list": [
+      {
+        "name": "test_id",
+        "label": "Test ID",
+        "type": "query",
+        "datasource": { "type": "prometheus", "uid": "prometheus" },
+        "query": "label_values(ab_test_events_total, test_id)",
+        "refresh": 2,
+        "multi": false,
+        "includeAll": false,
+        "sort": 0
+      },
+      {
+        "name": "variant",
+        "label": "Variant",
+        "type": "query",
+        "datasource": { "type": "prometheus", "uid": "prometheus" },
+        "query": "label_values(ab_test_events_total{test_id=\"$test_id\"}, variant)",
+        "refresh": 2,
+        "multi": true,
+        "includeAll": true,
+        "current": { "text": "All", "value": "$__all" }
+      }
+    ]
+  },
+  "panels": [
+    {
+      "id": 1,
+      "title": "Название теста",
+      "type": "stat",
+      "gridPos": { "h": 3, "w": 8, "x": 0, "y": 0 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [
+        {
+          "expr": "ab_test_events_total{test_id=\"$test_id\"}",
+          "legendFormat": "{{test_name}}",
+          "instant": true
+        }
+      ],
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"] },
+        "orientation": "auto",
+        "textMode": "name",
+        "colorMode": "none",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "text": { "titleSize": 18 }
+      },
+      "fieldConfig": {
+        "defaults": { "color": { "mode": "thresholds" }, "thresholds": { "steps": [{ "color": "blue", "value": null }] } }
+      }
+    },
+    {
+      "id": 2,
+      "title": "Всего событий",
+      "type": "stat",
+      "gridPos": { "h": 3, "w": 4, "x": 8, "y": 0 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [
+        {
+          "expr": "sum(ab_test_events_total{test_id=\"$test_id\"})",
+          "legendFormat": "События",
+          "instant": true
+        }
+      ],
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"] },
+        "colorMode": "background",
+        "graphMode": "none"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "fixed", "fixedColor": "blue" },
+          "thresholds": { "steps": [{ "color": "blue", "value": null }] }
+        }
+      }
+    },
+    {
+      "id": 3,
+      "title": "Уникальных пользователей (всего)",
+      "type": "stat",
+      "gridPos": { "h": 3, "w": 4, "x": 12, "y": 0 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [
+        {
+          "expr": "sum(ab_test_unique_users{test_id=\"$test_id\"})",
+          "legendFormat": "Пользователи",
+          "instant": true
+        }
+      ],
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"] },
+        "colorMode": "background",
+        "graphMode": "none"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "fixed", "fixedColor": "green" },
+          "thresholds": { "steps": [{ "color": "green", "value": null }] }
+        }
+      }
+    },
+    {
+      "id": 4,
+      "title": "Всего заказов",
+      "type": "stat",
+      "gridPos": { "h": 3, "w": 4, "x": 16, "y": 0 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [
+        {
+          "expr": "sum(ab_test_orders{test_id=\"$test_id\"})",
+          "legendFormat": "Заказы",
+          "instant": true
+        }
+      ],
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"] },
+        "colorMode": "background",
+        "graphMode": "none"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "fixed", "fixedColor": "orange" },
+          "thresholds": { "steps": [{ "color": "orange", "value": null }] }
+        }
+      }
+    },
+    {
+      "id": 5,
+      "title": "Выручка (₽)",
+      "type": "stat",
+      "gridPos": { "h": 3, "w": 4, "x": 20, "y": 0 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [
+        {
+          "expr": "sum(ab_test_revenue{test_id=\"$test_id\"})",
+          "legendFormat": "Выручка",
+          "instant": true
+        }
+      ],
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"] },
+        "colorMode": "background",
+        "graphMode": "none"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "fixed", "fixedColor": "purple" },
+          "unit": "currencyRUB",
+          "thresholds": { "steps": [{ "color": "purple", "value": null }] }
+        }
+      }
+    },
+    {
+      "id": 10,
+      "title": "Конверсия по вариантам (%)",
+      "type": "bargauge",
+      "gridPos": { "h": 7, "w": 12, "x": 0, "y": 3 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [
+        {
+          "expr": "ab_test_conversion_rate{test_id=\"$test_id\", variant=~\"$variant\"}",
+          "legendFormat": "Вариант {{variant}}",
+          "instant": true
+        }
+      ],
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"] },
+        "orientation": "horizontal",
+        "displayMode": "gradient",
+        "showUnfilled": true,
+        "minVizWidth": 0,
+        "minVizHeight": 10
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "min": 0,
+          "max": 100,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "red",    "value": null },
+              { "color": "yellow", "value": 5 },
+              { "color": "green",  "value": 20 }
+            ]
+          },
+          "color": { "mode": "thresholds" }
+        }
+      }
+    },
+    {
+      "id": 11,
+      "title": "Уникальных пользователей по вариантам",
+      "type": "barchart",
+      "gridPos": { "h": 7, "w": 12, "x": 12, "y": 3 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [
+        {
+          "expr": "ab_test_unique_users{test_id=\"$test_id\", variant=~\"$variant\"}",
+          "legendFormat": "{{variant}}",
+          "instant": true
+        }
+      ],
+      "options": {
+        "barWidth": 0.6,
+        "groupWidth": 0.7,
+        "fillOpacity": 80,
+        "legend": { "displayMode": "list", "placement": "bottom" },
+        "tooltip": { "mode": "single" },
+        "xTickLabelRotation": 0
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": { "lineWidth": 1 }
+        }
+      }
+    },
+    {
+      "id": 20,
+      "title": "События по вариантам — динамика",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 10 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [
+        {
+          "expr": "ab_test_events_total{test_id=\"$test_id\", variant=~\"$variant\"}",
+          "legendFormat": "События — вариант {{variant}}"
+        },
+        {
+          "expr": "ab_test_unique_users{test_id=\"$test_id\", variant=~\"$variant\"}",
+          "legendFormat": "Пользователи — вариант {{variant}}"
+        },
+        {
+          "expr": "ab_test_orders{test_id=\"$test_id\", variant=~\"$variant\"}",
+          "legendFormat": "Заказы — вариант {{variant}}"
+        }
+      ],
+      "options": {
+        "tooltip": { "mode": "multi", "sort": "none" },
+        "legend": { "displayMode": "table", "placement": "bottom", "calcs": ["lastNotNull", "max"] }
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": { "lineWidth": 2, "fillOpacity": 10, "showPoints": "auto" }
+        }
+      }
+    },
+    {
+      "id": 30,
+      "title": "Просмотры страниц по вариантам",
+      "type": "barchart",
+      "gridPos": { "h": 7, "w": 8, "x": 0, "y": 18 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [
+        {
+          "expr": "ab_test_page_views{test_id=\"$test_id\", variant=~\"$variant\"}",
+          "legendFormat": "{{variant}}",
+          "instant": true
+        }
+      ],
+      "options": {
+        "barWidth": 0.6,
+        "fillOpacity": 80,
+        "legend": { "displayMode": "list", "placement": "bottom" }
+      },
+      "fieldConfig": {
+        "defaults": { "color": { "mode": "palette-classic" } }
+      }
+    },
+    {
+      "id": 31,
+      "title": "Клики по вариантам",
+      "type": "barchart",
+      "gridPos": { "h": 7, "w": 8, "x": 8, "y": 18 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [
+        {
+          "expr": "ab_test_clicks{test_id=\"$test_id\", variant=~\"$variant\"}",
+          "legendFormat": "{{variant}}",
+          "instant": true
+        }
+      ],
+      "options": {
+        "barWidth": 0.6,
+        "fillOpacity": 80,
+        "legend": { "displayMode": "list", "placement": "bottom" }
+      },
+      "fieldConfig": {
+        "defaults": { "color": { "mode": "palette-classic" } }
+      }
+    },
+    {
+      "id": 32,
+      "title": "Выручка по вариантам (₽)",
+      "type": "barchart",
+      "gridPos": { "h": 7, "w": 8, "x": 16, "y": 18 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [
+        {
+          "expr": "ab_test_revenue{test_id=\"$test_id\", variant=~\"$variant\"}",
+          "legendFormat": "{{variant}}",
+          "instant": true
+        }
+      ],
+      "options": {
+        "barWidth": 0.6,
+        "fillOpacity": 80,
+        "legend": { "displayMode": "list", "placement": "bottom" }
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "currencyRUB",
+          "color": { "mode": "palette-classic" }
+        }
+      }
+    },
+    {
+      "id": 40,
+      "title": "Среднее время на странице (с) — по вариантам",
+      "type": "timeseries",
+      "gridPos": { "h": 7, "w": 12, "x": 0, "y": 25 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [
+        {
+          "expr": "ab_test_avg_session_ms{test_id=\"$test_id\", variant=~\"$variant\"} / 1000",
+          "legendFormat": "Вариант {{variant}}"
+        }
+      ],
+      "options": {
+        "tooltip": { "mode": "multi" },
+        "legend": { "displayMode": "list", "placement": "bottom" }
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "color": { "mode": "palette-classic" },
+          "custom": { "lineWidth": 2, "fillOpacity": 15 }
+        }
+      }
+    },
+    {
+      "id": 41,
+      "title": "Средняя глубина прокрутки (%) — по вариантам",
+      "type": "timeseries",
+      "gridPos": { "h": 7, "w": 12, "x": 12, "y": 25 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [
+        {
+          "expr": "ab_test_avg_scroll_pct{test_id=\"$test_id\", variant=~\"$variant\"}",
+          "legendFormat": "Вариант {{variant}}"
+        }
+      ],
+      "options": {
+        "tooltip": { "mode": "multi" },
+        "legend": { "displayMode": "list", "placement": "bottom" }
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "min": 0,
+          "max": 100,
+          "color": { "mode": "palette-classic" },
+          "custom": { "lineWidth": 2, "fillOpacity": 15 }
+        }
+      }
+    },
+    {
+      "id": 50,
+      "title": "Конверсия — динамика по времени",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 32 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [
+        {
+          "expr": "ab_test_conversion_rate{test_id=\"$test_id\", variant=~\"$variant\"}",
+          "legendFormat": "Конверсия — вариант {{variant}}"
+        }
+      ],
+      "options": {
+        "tooltip": { "mode": "multi" },
+        "legend": { "displayMode": "table", "placement": "bottom", "calcs": ["mean", "lastNotNull", "max"] }
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "min": 0,
+          "color": { "mode": "palette-classic" },
+          "custom": { "lineWidth": 2, "fillOpacity": 20 },
+          "thresholds": {
+            "steps": [
+              { "color": "red",    "value": null },
+              { "color": "yellow", "value": 5 },
+              { "color": "green",  "value": 20 }
+            ]
+          }
+        }
+      }
+    }
+  ]
+}

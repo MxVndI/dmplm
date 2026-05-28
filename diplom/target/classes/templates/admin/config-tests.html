@@ -1,0 +1,1074 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ru">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Настраиваемые A/B Тесты — Админ</title>
+    <link rel="stylesheet" th:href="@{/css/styles.css}"/>
+    <!-- CSRF for fetch() POST/PATCH calls through the proxy -->
+    <meta id="csrf-token"  th:content="${_csrf.token}"      content=""/>
+    <meta id="csrf-header" th:content="${_csrf.headerName}" content="X-CSRF-TOKEN"/>
+    <style>
+        /* ── modal ─────────────────────────────── */
+        .modal-backdrop {
+            display: none;
+            position: fixed; inset: 0;
+            background: rgba(0,0,0,.55);
+            z-index: 999;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal-backdrop.open { display: flex; }
+        .modal {
+            background: #fff;
+            border-radius: .75rem;
+            padding: 2rem;
+            width: 100%;
+            max-width: 680px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0,0,0,.35);
+            position: relative;
+        }
+        .modal h2 { margin-top: 0; color: #1e1e2e; }
+        .modal-close {
+            position: absolute; top: 1rem; right: 1.25rem;
+            background: none; border: none; font-size: 1.5rem;
+            cursor: pointer; color: #999; line-height: 1;
+        }
+        .modal-close:hover { color: #333; }
+
+        /* ── status badges ──────────────────────── */
+        .badge-draft     { background: #f1f5f9; color: #475569; }
+        .badge-running   { background: #fef9c3; color: #854d0e; }
+        .badge-active    { background: #d1fae5; color: #065f46; }
+        .badge-completed { background: #e0e7ff; color: #3730a3; }
+
+        /* ── criteria summary ───────────────────── */
+        .criteria-pill {
+            display: inline-block;
+            background: #f1f5f9;
+            color: #475569;
+            border-radius: 99px;
+            padding: .15rem .55rem;
+            font-size: .75rem;
+            margin: .1rem;
+        }
+
+        /* ── stats bar ──────────────────────────── */
+        .stats-bar { display: flex; gap: 1.5rem; flex-wrap: wrap; margin-top: .5rem; }
+        .stat-box { text-align: center; background: #f8f9fa; border-radius: .5rem; padding: .5rem .9rem; min-width: 80px; }
+        .stat-box .stat-val { font-size: 1.4rem; font-weight: 800; color: #1e1e2e; }
+        .stat-box .stat-lbl { font-size: .75rem; color: #6c757d; }
+
+        /* ── loader ─────────────────────────────── */
+        .spinner { display: inline-block; width: 1.2rem; height: 1.2rem;
+            border: 3px solid #e2e8f0; border-top-color: #667eea;
+            border-radius: 50%; animation: spin .7s linear infinite; vertical-align: middle; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* ── tag input ──────────────────────────── */
+        .tag-input-wrap { display: flex; flex-wrap: wrap; gap: .35rem;
+            border: 1.5px solid #ced4da; border-radius: .4rem; padding: .4rem .6rem;
+            background: #fff; cursor: text; min-height: 2.6rem; align-items: center; }
+        .tag-input-wrap:focus-within { border-color: #667eea; box-shadow: 0 0 0 3px rgba(102,126,234,.15); }
+        .tag-item { background: #667eea; color: #fff; border-radius: 99px;
+            padding: .15rem .5rem; font-size: .8rem; display: flex; align-items: center; gap: .25rem; }
+        .tag-item button { background: none; border: none; color: #fff; cursor: pointer; font-size: .9rem; padding: 0; line-height: 1; }
+        .tag-real-input { border: none; outline: none; flex: 1; min-width: 100px; font-size: .9rem; background: transparent; }
+
+        td .btn { white-space: nowrap; }
+        .action-row { display: flex; gap: .4rem; flex-wrap: wrap; }
+
+        /* ── stats modal charts ─────────────────────── */
+        #statsModal .modal { max-width: 860px; }
+        .charts-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; margin: 1rem 0 1.5rem; }
+        @media(max-width:640px){ .charts-row { grid-template-columns: 1fr; } }
+        .chart-box { background: #f8fafc; border-radius: .75rem; padding: 1rem; }
+        .chart-box h4 { margin: 0 0 .6rem; font-size: .82rem; color: #64748b;
+                        text-transform: uppercase; letter-spacing: .05em; }
+        .sig-pill-sm { display:inline-block; background:rgba(0,0,0,.07); border-radius:99px;
+                       padding:.2rem .65rem; font-size:.78rem; font-weight:600; margin:.15rem; }
+        .winner-sm { background:#10b981; color:#fff; border-radius:99px;
+                     padding:.25rem .8rem; font-weight:700; font-size:.82rem; }
+
+        #toast { position: fixed; bottom: 1.5rem; right: 1.5rem; z-index: 9999;
+            background: #1e1e2e; color: #fff; padding: .75rem 1.25rem;
+            border-radius: .5rem; font-size: .9rem; display: none;
+            box-shadow: 0 4px 20px rgba(0,0,0,.3); }
+    </style>
+</head>
+<body>
+<div th:replace="~{fragments/nav :: navbar}"></div>
+
+<!-- Toast notification -->
+<div id="toast"></div>
+
+<!-- Stats/Participants modal -->
+<div class="modal-backdrop" id="statsModal">
+    <div class="modal">
+        <button class="modal-close" onclick="closeModal('statsModal')">×</button>
+        <h2 id="modalTitle">Детали теста</h2>
+        <div id="modalBody"><span class="spinner"></span></div>
+    </div>
+</div>
+
+<!-- Edit Test Modal -->
+<div class="modal-backdrop" id="editModal">
+    <div class="modal">
+        <button class="modal-close" onclick="closeModal('editModal')">×</button>
+        <h2> Редактировать A/B Тест</h2>
+        <input type="hidden" id="e-id"/>
+
+        <div class="form-group">
+            <label> Название теста *</label>
+            <input type="text" id="e-name" placeholder=" Тест главной страницы" />
+        </div>
+        <div class="form-group">
+            <label> Описание</label>
+            <input type="text" id="e-desc" placeholder=" Какую гипотезу тестируем?" />
+        </div>
+
+        <hr style="margin:1.25rem 0;border-color:#e9ecef"/>
+        <h3 style="margin:0 0 1rem;font-size:1rem;color:#555"> Критерии отбора <span style="font-weight:400;color:#999">(оставить пустым = любые)</span></h3>
+
+        <div class="form-group" style="margin-bottom:.75rem">
+            <button type="button" class="btn btn-outline" style="color:#2563eb;border-color:#2563eb" onclick="openServicePicker('edit')">+ Добавить сервис</button>
+            <div id="editServiceBadges" style="display:flex;gap:.4rem;flex-wrap:wrap;margin-top:.55rem"></div>
+        </div>
+        <div id="editServicePicker" style="display:none;background:#f8fafc;border:1px solid #e2e8f0;border-radius:.5rem;padding:.75rem;margin-bottom:1rem">
+            <div class="form-row">
+                <div class="form-group">
+                    <label> Источник данных</label>
+                    <select id="editServiceSelect" onchange="renderServiceFields('edit')">
+                        <option value="shop"> Профиль магазина</option>
+                        <option value="demographic"> Демографический сервис</option>
+                    </select>
+                </div>
+            </div>
+            <div id="editServiceFields" style="display:flex;gap:.6rem;flex-wrap:wrap;margin:.35rem 0 .75rem"></div>
+            <div style="display:flex;justify-content:flex-end">
+                <button type="button" class="btn btn-primary btn-sm" onclick="applyServiceSelection('edit')">Добавить выбранные поля</button>
+            </div>
+        </div>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label> Возраст от</label>
+                <input type="number" id="e-ageMin" placeholder="напр. 18" min="0" max="120"/>
+            </div>
+            <div class="form-group">
+                <label> Возраст до</label>
+                <input type="number" id="e-ageMax" placeholder="напр. 45" min="0" max="120"/>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label> Страны <span style="font-weight:400;color:#999">— нажмите Enter для добавления</span></label>
+            <div class="tag-input-wrap" id="e-wrap-countries" onclick="this.querySelector('input').focus()">
+                <input class="tag-real-input" id="e-inp-countries" placeholder="напр. Россия" onkeydown="eTagKey(event,'countries')"/>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label> Языки <span style="font-weight:400;color:#999">— нажмите Enter для добавления</span></label>
+            <div class="tag-input-wrap" id="e-wrap-languages" onclick="this.querySelector('input').focus()">
+                <input class="tag-real-input" id="e-inp-languages" placeholder="напр. Русский" onkeydown="eTagKey(event,'languages')"/>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label> Пол</label>
+            <span id="g-edit-anchor" style="display:none"></span>
+            <div style="display:flex;gap:.75rem;flex-wrap:wrap;margin-top:.25rem">
+                <label style="display:flex;align-items:center;gap:.35rem;font-weight:normal;cursor:pointer">
+                    <input type="checkbox" value="MALE" class="eg-check"/> Мужской
+                </label>
+                <label style="display:flex;align-items:center;gap:.35rem;font-weight:normal;cursor:pointer">
+                    <input type="checkbox" value="FEMALE" class="eg-check"/> Женский
+                </label>
+                <label style="display:flex;align-items:center;gap:.35rem;font-weight:normal;cursor:pointer">
+                    <input type="checkbox" value="OTHER" class="eg-check"/> Другой
+                </label>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label> Уровень дохода <span style="font-weight:400;color:#999">— нажмите Enter для добавления</span></label>
+            <div class="tag-input-wrap" id="e-wrap-incomeLevels" onclick="this.querySelector('input').focus()">
+                <input class="tag-real-input" id="e-inp-incomeLevels" placeholder="напр. LOW" onkeydown="eTagKey(event,'incomeLevels')"/>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label> Образование <span style="font-weight:400;color:#999">— нажмите Enter для добавления</span></label>
+            <div class="tag-input-wrap" id="e-wrap-educationLevels" onclick="this.querySelector('input').focus()">
+                <input class="tag-real-input" id="e-inp-educationLevels" placeholder="напр. HIGHER" onkeydown="eTagKey(event,'educationLevels')"/>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label> Занятость <span style="font-weight:400;color:#999">— нажмите Enter для добавления</span></label>
+            <div class="tag-input-wrap" id="e-wrap-occupations" onclick="this.querySelector('input').focus()">
+                <input class="tag-real-input" id="e-inp-occupations" placeholder="напр. EMPLOYED" onkeydown="eTagKey(event,'occupations')"/>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label> Интересы <span style="font-weight:400;color:#999">— нажмите Enter для добавления</span></label>
+            <div class="tag-input-wrap" id="e-wrap-interests" onclick="this.querySelector('input').focus()">
+                <input class="tag-real-input" id="e-inp-interests" placeholder="напр. технологии" onkeydown="eTagKey(event,'interests')"/>
+            </div>
+        </div>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label> Макс. участников</label>
+                <input type="number" id="e-maxPart" placeholder="без ограничений" min="1"/>
+            </div>
+            <div class="form-group">
+                <label> Соотношение вариантов A % <span style="font-weight:400;color:#999">(по умолчанию 50)</span></label>
+                <input type="number" id="e-ratio" placeholder="50" min="0" max="100"/>
+            </div>
+        </div>
+
+        <div style="display:flex;gap:.75rem;justify-content:flex-end;margin-top:1.5rem">
+            <button class="btn btn-outline" onclick="closeModal('editModal')" style="color:#475569">Отмена</button>
+            <button class="btn btn-success" onclick="submitEdit()">Сохранить изменения</button>
+        </div>
+    </div>
+</div>
+
+<!-- Create Test Modal -->
+<div class="modal-backdrop" id="createModal">
+    <div class="modal">
+        <button class="modal-close" onclick="closeModal('createModal')">×</button>
+        <h2> Создать A/B Тест</h2>
+
+        <div class="form-group">
+            <label> Название теста *</label>
+            <input type="text" id="f-name" placeholder="Тест главной страницы" />
+        </div>
+        <div class="form-group">
+            <label>Описание</label>
+            <input type="text" id="f-desc" placeholder="Какую гипотезу тестируем?" />
+        </div>
+
+        <hr style="margin:1.25rem 0;border-color:#e9ecef"/>
+        <h3 style="margin:0 0 1rem;font-size:1rem;color:#555"> Критерии отбора <span style="font-weight:400;color:#999">(оставить пустым = любые)</span></h3>
+
+        <div class="form-group" style="margin-bottom:.75rem">
+            <button type="button" class="btn btn-outline" style="color:#2563eb;border-color:#2563eb" onclick="openServicePicker('create')">+ Добавить сервис</button>
+            <div id="createServiceBadges" style="display:flex;gap:.4rem;flex-wrap:wrap;margin-top:.55rem"></div>
+        </div>
+        <div id="createServicePicker" style="display:none;background:#f8fafc;border:1px solid #e2e8f0;border-radius:.5rem;padding:.75rem;margin-bottom:1rem">
+            <div class="form-row">
+                <div class="form-group">
+                    <label> Источник данных</label>
+                    <select id="createServiceSelect" onchange="renderServiceFields('create')">
+                        <option value="shop"> Профиль магазина</option>
+                        <option value="demographic"> Демографический сервис</option>
+                    </select>
+                </div>
+            </div>
+            <div id="createServiceFields" style="display:flex;gap:.6rem;flex-wrap:wrap;margin:.35rem 0 .75rem"></div>
+            <div style="display:flex;justify-content:flex-end">
+                <button type="button" class="btn btn-primary btn-sm" onclick="applyServiceSelection('create')">Добавить выбранные поля</button>
+            </div>
+        </div>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label> Возраст от</label>
+                <input type="number" id="f-ageMin" placeholder="напр. 18" min="0" max="120"/>
+            </div>
+            <div class="form-group">
+                <label> Возраст до</label>
+                <input type="number" id="f-ageMax" placeholder="напр. 45" min="0" max="120"/>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label> Страны <span style="font-weight:400;color:#999">— нажмите Enter для добавления</span></label>
+            <div class="tag-input-wrap" id="wrap-countries" onclick="this.querySelector('input').focus()">
+                <input class="tag-real-input" id="inp-countries" placeholder="напр. Россия" onkeydown="tagKey(event,'countries')"/>
+            </div>
+            <input type="hidden" id="f-countries"/>
+        </div>
+
+        <div class="form-group">
+            <label> Языки <span style="font-weight:400;color:#999">— нажмите Enter для добавления</span></label>
+            <div class="tag-input-wrap" id="wrap-languages" onclick="this.querySelector('input').focus()">
+                <input class="tag-real-input" id="inp-languages" placeholder="напр. Русский" onkeydown="tagKey(event,'languages')"/>
+            </div>
+            <input type="hidden" id="f-languages"/>
+        </div>
+
+        <div class="form-group">
+            <label> Пол</label>
+            <span id="g-create-anchor" style="display:none"></span>
+            <div style="display:flex;gap:.75rem;flex-wrap:wrap;margin-top:.25rem">
+                <label style="display:flex;align-items:center;gap:.35rem;font-weight:normal;cursor:pointer">
+                    <input type="checkbox" value="MALE" class="g-check"/> Мужской
+                </label>
+                <label style="display:flex;align-items:center;gap:.35rem;font-weight:normal;cursor:pointer">
+                    <input type="checkbox" value="FEMALE" class="g-check"/> Женский
+                </label>
+                <label style="display:flex;align-items:center;gap:.35rem;font-weight:normal;cursor:pointer">
+                    <input type="checkbox" value="OTHER" class="g-check"/> Другой
+                </label>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label>Уровень дохода <span style="font-weight:400;color:#999">— нажмите Enter для добавления</span></label>
+            <div class="tag-input-wrap" id="wrap-incomeLevels" onclick="this.querySelector('input').focus()">
+                <input class="tag-real-input" id="inp-incomeLevels" placeholder="напр. LOW" onkeydown="tagKey(event,'incomeLevels')"/>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label> Образование <span style="font-weight:400;color:#999">— нажмите Enter для добавления</span></label>
+            <div class="tag-input-wrap" id="wrap-educationLevels" onclick="this.querySelector('input').focus()">
+                <input class="tag-real-input" id="inp-educationLevels" placeholder="напр. HIGHER" onkeydown="tagKey(event,'educationLevels')"/>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label> Занятость <span style="font-weight:400;color:#999">— нажмите Enter для добавления</span></label>
+            <div class="tag-input-wrap" id="wrap-occupations" onclick="this.querySelector('input').focus()">
+                <input class="tag-real-input" id="inp-occupations" placeholder="напр. EMPLOYED" onkeydown="tagKey(event,'occupations')"/>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label> Интересы <span style="font-weight:400;color:#999">— нажмите Enter для добавления</span></label>
+            <div class="tag-input-wrap" id="wrap-interests" onclick="this.querySelector('input').focus()">
+                <input class="tag-real-input" id="inp-interests" placeholder="напр. технологии" onkeydown="tagKey(event,'interests')"/>
+            </div>
+        </div>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label> Макс. участников</label>
+                <input type="number" id="f-maxPart" placeholder="без ограничений" min="1"/>
+            </div>
+            <div class="form-group">
+                <label>Соотношение вариантов A % <span style="font-weight:400;color:#999">(по умолчанию 50)</span></label>
+                <input type="number" id="f-ratio" placeholder="50" min="0" max="100"/>
+            </div>
+        </div>
+
+        <div style="display:flex;gap:.75rem;justify-content:flex-end;margin-top:1.5rem">
+            <button class="btn btn-outline" onclick="closeModal('createModal')" style="color:#475569">Отмена</button>
+            <button class="btn btn-success" onclick="submitCreate()">Создать тест</button>
+        </div>
+    </div>
+</div>
+
+<!-- ── Main page ───────────────────────────────────────────── -->
+<div class="page-wrapper">
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem;margin-bottom:1.5rem">
+        <h1 class="page-title" style="margin:0"> Настраиваемые A/B Тесты</h1>
+        <div style="display:flex;gap:.75rem">
+            <a class="btn btn-outline" style="color:#7c3aed;border-color:#7c3aed" href="/admin/templates">HTML Шаблоны</a>
+            <button class="btn btn-primary" onclick="openModal('createModal')">+ Создать тест</button>
+            <button class="btn btn-outline" style="color:#475569" onclick="loadTests()">↻ Обновить</button>
+        </div>
+    </div>
+
+    <div id="msgArea"></div>
+
+    <div class="admin-section">
+        <div id="testsContainer">
+            <span class="spinner"></span> Загрузка…
+        </div>
+    </div>
+</div>
+
+<script>
+    // Proxy endpoint — same-origin, no CORS needed.
+    const API = '/admin/api/proxy/tests';
+
+    // CSRF token for POST/PATCH/DELETE requests
+    const csrfToken  = document.getElementById('csrf-token')?.getAttribute('content');
+    const csrfHeader = document.getElementById('csrf-header')?.getAttribute('content') || 'X-CSRF-TOKEN';
+
+    /* ── tag-input helpers ─────────────────────────────────── */
+    const tags = {
+        countries: [],
+        languages: [],
+        incomeLevels: [],
+        educationLevels: [],
+        occupations: [],
+        interests: []
+    };
+
+    const serviceCatalog = {
+        shop: {
+            label: 'Профиль магазина',
+            fields: [
+                { key: 'age', label: 'Возраст' },
+                { key: 'countries', label: 'Страны' },
+                { key: 'languages', label: 'Языки' },
+                { key: 'genders', label: 'Пол' },
+                { key: 'maxParticipants', label: 'Макс. участников' },
+                { key: 'variantARatio', label: 'Соотношение A/B' }
+            ]
+        },
+        demographic: {
+            label: 'Демографический сервис',
+            fields: [
+                { key: 'incomeLevels', label: 'Уровень дохода' },
+                { key: 'educationLevels', label: 'Образование' },
+                { key: 'occupations', label: 'Занятость' },
+                { key: 'interests', label: 'Интересы' }
+            ]
+        }
+    };
+
+    const fieldTargets = {
+        create: {
+            age: ['f-ageMin'],
+            countries: ['inp-countries'],
+            languages: ['inp-languages'],
+            genders: ['g-create-anchor'],
+            maxParticipants: ['f-maxPart'],
+            variantARatio: ['f-ratio'],
+            incomeLevels: ['inp-incomeLevels'],
+            educationLevels: ['inp-educationLevels'],
+            occupations: ['inp-occupations'],
+            interests: ['inp-interests']
+        },
+        edit: {
+            age: ['e-ageMin'],
+            countries: ['e-inp-countries'],
+            languages: ['e-inp-languages'],
+            genders: ['g-edit-anchor'],
+            maxParticipants: ['e-maxPart'],
+            variantARatio: ['e-ratio'],
+            incomeLevels: ['e-inp-incomeLevels'],
+            educationLevels: ['e-inp-educationLevels'],
+            occupations: ['e-inp-occupations'],
+            interests: ['e-inp-interests']
+        }
+    };
+
+    const selectedServices = {
+        create: new Set(),
+        edit: new Set()
+    };
+
+    const selectedFields = {
+        create: new Set(),
+        edit: new Set()
+    };
+
+    function openServicePicker(mode) {
+        const box = document.getElementById(mode + 'ServicePicker');
+        box.style.display = box.style.display === 'none' || !box.style.display ? 'block' : 'none';
+        renderServiceFields(mode);
+    }
+
+    function renderServiceFields(mode) {
+        const service = document.getElementById(mode + 'ServiceSelect').value;
+        const holder = document.getElementById(mode + 'ServiceFields');
+        const fields = serviceCatalog[service].fields;
+        holder.innerHTML = fields.map(f => `
+            <label style="display:flex;align-items:center;gap:.35rem;cursor:pointer;background:#fff;border:1px solid #cbd5e1;border-radius:999px;padding:.28rem .7rem;font-size:.82rem">
+                <input type="checkbox" value="${f.key}"/>
+                ${f.label}
+            </label>
+        `).join('');
+    }
+
+    function applyServiceSelection(mode) {
+        const service = document.getElementById(mode + 'ServiceSelect').value;
+        const holder = document.getElementById(mode + 'ServiceFields');
+        const picked = [...holder.querySelectorAll('input[type="checkbox"]:checked')].map(c => c.value);
+        if (!picked.length) {
+            toast('Выберите хотя бы одно поле', false);
+            return;
+        }
+        selectedServices[mode].add(service);
+        picked.forEach(p => selectedFields[mode].add(p));
+        renderServiceBadges(mode);
+        applyFieldVisibility(mode);
+        holder.querySelectorAll('input[type="checkbox"]').forEach(c => c.checked = false);
+    }
+
+    function removeService(mode, service) {
+        selectedServices[mode].delete(service);
+        serviceCatalog[service].fields.forEach(f => selectedFields[mode].delete(f.key));
+        renderServiceBadges(mode);
+        applyFieldVisibility(mode);
+    }
+
+    function renderServiceBadges(mode) {
+        const id = mode === 'create' ? 'createServiceBadges' : 'editServiceBadges';
+        const holder = document.getElementById(id);
+        if (!selectedServices[mode].size) {
+            holder.innerHTML = '<span class="criteria-pill"> Нет добавленных сервисов</span>';
+            return;
+        }
+        holder.innerHTML = [...selectedServices[mode]].map(s =>
+            `<span class="criteria-pill">${serviceCatalog[s].label} <button type="button" style="border:none;background:transparent;cursor:pointer;color:#334155;font-weight:700" onclick="removeService('${mode}','${s}')">×</button></span>`
+        ).join('');
+    }
+
+    function applyFieldVisibility(mode) {
+        const map = fieldTargets[mode];
+        Object.keys(map).forEach(field => setFieldVisible(mode, field, selectedFields[mode].has(field)));
+    }
+
+    function setFieldVisible(mode, field, visible) {
+        const ids = fieldTargets[mode][field] || [];
+        ids.forEach(id => {
+            const el = document.getElementById(id);
+            if (!el) return;
+            const container = el.closest('.form-group, .form-row');
+            if (container) container.style.display = visible ? '' : 'none';
+        });
+    }
+
+    function syncServiceSelectionFromCriteria(mode, criteria = {}) {
+        selectedServices[mode].clear();
+        selectedFields[mode].clear();
+
+        const shopFields = ['age', 'countries', 'languages', 'genders', 'maxParticipants', 'variantARatio'];
+        const demographicFields = ['incomeLevels', 'educationLevels', 'occupations', 'interests'];
+
+        if (criteria.ageMin != null || criteria.ageMax != null) selectedFields[mode].add('age');
+        if (criteria.countries?.length) selectedFields[mode].add('countries');
+        if (criteria.languages?.length) selectedFields[mode].add('languages');
+        if (criteria.genders?.length) selectedFields[mode].add('genders');
+        if (criteria.maxParticipants != null) selectedFields[mode].add('maxParticipants');
+        if (criteria.variantARatio != null) selectedFields[mode].add('variantARatio');
+        if (criteria.incomeLevels?.length) selectedFields[mode].add('incomeLevels');
+        if (criteria.educationLevels?.length) selectedFields[mode].add('educationLevels');
+        if (criteria.occupations?.length) selectedFields[mode].add('occupations');
+        if (criteria.interests?.length) selectedFields[mode].add('interests');
+
+        if (shopFields.some(f => selectedFields[mode].has(f))) selectedServices[mode].add('shop');
+        if (demographicFields.some(f => selectedFields[mode].has(f))) selectedServices[mode].add('demographic');
+
+        renderServiceBadges(mode);
+        applyFieldVisibility(mode);
+    }
+
+    function tagKey(e, field) {
+        if (e.key !== 'Enter' && e.key !== ',') return;
+        e.preventDefault();
+        const val = e.target.value.trim();
+        if (!val || tags[field].includes(val)) { e.target.value = ''; return; }
+        tags[field].push(val);
+        renderTags(field);
+        e.target.value = '';
+    }
+
+    function removeTag(field, val) {
+        tags[field] = tags[field].filter(t => t !== val);
+        renderTags(field);
+    }
+
+    function renderTags(field) {
+        const wrap = document.getElementById('wrap-' + field);
+        const inp  = document.getElementById('inp-' + field);
+        wrap.querySelectorAll('.tag-item').forEach(el => el.remove());
+        tags[field].forEach(v => {
+            const span = document.createElement('span');
+            span.className = 'tag-item';
+            span.innerHTML = `${v}<button type="button" onclick="removeTag('${field}','${v}')">×</button>`;
+            wrap.insertBefore(span, inp);
+        });
+    }
+
+    /* ── modal helpers ─────────────────────────────────────── */
+    function openModal(id) { document.getElementById(id).classList.add('open'); }
+    function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+    document.querySelectorAll('.modal-backdrop').forEach(b =>
+        b.addEventListener('click', e => { if (e.target === b) b.classList.remove('open'); })
+    );
+
+    /* ── toast ─────────────────────────────────────────────── */
+    let toastTimer;
+    function toast(msg, ok = true) {
+        const el = document.getElementById('toast');
+        el.textContent = msg;
+        el.style.background = ok ? '#1e1e2e' : '#dc3545';
+        el.style.display = 'block';
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(() => el.style.display = 'none', 3000);
+    }
+
+    /* ── API calls ──────────────────────────────────────────── */
+    async function api(path, method = 'GET', body = null) {
+        const headers = { 'Content-Type': 'application/json' };
+        if (method !== 'GET') headers[csrfHeader] = csrfToken;
+        const opts = { method, headers };
+        if (body) opts.body = JSON.stringify(body);
+        const res = await fetch(API + path, opts);
+        if (!res.ok) {
+            const txt = await res.text();
+            throw new Error(txt || res.statusText);
+        }
+        const ct = res.headers.get('content-type') || '';
+        return ct.includes('application/json') ? res.json() : null;
+    }
+
+    /* ── Load & render tests ────────────────────────────────── */
+    async function loadTests() {
+        const container = document.getElementById('testsContainer');
+        container.innerHTML = '<span class="spinner"></span> Загрузка…';
+        try {
+            const tests = await api('');
+            if (!tests || tests.length === 0) {
+                container.innerHTML = '<p class="text-muted">Тестов пока нет. Нажмите «+ Создать тест» чтобы добавить.</p>';
+                return;
+            }
+            container.innerHTML = renderTable(tests);
+        } catch (err) {
+            container.innerHTML = `<div class="alert alert-error">⚠ Сервис тестов недоступен: ${err.message}<br><small>Убедитесь, что diplom-test-service запущен на порту 8081.</small></div>`;
+        }
+    }
+
+    function statusBadge(s) {
+        const cls = { DRAFT: 'badge-draft', RUNNING: 'badge-running', ACTIVE: 'badge-active', COMPLETED: 'badge-completed' };
+        return `<span class="badge ${cls[s] || ''}">${s}</span>`;
+    }
+
+    function criteriaHtml(c) {
+        if (!c) return '<span class="text-muted">—</span>';
+        const pills = [];
+        if (c.ageMin != null || c.ageMax != null)
+            pills.push(`age ${c.ageMin ?? '?'}–${c.ageMax ?? '?'}`);
+        if (c.countries?.length)  pills.push('🌍 ' + c.countries.join(', '));
+        if (c.languages?.length)  pills.push('🗣 ' + c.languages.join(', '));
+        if (c.genders?.length)    pills.push(c.genders.join('/'));
+        if (c.incomeLevels?.length) pills.push('доход: ' + c.incomeLevels.join(', '));
+        if (c.educationLevels?.length) pills.push('образование: ' + c.educationLevels.join(', '));
+        if (c.occupations?.length) pills.push('занятость: ' + c.occupations.join(', '));
+        if (c.interests?.length) pills.push('интересы: ' + c.interests.join(', '));
+        if (c.maxParticipants)    pills.push(`max ${c.maxParticipants}`);
+        if (c.variantARatio != null) pills.push(`A:${c.variantARatio}% B:${100 - c.variantARatio}%`);
+        return pills.length
+            ? pills.map(p => `<span class="criteria-pill">${p}</span>`).join('')
+            : '<span class="text-muted">любые пользователи</span>';
+    }
+
+    function renderTable(tests) {
+        return `
+        <div class="table-wrapper">
+        <table>
+            <thead><tr>
+                <th>ID</th>
+                <th>Название</th>
+                <th>Критерии</th>
+                <th>Статус</th>
+                <th>Участников</th>
+                <th>Создан</th>
+                <th>Действия</th>
+            </tr></thead>
+            <tbody>
+            ${tests.map(t => `
+                <tr>
+                    <td style="font-family:monospace;font-size:.75rem;white-space:nowrap">${t.id.substring(0,12)}... <button type="button" onclick="navigator.clipboard.writeText(`+"`"+`${t.id}`+"`"+`).then(()=>toast('ID скопирован')).catch(()=>{})" style="background:none;border:none;cursor:pointer;font-size:.85rem" title="Скопировать ID">📋</button></td>
+                    <td style="font-family:monospace;font-size:.75rem;white-space:nowrap">${t.id.substring(0,10)}... <button type="button" onclick="navigator.clipboard.writeText(t.id).then(()=>toast('ID скопирован ✓')).catch(()=>{})" style="background:none;border:none;cursor:pointer;font-size:.85rem" title="Скопировать ID">📋</button></td>
+                    <td><strong>${t.name}</strong>${t.description ? `<br><small class="text-muted">${t.description}</small>` : ''}</td>
+                    <td>${criteriaHtml(t.criteria)}</td>
+                    <td>${statusBadge(t.status)}</td>
+                    <td>${t.enrolledCount ?? 0}</td>
+                    <td>${t.createdAt ? new Date(t.createdAt).toLocaleDateString('ru') : '—'}</td>
+                    <td>
+                        <div class="action-row">
+                            ${t.status !== 'COMPLETED' && t.status !== 'RUNNING'
+                                ? `<button class="btn btn-primary btn-sm" onclick="triggerTest('${t.id}')">▶ Запустить</button>` : ''}
+                            ${t.status === 'RUNNING'
+                                ? `<button class="btn btn-success btn-sm" onclick="activateTest('${t.id}')">✓ Активировать</button>` : ''}
+                            ${t.status === 'ACTIVE'
+                                ? `<button class="btn btn-outline btn-sm" style="color:#475569" onclick="completeTest('${t.id}')">✗ Завершить</button>` : ''}
+                            ${t.status !== 'RUNNING'
+                                ? `<button class="btn btn-outline btn-sm" style="color:#2563eb" onclick="openEdit(${JSON.stringify(t).replace(/"/g,'&quot;')})">✏ Изменить</button>` : ''}
+                            ${t.status !== 'RUNNING'
+                                ? `<button class="btn btn-outline btn-sm" style="color:#7c3aed" onclick="restartTest('${t.id}')">🔄 Перезапустить</button>` : ''}
+                            <button class="btn btn-outline btn-sm" style="color:#667eea" onclick="openStats('${t.id}','${t.name}')">📊 Статистика</button>
+                            <button class="btn btn-danger btn-sm" onclick="deleteTest('${t.id}','${t.name}')">🗑</button>
+                        </div>
+                    </td>
+                </tr>
+            `).join('')}
+            </tbody>
+        </table>
+        </div>`;
+    }
+
+    /* ── Actions ────────────────────────────────────────────── */
+    async function triggerTest(id) {
+        try {
+            await api(`/${id}/trigger`, 'POST');
+            toast('Запущен отбор пользователей...');
+            loadTests();
+        } catch (e) { toast('Ошибка: ' + e.message, false); }
+    }
+
+    async function activateTest(id) {
+        try {
+            await api(`/${id}/activate`, 'PATCH');
+            toast('Тест активирован ✓');
+            loadTests();
+        } catch (e) { toast('Ошибка: ' + e.message, false); }
+    }
+
+    async function completeTest(id) {
+        if (!confirm('Перевести тест в статус Завершён?')) return;
+        try {
+            await api(`/${id}/complete`, 'PATCH');
+            toast('Тест завершён.');
+            loadTests();
+        } catch (e) { toast('Ошибка: ' + e.message, false); }
+    }
+
+    async function deleteTest(id, name) {
+        if (!confirm(`дУдалить тест "${name}" и всех его участников?\nЭто действие необратимо.`)) return;
+        try {
+            const headers = { 'Content-Type': 'application/json' };
+            headers[csrfHeader] = csrfToken;
+            const res = await fetch(API + '/' + id, { method: 'DELETE', headers });
+            if (!res.ok) throw new Error(await res.text());
+            toast('Тест удалён.');
+            loadTests();
+        } catch (e) { toast('Ошибка: ' + e.message, false); }
+    }
+
+    async function restartTest(id) {
+        if (!confirm('ерезапустить тест?\n\nсе текущие участники будут удалены и отбор запустится заново.')) return;
+        try {
+            await api(`/${id}/restart`, 'POST');
+            toast('Тест перезапущен - идёт отбор...');
+            loadTests();
+        } catch (e) { toast('Ошибка: ' + e.message, false); }
+    }
+
+    /* ── Edit modal ─────────────────────────────────────────── */
+    const eTags = {
+        countries: [],
+        languages: [],
+        incomeLevels: [],
+        educationLevels: [],
+        occupations: [],
+        interests: []
+    };
+
+    function eTagKey(e, field) {
+        if (e.key !== 'Enter' && e.key !== ',') return;
+        e.preventDefault();
+        const val = e.target.value.trim();
+        if (!val || eTags[field].includes(val)) { e.target.value = ''; return; }
+        eTags[field].push(val);
+        eRenderTags(field);
+        e.target.value = '';
+    }
+
+    function eRemoveTag(field, val) {
+        eTags[field] = eTags[field].filter(t => t !== val);
+        eRenderTags(field);
+    }
+
+    function eRenderTags(field) {
+        const wrap = document.getElementById('e-wrap-' + field);
+        const inp  = document.getElementById('e-inp-' + field);
+        wrap.querySelectorAll('.tag-item').forEach(el => el.remove());
+        eTags[field].forEach(v => {
+            const span = document.createElement('span');
+            span.className = 'tag-item';
+            span.innerHTML = `${v}<button type="button" onclick="eRemoveTag('${field}','${v}')">×</button>`;
+            wrap.insertBefore(span, inp);
+        });
+    }
+
+    function openEdit(t) {
+        const c = t.criteria || {};
+        document.getElementById('e-id').value   = t.id;
+        document.getElementById('e-name').value = t.name || '';
+        document.getElementById('e-desc').value = t.description || '';
+        document.getElementById('e-ageMin').value = c.ageMin ?? '';
+        document.getElementById('e-ageMax').value = c.ageMax ?? '';
+        document.getElementById('e-maxPart').value = c.maxParticipants ?? '';
+        document.getElementById('e-ratio').value   = c.variantARatio ?? '';
+
+        eTags.countries = c.countries ? [...c.countries] : [];
+        eTags.languages = c.languages ? [...c.languages] : [];
+        eTags.incomeLevels = c.incomeLevels ? [...c.incomeLevels] : [];
+        eTags.educationLevels = c.educationLevels ? [...c.educationLevels] : [];
+        eTags.occupations = c.occupations ? [...c.occupations] : [];
+        eTags.interests = c.interests ? [...c.interests] : [];
+        eRenderTags('countries');
+        eRenderTags('languages');
+        eRenderTags('incomeLevels');
+        eRenderTags('educationLevels');
+        eRenderTags('occupations');
+        eRenderTags('interests');
+
+        document.querySelectorAll('.eg-check').forEach(cb => {
+            cb.checked = c.genders ? c.genders.includes(cb.value) : false;
+        });
+
+        syncServiceSelectionFromCriteria('edit', c);
+
+        openModal('editModal');
+    }
+
+    async function submitEdit() {
+        const id   = document.getElementById('e-id').value;
+        const name = document.getElementById('e-name').value.trim();
+        if (!name) { alert('Обязательно укажите нНазвание теста.'); return; }
+
+        const ageMin  = document.getElementById('e-ageMin').value;
+        const ageMax  = document.getElementById('e-ageMax').value;
+        const maxPart = document.getElementById('e-maxPart').value;
+        const ratio   = document.getElementById('e-ratio').value;
+        const genders = [...document.querySelectorAll('.eg-check:checked')].map(c => c.value);
+
+        const criteria = {};
+        if (selectedFields.edit.has('age') && ageMin) criteria.ageMin = parseInt(ageMin);
+        if (selectedFields.edit.has('age') && ageMax) criteria.ageMax = parseInt(ageMax);
+        if (selectedFields.edit.has('countries') && eTags.countries.length) criteria.countries = [...eTags.countries];
+        if (selectedFields.edit.has('languages') && eTags.languages.length) criteria.languages = [...eTags.languages];
+        if (selectedFields.edit.has('incomeLevels') && eTags.incomeLevels.length) criteria.incomeLevels = [...eTags.incomeLevels];
+        if (selectedFields.edit.has('educationLevels') && eTags.educationLevels.length) criteria.educationLevels = [...eTags.educationLevels];
+        if (selectedFields.edit.has('occupations') && eTags.occupations.length) criteria.occupations = [...eTags.occupations];
+        if (selectedFields.edit.has('interests') && eTags.interests.length) criteria.interests = [...eTags.interests];
+        if (selectedFields.edit.has('genders') && genders.length) criteria.genders = genders;
+        if (selectedFields.edit.has('maxParticipants') && maxPart) criteria.maxParticipants = parseInt(maxPart);
+        if (selectedFields.edit.has('variantARatio') && ratio) criteria.variantARatio = parseInt(ratio);
+        if (selectedFields.edit.has('variantARatio') && !criteria.variantARatio) criteria.variantARatio = 50;
+
+        const body = { name, description: document.getElementById('e-desc').value.trim() || null, criteria };
+
+        try {
+            await api('/' + id, 'PUT', body);
+            toast('Тест обновлён ✓');
+            closeModal('editModal');
+            loadTests();
+        } catch (e) { toast('Ошибка: ' + e.message, false); }
+    }
+
+    /* ── Stats modal ─────────────────────────────────────────── */
+    let _statCharts = [];
+    function destroyStatCharts() {
+        _statCharts.forEach(c => { try { c.destroy(); } catch(_){} });
+        _statCharts = [];
+    }
+
+    async function openStats(id, name) {
+        destroyStatCharts();
+        document.getElementById('modalTitle').textContent = name;
+        document.getElementById('modalBody').innerHTML = '<span class="spinner"></span> Загрузка…';
+        openModal('statsModal');
+        try {
+            const [stats, participants, metrics] = await Promise.all([
+                api(`/${id}/stats`),
+                api(`/${id}/participants`),
+                fetch(`/api/metrics/test/${id}`).then(r => r.ok ? r.json() : null).catch(() => null)
+            ]);
+
+            const total = stats.total ?? 0;
+            const a = stats.variantA ?? 0;
+            const b = stats.variantB ?? 0;
+            const variants = metrics?.variants ?? [];
+            const sig = metrics?.significance ?? {};
+
+            // ── KPI strip
+            let html = `
+                <div class="stats-bar">
+                    <div class="stat-box"><div class="stat-val">${total}</div><div class="stat-lbl">Участников</div></div>
+                    <div class="stat-box"><div class="stat-val" style="color:#f97316">${a}</div><div class="stat-lbl">Вариант A</div></div>
+                    <div class="stat-box"><div class="stat-val" style="color:#8b5cf6">${b}</div><div class="stat-lbl">Вариант B</div></div>
+                    ${variants.map(v => `<div class="stat-box"><div class="stat-val" style="font-size:1.1rem;color:#059669">${v.uniqueUserCount > 0 ? (v.orderUsers*100/v.uniqueUserCount).toFixed(1)+'%' : '—'}</div><div class="stat-lbl">Конверсия ${v.variant}</div></div>`).join('')}
+                    ${metrics ? `<div class="stat-box"><div class="stat-val" style="font-size:1.1rem">${metrics.totalEvents ?? 0}</div><div class="stat-lbl">Событий</div></div>` : ''}
+                </div>`;
+
+            // ── significance banner
+            if (sig.available) {
+                const sigColor = sig.significant ? '#d1fae5' : '#f1f5f9';
+                const sigIcon  = sig.significant ? '✅' : '📊';
+                html += `<div style="background:${sigColor};border-radius:.6rem;padding:.85rem 1rem;margin:.75rem 0;display:flex;align-items:center;gap:.75rem;flex-wrap:wrap">
+                    <span style="font-size:1.4rem">${sigIcon}</span>
+                    <div>
+                        <div style="font-weight:700;font-size:.9rem;color:#1e293b">
+                            ${sig.significant ? 'Результат значим (p < 0.05)' : 'Результат незначим (p ≥ 0.05)'}
+                        </div>
+                        <div style="margin-top:.35rem;display:flex;flex-wrap:wrap;gap:.3rem">
+                            <span class="sig-pill-sm">Конв.${sig.variantA}: ${sig.conversionA}%</span>
+                            <span class="sig-pill-sm">Конв.${sig.variantB}: ${sig.conversionB}%</span>
+                            <span class="sig-pill-sm">z=${sig.zScore}</span>
+                            <span class="sig-pill-sm">p=${sig.pValue}</span>
+                            ${sig.winner ? `<span class="winner-sm">Победитель: ${sig.winner}</span>` : ''}
+                        </div>
+                    </div>
+                </div>`;
+            }
+
+            // ── chart canvases
+            html += `<div class="charts-row">
+                <div class="chart-box"><h4>Распределение участников A/B</h4><canvas id="sc-dist" height="200"></canvas></div>
+                <div class="chart-box"><h4>${variants.length ? 'Ключевые метрики вариантов' : 'Нет данных метрик'}</h4><canvas id="sc-metrics" height="200"></canvas></div>
+            </div>`;
+
+            // ── participants table
+            if (participants && participants.length > 0) {
+                html += `
+                <div style="margin-top:1rem">
+                    <h3 style="font-size:.95rem;margin-bottom:.6rem">Участники (${participants.length})</h3>
+                    <div class="table-wrapper" style="max-height:260px;overflow-y:auto">
+                    <table>
+                        <thead><tr><th>#</th><th>ID польз.</th><th>Вариант</th><th>Дата</th></tr></thead>
+                        <tbody>
+                        ${participants.map((p, i) => `
+                            <tr>
+                                <td>${i + 1}</td>
+                                <td style="font-family:monospace;font-size:.78rem">${p.userId}</td>
+                                <td><span class="badge ${p.variant === 'A' ? 'badge-draft' : 'badge-completed'}">${p.variant}</span></td>
+                                <td style="font-size:.8rem">${p.enrolledAt ? new Date(p.enrolledAt).toLocaleString('ru') : '—'}</td>
+                            </tr>
+                        `).join('')}
+                        </tbody>
+                    </table>
+                    </div>
+                </div>`;
+            } else {
+                html += '<p class="text-muted" style="margin-top:1rem">Нет зарегистрированных участников.</p>';
+            }
+
+            document.getElementById('modalBody').innerHTML = html;
+
+            // ── render charts
+            const COLORS_BG  = ['rgba(249,115,22,.75)','rgba(139,92,246,.75)','rgba(14,165,233,.75)','rgba(220,38,38,.75)'];
+            const COLORS_BD  = ['#f97316','#8b5cf6','#0ea5e9','#dc2626'];
+
+            // donut: A vs B participants
+            const ctxDist = document.getElementById('sc-dist');
+            if (ctxDist && (a + b) > 0) {
+                const allVariants = {};
+                (participants || []).forEach(p => { allVariants[p.variant] = (allVariants[p.variant]||0)+1; });
+                const vLabels = Object.keys(allVariants);
+                const vData   = Object.values(allVariants);
+                _statCharts.push(new Chart(ctxDist, {
+                    type: 'doughnut',
+                    data: {
+                        labels: vLabels.map(l => 'Вариант ' + l),
+                        datasets: [{ data: vData,
+                            backgroundColor: COLORS_BG.slice(0, vLabels.length),
+                            borderColor: COLORS_BD.slice(0, vLabels.length),
+                            borderWidth: 2 }]
+                    },
+                    options: { responsive:true, plugins:{ legend:{ position:'bottom' } } }
+                }));
+            }
+
+            // bar: conversion + clicks + page views per variant
+            const ctxMetrics = document.getElementById('sc-metrics');
+            if (ctxMetrics && variants.length > 0) {
+                const vNames = variants.map(v => 'Вариант ' + v.variant);
+                _statCharts.push(new Chart(ctxMetrics, {
+                    type: 'bar',
+                    data: {
+                        labels: vNames,
+                        datasets: [
+                            { label: 'Просм. стр.', data: variants.map(v => v.pageViews||0),
+                              backgroundColor: 'rgba(30,64,175,.6)', borderRadius:4 },
+                            { label: 'Клики',       data: variants.map(v => v.clicks||0),
+                              backgroundColor: 'rgba(146,64,14,.6)', borderRadius:4 },
+                            { label: 'Заказы',      data: variants.map(v => v.orders||0),
+                              backgroundColor: 'rgba(6,95,70,.75)',  borderRadius:4 },
+                        ]
+                    },
+                    options: {
+                        responsive:true,
+                        plugins:{ legend:{ position:'bottom' } },
+                        scales:{ y:{ beginAtZero:true } }
+                    }
+                }));
+            }
+
+        } catch (e) {
+            document.getElementById('modalBody').innerHTML =
+                `<div class="alert alert-error">Ошибка загрузки статистики: ${e.message}</div>`;
+        }
+    }
+
+    /* ── Create test ────────────────────────────────────────── */
+    async function submitCreate() {
+        const name = document.getElementById('f-name').value.trim();
+        if (!name) { alert('Обязательно укажите нНазвание теста.'); return; }
+
+        const ageMin  = document.getElementById('f-ageMin').value;
+        const ageMax  = document.getElementById('f-ageMax').value;
+        const maxPart = document.getElementById('f-maxPart').value;
+        const ratio   = document.getElementById('f-ratio').value;
+        const genders = [...document.querySelectorAll('.g-check:checked')].map(c => c.value);
+
+        const criteria = {};
+        if (selectedFields.create.has('age') && ageMin) criteria.ageMin = parseInt(ageMin);
+        if (selectedFields.create.has('age') && ageMax) criteria.ageMax = parseInt(ageMax);
+        if (selectedFields.create.has('countries') && tags.countries.length) criteria.countries = [...tags.countries];
+        if (selectedFields.create.has('languages') && tags.languages.length) criteria.languages = [...tags.languages];
+        if (selectedFields.create.has('incomeLevels') && tags.incomeLevels.length) criteria.incomeLevels = [...tags.incomeLevels];
+        if (selectedFields.create.has('educationLevels') && tags.educationLevels.length) criteria.educationLevels = [...tags.educationLevels];
+        if (selectedFields.create.has('occupations') && tags.occupations.length) criteria.occupations = [...tags.occupations];
+        if (selectedFields.create.has('interests') && tags.interests.length) criteria.interests = [...tags.interests];
+        if (selectedFields.create.has('genders') && genders.length) criteria.genders = genders;
+        if (selectedFields.create.has('maxParticipants') && maxPart) criteria.maxParticipants = parseInt(maxPart);
+        if (selectedFields.create.has('variantARatio') && ratio) criteria.variantARatio = parseInt(ratio);
+
+        const body = { name, description: document.getElementById('f-desc').value.trim() || null, criteria };
+
+        try {
+            await api('', 'POST', body);
+            toast('Тест создан ✓');
+            closeModal('createModal');
+            resetCreateForm();
+            loadTests();
+        } catch (e) { toast('Ошибка: ' + e.message, false); }
+    }
+
+    function resetCreateForm() {
+        ['f-name','f-desc','f-ageMin','f-ageMax','f-maxPart','f-ratio'].forEach(id =>
+            document.getElementById(id).value = '');
+        tags.countries = [];
+        tags.languages = [];
+        tags.incomeLevels = [];
+        tags.educationLevels = [];
+        tags.occupations = [];
+        tags.interests = [];
+        renderTags('countries');
+        renderTags('languages');
+        renderTags('incomeLevels');
+        renderTags('educationLevels');
+        renderTags('occupations');
+        renderTags('interests');
+        document.querySelectorAll('.g-check').forEach(c => c.checked = false);
+        selectedServices.create.clear();
+        selectedFields.create.clear();
+        renderServiceBadges('create');
+        applyFieldVisibility('create');
+    }
+
+    /* ── Init ───────────────────────────────────────────────── */
+    renderServiceFields('create');
+    renderServiceFields('edit');
+    renderServiceBadges('create');
+    renderServiceBadges('edit');
+    applyFieldVisibility('create');
+    applyFieldVisibility('edit');
+    loadTests();
+</script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
+</body>
+</html>
+
+
+
+
+
+

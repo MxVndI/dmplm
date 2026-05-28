@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ru">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title th:text="'Дашборд: ' + ${test.name} + ' — Админ'">Дашборд</title>
+    <link rel="stylesheet" th:href="@{/css/styles.css}"/>
+    <style>
+        /* ── layout ─────────────────────────────── */
+        .dash-grid { display:grid; grid-template-columns:1fr 1fr; gap:1.25rem; margin-bottom:1.25rem; }
+        .dash-grid.wide { grid-template-columns:1fr; }
+        @media(max-width:820px){ .dash-grid { grid-template-columns:1fr; } }
+
+        /* ── cards ──────────────────────────────── */
+        .chart-card { background:#fff; border-radius:.9rem; padding:1.3rem 1.5rem;
+                      box-shadow:0 2px 10px rgba(0,0,0,.07); }
+        .chart-card h3 { margin:0 0 1rem; font-size:1rem; color:#1e293b; }
+
+        /* ── KPI strip ──────────────────────────── */
+        .kpi-strip { display:flex; flex-wrap:wrap; gap:1rem; margin-bottom:1.25rem; }
+        .kpi { background:#fff; border-radius:.9rem; padding:1rem 1.4rem; min-width:140px; flex:1;
+               box-shadow:0 2px 10px rgba(0,0,0,.07); }
+        .kpi__label { font-size:.72rem; color:#64748b; text-transform:uppercase; letter-spacing:.06em; margin-bottom:.3rem; }
+        .kpi__val   { font-size:1.8rem; font-weight:800; color:#1e293b; }
+
+        /* ── significance banner ────────────────── */
+        .sig-banner { border-radius:.75rem; padding:1.2rem 1.5rem; margin-bottom:1.25rem;
+                      display:flex; align-items:center; gap:1rem; flex-wrap:wrap; }
+        .sig-banner.sig-yes { background:#d1fae5; border:1.5px solid #6ee7b7; }
+        .sig-banner.sig-no  { background:#f1f5f9; border:1.5px solid #cbd5e1; }
+        .sig-banner.sig-nodata { background:#fef9c3; border:1.5px solid #fde047; }
+        .sig-icon { font-size:2rem; }
+        .sig-title { font-size:1.05rem; font-weight:700; color:#1e293b; }
+        .sig-sub   { font-size:.85rem; color:#475569; margin-top:.2rem; }
+        .sig-pills { display:flex; gap:.75rem; flex-wrap:wrap; margin-top:.6rem; }
+        .sig-pill  { background:rgba(0,0,0,.07); border-radius:99px; padding:.25rem .75rem;
+                     font-size:.78rem; font-weight:600; }
+        .winner-badge { background:#10b981; color:#fff; border-radius:99px;
+                        padding:.3rem .9rem; font-weight:700; font-size:.85rem; }
+
+        /* ── variant blocks ─────────────────────── */
+        .variant-block { background:#fff; border-radius:.9rem; padding:1.4rem 1.6rem;
+                         box-shadow:0 2px 10px rgba(0,0,0,.07); margin-bottom:1.25rem; }
+        .stats-row { display:flex; flex-wrap:wrap; gap:.85rem; margin-bottom:1rem; }
+        .stat { background:#f8fafc; border-radius:.6rem; padding:.7rem 1rem; min-width:130px; }
+        .stat__label { font-size:.72rem; color:#64748b; text-transform:uppercase; letter-spacing:.06em; }
+        .stat__val { font-size:1.45rem; font-weight:800; color:#1e293b; }
+        .top-pages li { font-size:.87rem; color:#334155; margin:.22rem 0; }
+        .variant-a-color { border-left:4px solid #f97316; }
+        .variant-b-color { border-left:4px solid #8b5cf6; }
+        .variant-c-color { border-left:4px solid #0ea5e9; }
+        .variant-d-color { border-left:4px solid #dc2626; }
+
+        /* ── funnel ─────────────────────────────── */
+        .funnel-wrap { overflow-x:auto; }
+        .funnel-table { border-collapse:collapse; width:100%; font-size:.88rem; }
+        .funnel-table th { text-align:left; padding:.5rem .75rem; background:#f8fafc;
+                           color:#64748b; font-weight:600; font-size:.78rem; text-transform:uppercase; }
+        .funnel-table td { padding:.55rem .75rem; border-bottom:1px solid #f1f5f9; }
+        .funnel-bar-wrap { min-width:120px; }
+        .funnel-bar { height:18px; border-radius:3px; min-width:4px;
+                      transition:width .4s; display:inline-block; }
+
+        /* ── event badges ───────────────────────── */
+        .event-type { display:inline-block; padding:.15rem .55rem; border-radius:2rem;
+                      font-size:.72rem; font-weight:700; }
+        .et-PAGE_VIEW    { background:#dbeafe; color:#1e40af; }
+        .et-CLICK        { background:#fef9c3; color:#92400e; }
+        .et-SCROLL_DEPTH { background:#dcfce7; color:#15803d; }
+        .et-TIME_ON_PAGE { background:#ede9fe; color:#5b21b6; }
+        .et-SEARCH       { background:#fce7f3; color:#9d174d; }
+        .et-PRODUCT_VIEW { background:#ffedd5; color:#c2410c; }
+        .et-ADD_TO_CART  { background:#d1fae5; color:#065f46; }
+        .et-CHECKOUT_START { background:#fee2e2; color:#991b1b; }
+        .et-FORM_FOCUS   { background:#f1f5f9; color:#475569; }
+    </style>
+</head>
+<body>
+<div th:replace="~{fragments/nav :: navbar}"></div>
+
+<div class="page-wrapper">
+
+    <!-- ── заголовок ──────────────────────────────────────────── -->
+    <div style="display:flex;align-items:center;gap:1rem;margin-bottom:1.5rem;flex-wrap:wrap">
+        <a href="/admin/metrics" class="btn btn-outline btn-sm">&larr; Назад</a>
+        <h1 class="page-title" style="margin:0" th:text="'Дашборд: ' + ${test.name}">Дашборд</h1>
+        <span class="badge" th:classappend="${testActive} ? 'badge-active' : 'badge-inactive'"
+              th:text="${testStatus}">-</span>
+        <a href="http://localhost:3000" target="_blank"
+           style="margin-left:auto;display:inline-flex;align-items:center;gap:.4rem;background:#f97522;color:#fff;border-radius:.4rem;padding:.4rem .9rem;text-decoration:none;font-size:.85rem;font-weight:600">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+            Grafana
+        </a>
+    </div>
+
+    <!-- ── KPI-полоса ─────────────────────────────────────────── -->
+    <div class="kpi-strip">
+        <div class="kpi">
+            <div class="kpi__label">Всего событий</div>
+            <div class="kpi__val" th:text="${summary['totalEvents']}">0</div>
+        </div>
+        <div class="kpi">
+            <div class="kpi__label">Вариантов</div>
+            <div class="kpi__val" th:text="${#lists.size(summary['variants'])}">0</div>
+        </div>
+        <div class="kpi" th:each="v : ${summary['variants']}"
+             th:style="'border-top:4px solid ' + (${v['variant'] == 'A'} ? '#f97316' : (${v['variant'] == 'B'} ? '#8b5cf6' : (${v['variant'] == 'C'} ? '#0ea5e9' : '#dc2626')))"
+>
+            <div class="kpi__label" th:text="'Конверсия ' + ${v['variant']}">Конверсия</div>
+            <div class="kpi__val"
+                 th:text="${v['uniqueUserCount'] > 0 ? #numbers.formatDecimal(v['orderUsers'] * 100.0 / v['uniqueUserCount'],1,1) + '%' : '—'}">—</div>
+        </div>
+        <div class="kpi">
+            <div class="kpi__label">ID теста</div>
+            <div style="display:flex;align-items:center;gap:.4rem;margin-top:.25rem">
+                <span style="font-size:.7rem;font-family:monospace;color:#475569"
+                      th:text="${test.id}">-</span>
+                <button onclick="navigator.clipboard.writeText(this.previousElementSibling.textContent.trim()).then(()=>{this.textContent='✓';setTimeout(()=>this.textContent='📋',1200)})"
+                        style="background:none;border:none;cursor:pointer;font-size:.85rem;padding:0">📋</button>
+            </div>
+            <div th:if="${test.expiresAt != null}" style="font-size:.75rem;color:#dc2626;font-weight:600;margin-top:.3rem"
+                 th:text="'до ' + ${#strings.replace(#strings.substring(test.expiresAt,0,16),'T',' ')}">-</div>
+        </div>
+    </div>
+
+    <!-- ── статистическая значимость ─────────────────────────── -->
+    <div th:with="sig=${summary['significance']}">
+        <!-- Нет данных -->
+        <div th:if="${!sig['available']}" class="sig-banner sig-nodata">
+            <span class="sig-icon">⚠️</span>
+            <div>
+                <div class="sig-title">Недостаточно данных для анализа значимости</div>
+                <div class="sig-sub" th:text="${sig['reason'] ?: 'Нужно минимум 2 варианта с зафиксированными конверсиями.'}">-</div>
+            </div>
+        </div>
+        <!-- Значимый результат -->
+        <div th:if="${sig['available'] and sig['significant']}" class="sig-banner sig-yes">
+            <span class="sig-icon">✅</span>
+            <div style="flex:1">
+                <div class="sig-title">Результат статистически значим (p &lt; 0.05)</div>
+                <div class="sig-sub">
+                    Различие в конверсии между вариантами <strong th:text="${sig['variantA']}">A</strong>
+                    и <strong th:text="${sig['variantB']}">B</strong> не случайно с вероятностью 95%.
+                </div>
+                <div class="sig-pills">
+                    <span class="sig-pill" th:text="'Конв. ' + ${sig['variantA']} + ': ' + ${sig['conversionA']} + '%'">-</span>
+                    <span class="sig-pill" th:text="'Конв. ' + ${sig['variantB']} + ': ' + ${sig['conversionB']} + '%'">-</span>
+                    <span class="sig-pill" th:text="'z = ' + ${sig['zScore']}">-</span>
+                    <span class="sig-pill" th:text="'p = ' + ${sig['pValue']}">-</span>
+                    <span class="winner-badge" th:text="'Победитель: вариант ' + ${sig['winner']}">-</span>
+                </div>
+            </div>
+        </div>
+        <!-- Незначимый результат -->
+        <div th:if="${sig['available'] and !sig['significant']}" class="sig-banner sig-no">
+            <span class="sig-icon">📊</span>
+            <div style="flex:1">
+                <div class="sig-title">Результат статистически незначим (p ≥ 0.05)</div>
+                <div class="sig-sub">
+                    Разница между вариантами может быть случайной. Нужно больше данных или более длительный тест.
+                </div>
+                <div class="sig-pills">
+                    <span class="sig-pill" th:text="'Конв. ' + ${sig['variantA']} + ': ' + ${sig['conversionA']} + '%'">-</span>
+                    <span class="sig-pill" th:text="'Конв. ' + ${sig['variantB']} + ': ' + ${sig['conversionB']} + '%'">-</span>
+                    <span class="sig-pill" th:text="'z = ' + ${sig['zScore']}">-</span>
+                    <span class="sig-pill" th:text="'p = ' + ${sig['pValue']}">-</span>
+                    <span class="sig-pill" th:text="'n(' + ${sig['variantA']} + ')=' + ${sig['nA']}">-</span>
+                    <span class="sig-pill" th:text="'n(' + ${sig['variantB']} + ')=' + ${sig['nB']}">-</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── графики ────────────────────────────────────────────── -->
+    <div id="chartsSection" th:data-test-id="${test.id}">
+        <div class="dash-grid">
+            <div class="chart-card">
+                <h3>Конверсия по вариантам</h3>
+                <canvas id="chartConversion" height="220"></canvas>
+            </div>
+            <div class="chart-card">
+                <h3>Уникальные пользователи</h3>
+                <canvas id="chartUsers" height="220"></canvas>
+            </div>
+        </div>
+        <div class="dash-grid">
+            <div class="chart-card">
+                <h3>Ключевые события по вариантам</h3>
+                <canvas id="chartEvents" height="240"></canvas>
+            </div>
+            <div class="chart-card">
+                <h3>Вовлечённость: время (с) и прокрутка (%)</h3>
+                <canvas id="chartEngagement" height="240"></canvas>
+            </div>
+        </div>
+        <div id="chartError" style="display:none;padding:.75rem;background:#fef2f2;border-radius:.5rem;color:#991b1b;margin-bottom:1rem">
+            Не удалось загрузить графики. Убедитесь, что приложение запущено и данные метрик есть.
+        </div>
+        <div class="dash-grid">
+            <div class="chart-card">
+                <h3>Выручка по вариантам (₽)</h3>
+                <canvas id="chartRevenue" height="220"></canvas>
+            </div>
+            <div class="chart-card">
+                <h3>Топ страниц — распределение просмотров</h3>
+                <canvas id="chartTopPages" height="220"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- воронка -->
+    <div class="admin-section">
+        <h3>Конверсионная воронка</h3>
+        <p style="font-size:.85rem;color:#64748b;margin:0 0 1rem">
+            Отображает, сколько пользователей прошло каждый шаг пути к покупке в каждом варианте.
+            Конверсия — отношение завершённых заказов к уникальным посетителям варианта.
+        </p>
+        <div th:if="${#maps.isEmpty(summary['funnel'])}" class="text-muted">Событий ещё нет.</div>
+        <div th:unless="${#maps.isEmpty(summary['funnel'])}" class="funnel-wrap">
+            <table class="funnel-table">
+                <thead>
+                    <tr>
+                        <th>Шаг воронки</th>
+                        <th th:each="entry : ${summary['funnel']}" th:text="'Вариант ' + ${entry.key}">—</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="step : ${ {'PAGE_VIEW','PRODUCT_VIEW','ADD_TO_CART','CHECKOUT_START','ORDER'} }">
+                        <td>
+                            <span th:switch="${step}">
+                                <span th:case="'PAGE_VIEW'">👁 Просмотр страницы</span>
+                                <span th:case="'PRODUCT_VIEW'">🛍 Просмотр товара</span>
+                                <span th:case="'ADD_TO_CART'">🛒 Добавление в корзину</span>
+                                <span th:case="'CHECKOUT_START'">💳 Начало оформления</span>
+                                <span th:case="'ORDER'">✅ Оформленный заказ</span>
+                                <span th:case="*" th:text="${step}">—</span>
+                            </span>
+                        </td>
+                        <td th:each="entry : ${summary['funnel']}">
+                            <div style="display:flex;align-items:center;gap:.6rem">
+                                <span style="font-weight:700;min-width:32px" th:text="${entry.value[step] ?: 0}">0</span>
+                                <div class="funnel-bar-wrap">
+                                    <div class="funnel-bar"
+                                         th:style="'width:' + ${(entry.value[step] ?: 0) > 0 ? T(java.lang.Math).min(100, (entry.value[step] ?: 0) * 2) : 0} + '%;background:' + ${entry.key == 'A' ? '#f97316' : (entry.key == 'B' ? '#8b5cf6' : (entry.key == 'C' ? '#0ea5e9' : '#dc2626'))}">
+                                    </div>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- разбивка по вариантам (детали) -->
+    <div class="admin-section">
+        <h3>Детальная разбивка по вариантам</h3>
+        <div th:if="${#lists.isEmpty(summary['variants'])}" class="text-muted">
+            Событий для этого теста пока нет.
+        </div>
+
+        <div th:each="v : ${summary['variants']}"
+             class="variant-block"
+             th:classappend="'variant-' + ${v['variant'].toString().toLowerCase()} + '-color'">
+            <h3>Вариант <span th:text="${v['variant']}">?</span></h3>
+            <div class="stats-row">
+                <div class="stat">
+                    <div class="stat__label">Всего событий</div>
+                    <div class="stat__val" th:text="${v['totalEvents']}">0</div>
+                </div>
+                <div class="stat">
+                    <div class="stat__label">Уникальных польз.</div>
+                    <div class="stat__val" th:text="${v['uniqueUserCount']}">0</div>
+                </div>
+                <div class="stat">
+                    <div class="stat__label">Просмотры страниц</div>
+                    <div class="stat__val" th:text="${v['pageViews']}">0</div>
+                </div>
+                <div class="stat">
+                    <div class="stat__label">Клики</div>
+                    <div class="stat__val" th:text="${v['clicks']}">0</div>
+                </div>
+                <div class="stat" th:if="${v['avgScrollDepth'] != null}">
+                    <div class="stat__label">Ср. прокрутка</div>
+                    <div class="stat__val" th:text="${#numbers.formatDecimal(v['avgScrollDepth'],1,1)} + '%'">0%</div>
+                </div>
+                <div class="stat" th:if="${v['avgSessionMs'] != null}">
+                    <div class="stat__label">Ср. время на стр.</div>
+                    <div class="stat__val"
+                         th:text="${#numbers.formatDecimal(v['avgSessionMs'] / 1000.0, 1, 1)} + 'с'">0с</div>
+                </div>
+                <div class="stat">
+                    <div class="stat__label">Заказы</div>
+                    <div class="stat__val" th:text="${v['orders']}">0</div>
+                </div>
+                <div class="stat" th:if="${v['orders'] > 0}">
+                    <div class="stat__label">Выручка</div>
+                    <div class="stat__val" style="font-size:1.2rem" th:text="'₽' + ${v['orderRevenue']}">₽0</div>
+                </div>
+                <div class="stat" th:if="${v['uniqueUserCount'] > 0}">
+                    <div class="stat__label">Конверсия</div>
+                    <div class="stat__val"
+                         th:text="${#numbers.formatDecimal(v['orderUsers'] * 100.0 / v['uniqueUserCount'], 1, 1)} + '%'">0%</div>
+                </div>
+            </div>
+            <div th:if="${not #lists.isEmpty(v['topPages'])}">
+                <strong style="font-size:.85rem;color:#475569">Топ страниц:</strong>
+                <ul class="top-pages">
+                    <li th:each="pg : ${v['topPages']}"
+                        th:text="${pg['page']} + ' — ' + ${pg['count']} + ' просм.'">-</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- сырые события -->
+    <div class="admin-section">
+        <h3>Сырые события (<span th:text="${#lists.size(events)}">0</span>)</h3>
+        <div th:if="${#lists.isEmpty(events)}" class="text-muted">Событий пока нет.</div>
+        <div class="table-wrapper" th:unless="${#lists.isEmpty(events)}">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Время</th>
+                        <th>Тип</th>
+                        <th>Вариант</th>
+                        <th>Страница</th>
+                        <th>Пользователь</th>
+                        <th>Данные</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="ev : ${events}">
+                        <td style="white-space:nowrap;font-size:.78rem"
+                            th:text="${ev.timestamp != null ? #temporals.format(ev.timestamp,'HH:mm:ss dd.MM') : '-'}">-</td>
+                        <td>
+                            <span class="event-type"
+                                  th:classappend="'et-' + ${ev.eventType}"
+                                  th:text="${ev.eventType}">-</span>
+                        </td>
+                        <td th:text="${ev.variant ?: '—'}">—</td>
+                        <td style="font-size:.8rem" th:text="${ev.page}">-</td>
+                        <td style="font-size:.78rem;max-width:100px;overflow:hidden;text-overflow:ellipsis"
+                            th:text="${ev.userId}">-</td>
+                        <td style="font-size:.75rem;color:#64748b;max-width:220px;overflow:hidden;text-overflow:ellipsis"
+                            th:text="${ev.eventData}">-</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script th:src="@{/js/main.js}"></script>
+<!-- Chart.js loaded AFTER DOM so canvases are ready -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"
+        onerror="document.getElementById('chartError').style.display='block'"></script>
+<script>
+(function () {
+    var section = document.getElementById('chartsSection');
+    if (!section) return;
+    var testId = section.getAttribute('data-test-id');
+    if (!testId) return;
+
+    var PALETTE = {
+        A: { bg: 'rgba(249,115,22,.75)', bd: '#f97316' },
+        B: { bg: 'rgba(139,92,246,.75)', bd: '#8b5cf6' },
+        C: { bg: 'rgba(14,165,233,.75)', bd: '#0ea5e9' },
+        D: { bg: 'rgba(220,38,38,.75)',  bd: '#dc2626' },
+    };
+    function col(v, prop) {
+        return (PALETTE[v] || { bg:'rgba(100,116,139,.6)', bd:'#64748b' })[prop];
+    }
+
+    function makeBar(id, datasets, labels, opts) {
+        var ctx = document.getElementById(id);
+        if (!ctx || typeof Chart === 'undefined') return null;
+        return new Chart(ctx, {
+            type: 'bar',
+            data: { labels: labels, datasets: datasets },
+            options: Object.assign({ responsive: true,
+                plugins: { legend: { position: 'bottom' } },
+                scales: { y: { beginAtZero: true } }
+            }, opts || {})
+        });
+    }
+
+    function drawAll(data) {
+        var variants = (data && data.variants) ? data.variants : [];
+        if (!variants.length) return;
+        var labels = variants.map(function(v){ return 'Вариант ' + v.variant; });
+
+        // ── конверсия ─────────────────────────────────────────────
+        makeBar('chartConversion',
+            [{ label: 'Конверсия, %',
+               data: variants.map(function(v){
+                   return v.uniqueUserCount > 0
+                       ? Math.round(v.orderUsers * 10000 / v.uniqueUserCount) / 100
+                       : 0;
+               }),
+               backgroundColor: variants.map(function(v){ return col(v.variant,'bg'); }),
+               borderColor:      variants.map(function(v){ return col(v.variant,'bd'); }),
+               borderWidth: 2, borderRadius: 6
+            }],
+            labels,
+            { plugins: { legend: { display: false } },
+              scales: { y: { beginAtZero: true, ticks: { callback: function(v){ return v+'%'; } } } } }
+        );
+
+        // ── уникальные пользователи ───────────────────────────────
+        makeBar('chartUsers',
+            [{ label: 'Уникальных польз.',
+               data: variants.map(function(v){ return v.uniqueUserCount || 0; }),
+               backgroundColor: variants.map(function(v){ return col(v.variant,'bg'); }),
+               borderColor:     variants.map(function(v){ return col(v.variant,'bd'); }),
+               borderWidth: 2, borderRadius: 6
+            }],
+            labels,
+            { plugins: { legend: { display: false } } }
+        );
+
+        // ── ключевые события (grouped) ────────────────────────────
+        makeBar('chartEvents',
+            [
+                { label: 'Просмотры', data: variants.map(function(v){ return v.pageViews||0; }),
+                  backgroundColor:'rgba(30,64,175,.65)', borderRadius:4 },
+                { label: 'Клики',      data: variants.map(function(v){ return v.clicks||0; }),
+                  backgroundColor:'rgba(146,64,14,.65)', borderRadius:4 },
+                { label: 'Заказы',     data: variants.map(function(v){ return v.orders||0; }),
+                  backgroundColor:'rgba(6,95,70,.75)',   borderRadius:4 },
+            ], labels
+        );
+
+        // ── время / прокрутка (dual axis) ────────────────────────
+        makeBar('chartEngagement',
+            [
+                { label: 'Ср. время (с)', yAxisID:'y',
+                  data: variants.map(function(v){
+                      return v.avgSessionMs != null ? Math.round(v.avgSessionMs/100)/10 : null;
+                  }),
+                  backgroundColor:'rgba(91,33,182,.65)', borderRadius:4 },
+                { label: 'Ср. прокрутка (%)', yAxisID:'y2',
+                  data: variants.map(function(v){
+                      return v.avgScrollDepth != null ? Math.round(v.avgScrollDepth*10)/10 : null;
+                  }),
+                  backgroundColor:'rgba(21,128,61,.65)', borderRadius:4 },
+            ], labels,
+            { scales: {
+                y:  { beginAtZero:true, position:'left',  title:{ display:true, text:'Секунды' } },
+                y2: { beginAtZero:true, position:'right', title:{ display:true, text:'Прокрутка, %' },
+                      grid:{ drawOnChartArea:false } }
+            }}
+        );
+
+        // ── выручка ───────────────────────────────────────────────
+        makeBar('chartRevenue',
+            [{ label: 'Выручка, ₽',
+               data: variants.map(function(v){
+                   var r = v.orderRevenue;
+                   return r != null ? (typeof r === 'string' ? parseFloat(r) : r) : 0;
+               }),
+               backgroundColor: variants.map(function(v){ return col(v.variant,'bg'); }),
+               borderColor:     variants.map(function(v){ return col(v.variant,'bd'); }),
+               borderWidth:2, borderRadius:6
+            }],
+            labels,
+            { plugins:{ legend:{ display:false } } }
+        );
+
+        // ── топ страниц (doughnut, берём первый вариант для примера) ─
+        var allPages = {};
+        variants.forEach(function(v){
+            (v.topPages || []).forEach(function(p){
+                allPages[p.page] = (allPages[p.page]||0) + p.count;
+            });
+        });
+        var pLabels = Object.keys(allPages).slice(0,8);
+        var pData   = pLabels.map(function(k){ return allPages[k]; });
+        var ctxP = document.getElementById('chartTopPages');
+        if (ctxP && pLabels.length && typeof Chart !== 'undefined') {
+            new Chart(ctxP, {
+                type: 'doughnut',
+                data: {
+                    labels: pLabels,
+                    datasets:[{ data: pData,
+                        backgroundColor:['#1e40af','#92400e','#065f46','#7c3aed','#991b1b','#0e7490','#854d0e','#3730a3'],
+                        borderWidth:2, borderColor:'#fff'
+                    }]
+                },
+                options:{ responsive:true, plugins:{ legend:{ position:'right' } } }
+            });
+        }
+    }
+
+    // Fetch metrics from the REST API — never relies on Thymeleaf inline serialization
+    fetch('/api/metrics/test/' + testId)
+        .then(function(r){ return r.ok ? r.json() : Promise.reject(r.status); })
+        .then(function(data){
+            if (typeof Chart !== 'undefined') {
+                drawAll(data);
+            } else {
+                // Chart.js not yet ready (slow CDN) — wait for it
+                var s = document.querySelector('script[src*="chart.js"]');
+                if (s) { s.addEventListener('load', function(){ drawAll(data); }); }
+            }
+        })
+        .catch(function(err){
+            console.warn('Metrics fetch error:', err);
+            document.getElementById('chartError').style.display = 'block';
+        });
+})();
+</script>
+</body>
+</html>

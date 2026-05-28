@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ru">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Регистрация — Магазин</title>
+    <link rel="stylesheet" th:href="@{/css/styles.css}"/>
+</head>
+<body class="auth-page">
+<div class="auth-container" style="max-width:580px">
+    <div class="auth-card">
+        <h1 class="auth-title">Создать аккаунт</h1>
+
+        <div th:if="${error}" class="alert alert-error" th:text="${error}"></div>
+
+        <form th:action="@{/auth/register}" method="post" th:object="${dto}">
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="firstName">Имя *</label>
+                    <input type="text" id="firstName" th:field="*{firstName}" placeholder="Иван" required/>
+                    <span class="field-error" th:if="${#fields.hasErrors('firstName')}" th:errors="*{firstName}"></span>
+                </div>
+                <div class="form-group">
+                    <label for="lastName">Фамилия *</label>
+                    <input type="text" id="lastName" th:field="*{lastName}" placeholder="Иванов" required/>
+                    <span class="field-error" th:if="${#fields.hasErrors('lastName')}" th:errors="*{lastName}"></span>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="login">Логин *</label>
+                <input type="text" id="login" th:field="*{login}" placeholder="ivan_ivanov" required autocomplete="username"/>
+                <span class="field-error" th:if="${#fields.hasErrors('login')}" th:errors="*{login}"></span>
+            </div>
+
+            <div class="form-group">
+                <label for="password">Пароль *</label>
+                <input type="password" id="password" th:field="*{password}" placeholder="минимум 8 символов" required autocomplete="new-password"/>
+                <span class="field-error" th:if="${#fields.hasErrors('password')}" th:errors="*{password}"></span>
+            </div>
+
+            <div class="form-group">
+                <label for="email">Email *</label>
+                <input type="email" id="email" th:field="*{email}" placeholder="ivan@example.com" required/>
+                <span class="field-error" th:if="${#fields.hasErrors('email')}" th:errors="*{email}"></span>
+            </div>
+
+            <div class="form-group">
+                <label for="phone">Телефон</label>
+                <input type="tel" id="phone" th:field="*{phone}" placeholder="+7 999 123-45-67"/>
+                <span class="field-error" th:if="${#fields.hasErrors('phone')}" th:errors="*{phone}"></span>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="country">Страна</label>
+                    <input type="text" id="country" th:field="*{country}" placeholder="Россия (необязательно)"/>
+                    <span class="field-error" th:if="${#fields.hasErrors('country')}" th:errors="*{country}"></span>
+                </div>
+                <div class="form-group">
+                    <label for="language">Язык</label>
+                    <input type="text" id="language" th:field="*{language}" placeholder="Русский (необязательно)"/>
+                    <span class="field-error" th:if="${#fields.hasErrors('language')}" th:errors="*{language}"></span>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="gender">Пол</label>
+                    <select id="gender" th:field="*{gender}">
+                        <option value="">Выбрать... (необязательно)</option>
+                        <option value="MALE">Мужской</option>
+                        <option value="FEMALE">Женский</option>
+                        <option value="OTHER">Другой</option>
+                    </select>
+                    <span class="field-error" th:if="${#fields.hasErrors('gender')}" th:errors="*{gender}"></span>
+                </div>
+                <div class="form-group">
+                    <label for="age">Возраст</label>
+                    <input type="number" id="age" th:field="*{age}" min="1" max="150" placeholder="25 (необязательно)"/>
+                    <span class="field-error" th:if="${#fields.hasErrors('age')}" th:errors="*{age}"></span>
+                </div>
+            </div>
+
+            <!-- Расширенные демографические данные -->
+            <details style="margin-bottom:1rem">
+                <summary style="cursor:pointer;font-weight:600;color:var(--color-primary,#3b82f6)">
+                    + Подробности профиля (необязательно, используются для таргетирования A/B тестов)
+                </summary>
+                <div style="margin-top:.75rem">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="incomeLevel">Уровень дохода</label>
+                            <select id="incomeLevel" th:field="*{incomeLevel}">
+                                <option value="">— не указано —</option>
+                                <option value="LOW">Низкий</option>
+                                <option value="MEDIUM">Средний</option>
+                                <option value="HIGH">Высокий</option>
+                            </select>
+                            <span class="field-error" th:if="${#fields.hasErrors('incomeLevel')}" th:errors="*{incomeLevel}"></span>
+                        </div>
+                        <div class="form-group">
+                            <label for="educationLevel">Образование</label>
+                            <select id="educationLevel" th:field="*{educationLevel}">
+                                <option value="">— не указано —</option>
+                                <option value="BASIC">Начальное</option>
+                                <option value="SECONDARY">Среднее</option>
+                                <option value="HIGHER">Высшее</option>
+                                <option value="ACADEMIC">Аспирантура / PhD</option>
+                            </select>
+                            <span class="field-error" th:if="${#fields.hasErrors('educationLevel')}" th:errors="*{educationLevel}"></span>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="occupation">Занятость</label>
+                        <select id="occupation" th:field="*{occupation}">
+                            <option value="">— не указано —</option>
+                            <option value="STUDENT">Студент</option>
+                            <option value="EMPLOYED">Работающий</option>
+                            <option value="SELF_EMPLOYED">Самозанятый</option>
+                            <option value="UNEMPLOYED">Безработный</option>
+                            <option value="RETIRED">Пенсионер</option>
+                        </select>
+                        <span class="field-error" th:if="${#fields.hasErrors('occupation')}" th:errors="*{occupation}"></span>
+                    </div>
+                    <div class="form-group">
+                        <label for="interestsRaw">Интересы (через запятую)</label>
+                        <input type="text" id="interestsRaw" th:field="*{interestsRaw}"
+                               placeholder="напр. технологии, спорт, музыка"/>
+                        <span class="field-error" th:if="${#fields.hasErrors('interestsRaw')}" th:errors="*{interestsRaw}"></span>
+                    </div>
+                </div>
+            </details>
+
+            <button type="submit" class="btn btn-primary btn-full">Зарегистрироваться</button>
+        </form>
+
+        <p class="auth-link">Уже есть аккаунт? <a th:href="@{/auth/login}">Войти</a></p>
+    </div>
+</div>
+</body>
+</html>

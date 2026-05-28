@@ -1,0 +1,8 @@
+com\diplom\participant\ParticipantServiceApplication.class
+com\diplom\participant\event\TestParticipantListener.class
+com\diplom\participant\persistance\entity\TestParticipantEntity.class
+com\diplom\participant\config\KafkaConfig.class
+com\diplom\participant\event\TestParticipantEvent.class
+com\diplom\participant\rest\controller\ParticipantController.class
+com\diplom\participant\domain\service\ParticipantService.class
+com\diplom\participant\persistance\repository\TestParticipantRepository.class

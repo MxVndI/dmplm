@@ -1,0 +1,36 @@
+package com.diplom.rest.controller;
+
+import com.diplom.persistance.entity.UserEntity;
+import com.diplom.domain.service.ProductService;
+import com.diplom.domain.service.UserService;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
+
+/**
+ * Renders the home page. Always returns the default template — A/B test page
+ * overrides are applied by TemplateOverrideInterceptor only when the admin has
+ * explicitly configured a custom HTML template for "/" on the user's test/variant.
+ */
+@Slf4j
+@Controller
+@RequiredArgsConstructor
+public class FrontendController {
+
+    private final UserService userService;
+    private final ProductService productService;
+
+    @GetMapping("/")
+    public String home(@AuthenticationPrincipal UserDetails userDetails, Model model) {
+        UserEntity user = userService.findByLogin(userDetails.getUsername())
+                .orElseThrow(() -> new IllegalStateException("Authenticated user not found"));
+
+        model.addAttribute("user", user);
+        model.addAttribute("products", productService.findAll());
+        return "default/home";
+    }
+}

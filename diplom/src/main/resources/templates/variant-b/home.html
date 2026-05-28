@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security" lang="ru">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Магазин — Premium Tech &amp; Lifestyle</title>
+    <link rel="stylesheet" th:href="@{/css/styles.css}"/>
+    <meta name="ab-test-variant" content="B"/>
+</head>
+<!--
+     ВАРИАНТ B — Информационный. Белый фон, акцент на изумрудный.
+     Редакционный список товаров. Сигналы доверия. Профессиональный вид.
+-->
+<body class="variant-b">
+
+<!-- ПРОМО ПОЛОСА -->
+<div class="vb-promo-bar">
+    🚚&nbsp;<strong>Бесплатная доставка</strong> от 4000 руб.
+    &nbsp;&nbsp;·&nbsp;&nbsp;
+    ↩&nbsp;<strong>30-дневный</strong> возврат без вопросов
+    &nbsp;&nbsp;·&nbsp;&nbsp;
+    🔒&nbsp;<strong>Безопасная</strong> оплата
+</div>
+
+<div th:replace="~{fragments/nav :: navbar}"></div>
+
+<!-- HERO -->
+<section class="vb-hero">
+    <div class="vb-hero__inner page-wrapper">
+        <div class="vb-hero__text">
+            <p class="vb-hero__eyebrow">Специально для вас, <span th:text="${user.firstName}">друг</span></p>
+            <h1 class="vb-hero__title">
+                Умные покупки<br><span>онлайн</span>
+            </h1>
+            <p class="vb-hero__sub">
+                Только проверенные товары. Каждый товар вручную протестирован,
+                точно описан и честно оценён.
+            </p>
+            <a th:href="@{/products}" class="btn btn-primary vb-hero__cta">Перейти в каталог</a>
+        </div>
+        <div class="vb-hero__badges">
+            <div class="vb-trust-badge">
+                <div class="vb-trust-badge__icon">🏆</div>
+                <div class="vb-trust-badge__label">Высокий рейтинг</div>
+                <div class="vb-trust-badge__sub">4.8 / 5 звёзд</div>
+            </div>
+            <div class="vb-trust-badge">
+                <div class="vb-trust-badge__icon">📦</div>
+                <div class="vb-trust-badge__label">Быстрая доставка</div>
+                <div class="vb-trust-badge__sub">Отправка за 24 ч</div>
+            </div>
+            <div class="vb-trust-badge">
+                <div class="vb-trust-badge__icon">🛡</div>
+                <div class="vb-trust-badge__label">Защита покупателя</div>
+                <div class="vb-trust-badge__sub">100% гарантия</div>
+            </div>
+        </div>
+    </div>
+    <div class="vb-variant-tag">
+        A/B Вариант:&nbsp;<strong th:text="${testVariant}">B</strong>
+    </div>
+</section>
+
+<div class="page-wrapper">
+
+    <!-- Поиск -->
+    <form th:action="@{/products}" method="get" class="search-bar" style="margin-bottom:1.25rem">
+        <input type="text" name="search" placeholder="Поиск товаров…" th:value="${search}"/>
+        <button type="submit" class="btn btn-primary">Найти</button>
+        <a th:if="${search != null and !search.isEmpty()}"
+           th:href="@{/}" class="btn btn-outline" style="color:#0d9488;border-color:#0d9488">✕&nbsp;Сбросить</a>
+    </form>
+
+    <!-- Заголовок каталога -->
+    <div class="vb-section-header">
+        <h2 class="page-title" style="color:#0f172a">Каталог товаров</h2>
+        <span class="vb-product-count"
+              th:text="${#lists.size(products)} + ' товаров'">0 товаров</span>
+    </div>
+
+    <div th:if="${#lists.isEmpty(products)}" class="alert alert-success">
+        Товары ещё не добавлены.
+    </div>
+
+    <!-- Список товаров -->
+    <div class="vb-product-list" th:unless="${#lists.isEmpty(products)}">
+        <div class="vb-product-row" th:each="p, pStat : ${products}">
+
+            <!-- Миниатюра -->
+            <a th:href="@{/products/{id}(id=${p.id})}" class="vb-product-row__thumb">
+                <img th:if="${p.photoUrl != null and !p.photoUrl.isEmpty()}"
+                     th:src="${p.photoUrl}" th:alt="${p.name}"/>
+                <div class="vb-product-row__no-img"
+                     th:unless="${p.photoUrl != null and !p.photoUrl.isEmpty()}">📷</div>
+            </a>
+
+            <!-- Информация -->
+            <div class="vb-product-row__info">
+                <a th:href="@{/products/{id}(id=${p.id})}" class="vb-product-row__name"
+                   th:text="${p.name}">Название товара</a>
+                <p class="vb-product-row__desc" th:text="${p.description}">Описание</p>
+                <div class="vb-product-row__meta">
+                    <span class="vb-tag" th:if="${pStat.index < 5}">Новинка</span>
+                    <span class="vb-tag vb-tag--limited"
+                          th:if="${p.availableQuantity > 0 and p.availableQuantity < 20}"
+                          th:text="'Осталось ' + ${p.availableQuantity} + ' шт.'">Мало</span>
+                    <span class="vb-product-row__qty"
+                          th:if="${p.availableQuantity >= 20}"
+                          th:text="'В наличии: ' + ${p.availableQuantity}">В наличии</span>
+                    <span class="vb-product-row__qty vb-qty-out"
+                          th:if="${p.availableQuantity == 0}">Нет в наличии</span>
+                </div>
+            </div>
+
+            <!-- Цена + CTA -->
+            <div class="vb-product-row__action">
+                <div class="vb-product-row__price" th:text="'$' + ${p.price}">$0.00</div>
+                <a th:href="@{/products/{id}(id=${p.id})}" class="btn btn-primary btn-sm">
+                    Подробнее
+                </a>
+            </div>
+
+        </div>
+    </div>
+    <!-- Конец списка товаров -->
+
+</div>
+
+<script th:src="@{/js/main.js}"></script>
+</body>
+</html>

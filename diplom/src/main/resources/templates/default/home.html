@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security" lang="ru">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <meta name="description" content="DiplomShop — современный магазин с A/B тестированием"/>
+    <title>Главная — DiplomShop</title>
+    <link rel="stylesheet" th:href="@{/css/styles.css}"/>
+</head>
+<body>
+
+<div th:replace="~{fragments/nav :: navbar}"></div>
+
+<!-- Hero Section -->
+<section style="background: linear-gradient(to bottom, #e3f0fa 0%, #ccdff1 100%); padding: 5rem 1.5rem; text-align: center; position: relative; overflow: hidden">    <div style="position: relative; z-index: 1; max-width: 700px; margin: 0 auto">
+        <h1 style="font-size: clamp(2.5rem, 6vw, 4rem); font-weight: 700; margin: 0 0 1rem; letter-spacing: -0.03em; font-family: var(--font-heading); color: var(--color-primary)">
+            Welcome to DiplomShop
+        </h1>
+        <p style="font-size: 1.1rem; color: var(--color-secondary); max-width: 600px; margin: 0 auto 2.5rem; line-height: 1.7">
+            Experience modern e-commerce with integrated A/B testing. Discover products tailored to your preferences.
+        </p>
+        <a th:href="@{/products}" class="btn btn-primary" style="font-size: 1.05rem; padding: 0.85rem 2.5rem; min-height: 50px">
+            Explore Catalog
+        </a>
+    </div>
+</section>
+
+<div class="page-wrapper">
+    <!-- Search -->
+    <form th:action="@{/products}" method="get" class="search-bar" style="margin-top: 3rem">
+        <input type="text"
+               name="search"
+               placeholder="Search products..."
+               th:value="${search}"
+               aria-label="Search products"
+               style="background: white;"/>
+        <button type="submit" class="btn btn-primary">Search</button>
+    </form>
+
+    <!-- Section Title -->
+    <div style="display: flex; align-items: baseline; justify-content: space-between; margin: 3rem 0 2rem; gap: 1rem">
+        <h2 class="page-title" style="margin: 0">Featured Products</h2>
+        <a th:href="@{/products}" style="font-size: 0.9rem; color: var(--color-primary); font-weight: 600; transition: all var(--duration-fast); border-bottom: 2px solid transparent" onmouseover="this.style.borderBottomColor='var(--color-primary)'" onmouseout="this.style.borderBottomColor='transparent'">View all →</a>
+    </div>
+
+    <!-- Empty State -->
+    <div th:if="${#lists.isEmpty(products)}" class="empty-state">
+        <div class="empty-state__icon">📦</div>
+        <h3 class="empty-state__title">No products yet</h3>
+        <p class="empty-state__message">Check back later or contact support</p>
+        <a th:href="@{/}" class="btn btn-secondary">Return Home</a>
+    </div>
+
+    <!-- Товары с glassmorphism дизайном -->
+    <div class="products-grid" th:unless="${#lists.isEmpty(products)}">
+        <div class="product-card" th:each="p : ${products}" tabindex="0">
+            <!-- Изображение -->
+            <a th:href="@{/products/{id}(id=${p.id})}" style="display: block; overflow: hidden">
+                <img th:if="${p.photoKey != null and !p.photoKey.isEmpty()}"
+                     th:src="@{'/images/' + ${p.photoKey}}"
+                     th:alt="${p.name}"
+                     loading="lazy"
+                     style="transition: transform 0.3s ease"/>
+                <div class="product-card-no-img" th:unless="${p.photoKey != null and !p.photoKey.isEmpty()}">📷</div>
+            </a>
+
+            <!-- Информация -->
+            <div class="product-card-body">
+                <h3 class="product-card-name" th:text="${p.name}">Товар</h3>
+
+                <div class="product-card-price" th:text="'$' + ${#numbers.formatDecimal(p.price, 1, 2)}">$0.00</div>
+
+                <p class="product-card-desc" th:text="${p.description}">Описание товара...</p>
+
+                <div class="product-card-qty"
+                     th:classappend="${p.availableQuantity == 0} ? 'out' : ''"
+                     th:text="${p.availableQuantity > 0} ? '✓ В наличии: ' + ${p.availableQuantity} + ' шт.' : '✕ Нет в наличии'"
+                     style="margin-top: auto">
+                </div>
+            </div>
+
+            <!-- Действие -->
+            <div class="product-card-footer">
+                <a th:href="@{/products/{id}(id=${p.id})}"
+                   class="btn btn-primary btn-sm btn-full"
+                   th:aria-label="'Подробнее о товаре ' + ${p.name}">
+                   👁️ Подробнее
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Info Banner -->
+    <div style="margin-top: 4rem; padding: 2rem; background: var(--color-muted); border-radius: var(--radius-lg); border-left: 3px solid var(--color-primary); text-align: center">
+        <p style="margin: 0; color: var(--color-secondary); font-size: 0.95rem">
+            <strong>Notice:</strong> You are viewing this shop as part of an A/B test. Some interface elements may differ.
+        </p>
+    </div>
+</div>
+
+<script th:src="@{/js/main.js}"></script>
+</body>
+</html>

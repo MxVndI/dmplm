@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security" lang="ru">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Магазин — Отзывы покупателей</title>
+    <link rel="stylesheet" th:href="@{/css/styles.css}"/>
+    <meta name="ab-test-variant" content="C"/>
+</head>
+<!--
+     ВАРИАНТ C — Социальные доказательства. Отзывы, рейтинги, сообщество.
+     Акцент на доверие: звёзды, цитаты, счётчики.
+-->
+<body class="variant-c">
+
+<!-- ПРОМО ПОЛОСА -->
+<div class="vc-promo-bar" style="background:#7c3aed;color:#fff;text-align:center;padding:.6rem;font-size:.88rem">
+    ⭐&nbsp;<strong>Более 1000 довольных покупателей</strong> — Присоединяйся!
+    &nbsp;&nbsp;·&nbsp;&nbsp;
+    🔒&nbsp;Безопасная оплата &amp; возврат без вопросов
+</div>
+
+<div th:replace="~{fragments/nav :: navbar}"></div>
+
+<!-- HERO -->
+<section class="vc-hero" style="background:linear-gradient(135deg,#7c3aed 0%,#a855f7 100%);color:#fff;padding:3rem 1.5rem;text-align:center">
+    <div class="page-wrapper">
+        <div style="display:inline-block;background:rgba(255,255,255,.15);border-radius:99px;padding:.4rem 1.2rem;font-size:.85rem;font-weight:700;margin-bottom:1rem">
+            ⭐ Выбор покупателей 2024
+        </div>
+        <h1 style="font-size:2.5rem;font-weight:900;margin:.5rem 0">
+            Покупают и рекомендуют
+        </h1>
+        <p style="font-size:1.1rem;opacity:.9;max-width:500px;margin:0 auto 1.5rem">
+            Реальные отзывы реальных людей. Только проверенные товары.
+        </p>
+        <div style="display:flex;gap:2rem;justify-content:center;flex-wrap:wrap;font-size:.9rem">
+            <div>
+                <div style="font-size:2rem;font-weight:900" th:text="${#lists.size(products)} + '+'">32+</div>
+                <div style="opacity:.8">Товаров</div>
+            </div>
+            <div>
+                <div style="font-size:2rem;font-weight:900">4.8★</div>
+                <div style="opacity:.8">Средний рейтинг</div>
+            </div>
+            <div>
+                <div style="font-size:2rem;font-weight:900">1 200+</div>
+                <div style="opacity:.8">Отзывов</div>
+            </div>
+        </div>
+        <div style="margin-top:1rem;opacity:.75;font-size:.8rem">
+            A/B Вариант: <strong th:text="${testVariant}">C</strong>
+        </div>
+    </div>
+</section>
+
+<!-- ОТЗЫВЫ -->
+<div style="background:#f8fafc;padding:2rem 1.5rem">
+    <div class="page-wrapper">
+        <h2 style="text-align:center;margin-bottom:1.5rem;color:#1e293b">Что говорят покупатели</h2>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:1rem">
+            <div style="background:#fff;border-radius:.75rem;padding:1.25rem;box-shadow:0 2px 8px rgba(0,0,0,.06)">
+                <div style="color:#f59e0b;font-size:1.1rem">★★★★★</div>
+                <p style="margin:.5rem 0;color:#334155;font-size:.9rem">"Отличное качество, быстрая доставка. Буду заказывать ещё!"</p>
+                <div style="font-size:.8rem;color:#64748b;font-weight:600">— Анна М., Москва</div>
+            </div>
+            <div style="background:#fff;border-radius:.75rem;padding:1.25rem;box-shadow:0 2px 8px rgba(0,0,0,.06)">
+                <div style="color:#f59e0b;font-size:1.1rem">★★★★★</div>
+                <p style="margin:.5rem 0;color:#334155;font-size:.9rem">"Заказал подарок — всё пришло в срок и в полном порядке."</p>
+                <div style="font-size:.8rem;color:#64748b;font-weight:600">— Иван К., СПб</div>
+            </div>
+            <div style="background:#fff;border-radius:.75rem;padding:1.25rem;box-shadow:0 2px 8px rgba(0,0,0,.06)">
+                <div style="color:#f59e0b;font-size:1.1rem">★★★★☆</div>
+                <p style="margin:.5rem 0;color:#334155;font-size:.9rem">"Хорошее соотношение цены и качества. Рекомендую!"</p>
+                <div style="font-size:.8rem;color:#64748b;font-weight:600">— Мария С., Екб</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="page-wrapper" style="padding-top:2rem">
+
+    <!-- Поиск -->
+    <form th:action="@{/products}" method="get" class="search-bar" style="margin-bottom:1.5rem">
+        <input type="text" name="search" placeholder="Поиск товаров…" th:value="${search}"/>
+        <button type="submit" class="btn btn-primary">Найти</button>
+        <a th:if="${search != null and !search.isEmpty()}"
+           th:href="@{/}" class="btn btn-outline" style="color:#666;border-color:#ced4da">✕ Сбросить</a>
+    </form>
+
+    <h2 class="page-title">Рекомендуемые товары</h2>
+
+    <div th:if="${#lists.isEmpty(products)}" class="alert alert-success">
+        Товары ещё не добавлены.
+    </div>
+
+    <!-- Сетка товаров -->
+    <div class="products-grid" th:unless="${#lists.isEmpty(products)}">
+        <div class="product-card" th:each="p, pStat : ${products}">
+
+            <div class="va-badge va-badge--new"
+                 th:if="${pStat.index < 5}"
+                 th:text="${pStat.index < 2 ? '⭐ Топ продаж' : '✅ Рекомендуем'}">Топ</div>
+
+            <a th:href="@{/products/{id}(id=${p.id})}">
+                <img th:if="${p.photoUrl != null and !p.photoUrl.isEmpty()}"
+                     th:src="${p.photoUrl}" th:alt="${p.name}"/>
+                <div class="product-card-no-img"
+                     th:unless="${p.photoUrl != null and !p.photoUrl.isEmpty()}">📷</div>
+            </a>
+
+            <div class="product-card-body">
+                <div class="product-card-name" th:text="${p.name}">Товар</div>
+                <div style="color:#f59e0b;font-size:.9rem;margin:.25rem 0">
+                    ★★★★★
+                    <span style="color:#64748b;font-size:.8rem"
+                          th:text="'(' + ${15 + (pStat.index * 11 % 75)} + ' отзывов)'"></span>
+                </div>
+                <div class="product-card-price" th:text="'$' + ${p.price}">$0.00</div>
+                <div class="product-card-desc" th:text="${p.description}">Описание</div>
+                <div class="product-card-qty"
+                     th:classappend="${p.availableQuantity == 0} ? 'out' : ''"
+                     th:text="${p.availableQuantity > 0} ? 'В наличии: ' + ${p.availableQuantity} : 'Нет в наличии'">
+                </div>
+            </div>
+
+            <div class="product-card-footer">
+                <a th:href="@{/products/{id}(id=${p.id})}" class="btn btn-primary btn-sm btn-full">
+                    Подробнее
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script th:src="@{/js/main.js}"></script>
+</body>
+</html>

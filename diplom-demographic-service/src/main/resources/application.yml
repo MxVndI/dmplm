@@ -1,0 +1,28 @@
+server:
+  port: ${SERVER_PORT:8084}
+
+spring:
+  application:
+    name: diplom-demographic-service
+  data:
+    mongodb:
+      uri: ${MONGO_URI:mongodb://localhost:27017/diplom_demographics}
+
+logging:
+  level:
+    com.diplom: DEBUG
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,prometheus
+      base-path: /actuator
+  endpoint:
+    health:
+      show-details: never
+    prometheus:
+      enabled: true
+  metrics:
+    tags:
+      application: diplom-demographic-service

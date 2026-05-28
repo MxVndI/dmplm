@@ -1,0 +1,11 @@
+C:\Users\LesunVo\Desktop\BIGGEST\diplom-selector-service\src\main\java\com\diplom\selector\domain\model\UserProfile.java
+C:\Users\LesunVo\Desktop\BIGGEST\diplom-selector-service\src\main\java\com\diplom\selector\config\KafkaStreamsConfig.java
+C:\Users\LesunVo\Desktop\BIGGEST\diplom-selector-service\src\main\java\com\diplom\selector\stream\UserSelectionProcessor.java
+C:\Users\LesunVo\Desktop\BIGGEST\diplom-selector-service\src\main\java\com\diplom\selector\persistance\entity\TestParticipantEntity.java
+C:\Users\LesunVo\Desktop\BIGGEST\diplom-selector-service\src\main\java\com\diplom\selector\serde\JsonSerde.java
+C:\Users\LesunVo\Desktop\BIGGEST\diplom-selector-service\src\main\java\com\diplom\selector\domain\model\TestCriteria.java
+C:\Users\LesunVo\Desktop\BIGGEST\diplom-selector-service\src\main\java\com\diplom\selector\SelectorApplication.java
+C:\Users\LesunVo\Desktop\BIGGEST\diplom-selector-service\src\main\java\com\diplom\selector\persistance\repository\TestParticipantRepository.java
+C:\Users\LesunVo\Desktop\BIGGEST\diplom-selector-service\src\main\java\com\diplom\selector\domain\model\DemographicProfile.java
+C:\Users\LesunVo\Desktop\BIGGEST\diplom-selector-service\src\main\java\com\diplom\selector\event\TestParticipantEvent.java
+C:\Users\LesunVo\Desktop\BIGGEST\diplom-selector-service\src\main\java\com\diplom\selector\domain\model\SelectionRequest.java

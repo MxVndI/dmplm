@@ -1,0 +1,247 @@
+{
+  "name": "Telegram → A/B Test Creator",
+  "active": true,
+  "settings": {"executionOrder": "v1", "binaryMode": "separate", "saveManualExecutions": true},
+  "nodes": [
+    {
+      "parameters": {"rule": {"interval": [{"field": "seconds", "secondsInterval": 5}]}},
+      "id": "node-schedule-5s",
+      "name": "Poll Every 5s",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [-1120, 144]
+    },
+    {
+      "parameters": {"jsCode": "const staticData = $getWorkflowStaticData('global');\nconst offset = staticData.telegramOffset ?? 0;\nreturn [{ json: { offset: String(offset) } }];"},
+      "id": "node-prepare-poll",
+      "name": "Prepare Poll",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [-900, 144]
+    },
+    {
+      "parameters": {"url": "={{ 'https://api.telegram.org/bot' + $credentials.telegram.botToken + '/getUpdates?offset=' + $json.offset + '&limit=10&timeout=0' }}", "options": {}, "authentication": "predefinedCredentialType", "nodeCredentialType": "telegramBot"},
+      "id": "node-get-updates",
+      "name": "Get Updates",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [-680, 144]
+    },
+    {
+      "parameters": {"jsCode": "const staticData = $getWorkflowStaticData('global');\nconst updates = $input.first().json?.result ?? [];\n\nif (updates.length > 0) {\n  staticData.telegramOffset = updates[updates.length - 1].update_id + 1;\n}\n\nconst messages = updates\n  .filter(u => u.message)\n  .map(u => {\n    const msg = u.message;\n    const chatId = String(msg?.chat?.id ?? '');\n    const firstName = msg?.from?.first_name ?? 'there';\n    const hasVoice = !!(msg?.voice || msg?.audio);\n    const fileId   = msg?.voice?.file_id ?? msg?.audio?.file_id ?? '';\n    const text     = msg?.text ?? '';\n    const isCommand = text.startsWith('/');\n    if (!chatId) return null;\n    return { json: { chatId, firstName, hasVoice, fileId, text, isCommand } };\n  })\n  .filter(Boolean);\n\nif (messages.length === 0) return [];\nreturn messages;"},
+      "id": "node-classify",
+      "name": "Classify Message",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [-448, 144]
+    },
+    {
+      "parameters": {"conditions": {"options": {"caseSensitive": true, "leftValue": "", "typeValidation": "strict"}, "combinator": "and", "conditions": [{"id": "cmd-cond", "leftValue": "={{ $json.isCommand }}", "rightValue": true, "operator": {"type": "boolean", "operation": "true"}}]}, "options": {}},
+      "id": "node-is-command",
+      "name": "Is Command?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [-224, -100]
+    },
+    {
+      "parameters": {"jsCode": "const item = $input.first().json;\nconst chatId = String(item.chatId);\nconst adminIds = '787209390'.split(',').map(s => s.trim()).filter(Boolean);\nif (adminIds.length > 0 && adminIds.includes(chatId)) {\n  return [];\n}\nconst cmd = (item.text || '').trim().split(' ')[0].toLowerCase();\nconst firstName = item.firstName || 'there';\nconst LF = String.fromCharCode(10);\nlet replyText;\nif (cmd === '/start' || cmd === '/help') {\n  replyText = 'Привет, ' + firstName + '!' + LF + LF +\n    'Я помогаю создавать A/B тесты по описанию.' + LF + LF +\n    'Опиши тест, например: _Тест для 18-40 лет, 200 участников, сплит 50/50_' +\n    LF + LF + 'Голосовые сообщения тоже понимаю.';\n} else if (cmd === '/list') {\n  replyText = 'Используй админ-панель для просмотра тестов.';\n} else {\n  replyText = 'Команда ' + cmd + ' не поддерживается.' + LF + LF +\n    'Отправь /help или опиши свой A/B тест текстом/голосом.';\n}\nreturn [{ json: { chatId, replyText } }];"},
+      "id": "node-build-cmd-reply",
+      "name": "Build Command Reply",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [0, -244]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ 'https://api.telegram.org/bot' + $credentials.telegram.botToken + '/sendMessage' }}",
+        "sendBody": true,
+        "contentType": "json",
+        "jsonBody": "={{ JSON.stringify({ chat_id: $json.chatId, text: $json.replyText, parse_mode: 'Markdown' }) }}",
+        "options": {}
+      },
+      "id": "node-reply-command",
+      "name": "Reply: Command",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [224, -244]
+    },
+    {
+      "parameters": {"conditions": {"options": {"caseSensitive": true, "leftValue": "", "typeValidation": "strict"}, "combinator": "and", "conditions": [{"id": "voice-cond", "leftValue": "={{ $json.hasVoice }}", "rightValue": true, "operator": {"type": "boolean", "operation": "true"}}]}, "options": {}},
+      "id": "node-is-voice",
+      "name": "Is Voice?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [-224, 144]
+    },
+    {
+      "parameters": {"url": "={{ 'https://api.telegram.org/bot' + $credentials.telegram.botToken + '/getFile?file_id=' + $json.fileId }}", "options": {}},
+      "id": "node-get-file",
+      "name": "Get File Info",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [0, 0]
+    },
+    {
+      "parameters": {"url": "={{ 'https://api.telegram.org/file/bot' + $credentials.telegram.botToken + '/' + $json.result.file_path }}", "options": {"response": {"response": {"responseFormat": "file"}}}},
+      "id": "node-download-voice",
+      "name": "Download Voice",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [224, 0]
+    },
+    {
+      "parameters": {"jsCode": "const item = $input.first();\nif (!item.binary || !item.binary.data) return [item];\nconst b = item.binary.data;\nconst name = String(b.fileName || 'voice.ogg');\nconst lower = name.toLowerCase();\nif (lower.endsWith('.oga') || lower.endsWith('.opus') || lower.endsWith('.ogg')) {\n  b.fileName = name.replace(/\\.(oga|opus|ogg)$/i, '.ogg');\n  b.mimeType = 'audio/ogg';\n} else if (!b.mimeType || b.mimeType === 'application/octet-stream') {\n  b.fileName = 'voice.ogg';\n  b.mimeType = 'audio/ogg';\n}\nitem.binary.data = b;\nreturn [item];"},
+      "id": "node-normalize-voice",
+      "name": "Normalize Voice Binary",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [336, 0]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.groq.com/openai/v1/audio/transcriptions",
+        "sendHeaders": true,
+        "headerParameters": {"parameters": [{"name": "Authorization", "value": "={{ 'Bearer ' + $credentials.groq.apiKey }}"}]},
+        "sendBody": true,
+        "contentType": "multipart-form-data",
+        "bodyParameters": {"parameters": [{"name": "model", "value": "whisper-large-v3"}, {"parameterType": "formBinaryData", "name": "file", "inputDataFieldName": "data"}, {"name": "response_format", "value": "json"}]},
+        "options": {}
+      },
+      "id": "node-transcribe",
+      "name": "Transcribe Voice (Groq)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [448, 0]
+    },
+    {
+      "parameters": {"assignments": {"assignments": [{"id": "sv1", "name": "textContent", "value": "={{ $json.text }}", "type": "string"}, {"id": "sv2", "name": "chatId", "value": "={{ $('Classify Message').item.json.chatId }}", "type": "string"}, {"id": "sv3", "name": "firstName", "value": "={{ $('Classify Message').item.json.firstName }}", "type": "string"}]}, "options": {}},
+      "id": "node-set-voice-text",
+      "name": "Set Voice Text",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [672, 0]
+    },
+    {
+      "parameters": {"assignments": {"assignments": [{"id": "st1", "name": "textContent", "value": "={{ $json.text }}", "type": "string"}, {"id": "st2", "name": "chatId", "value": "={{ $json.chatId }}", "type": "string"}, {"id": "st3", "name": "firstName", "value": "={{ $json.firstName }}", "type": "string"}]}, "options": {}},
+      "id": "node-set-text",
+      "name": "Set Text",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [0, 288]
+    },
+    {
+      "parameters": {"jsCode": "const systemPrompt = 'You are an A/B test configuration assistant. Return ONLY valid JSON: {\"name\":\"short test name\",\"description\":\"what this measures\",\"criteria\":{\"ageMin\":null,\"ageMax\":null,\"countries\":[],\"languages\":[],\"genders\":[],\"maxParticipants\":100,\"variantARatio\":50}}. null = no restriction. [] = everyone. variantARatio 0-100.';\nconst item = $input.first().json;\nconst requestBody = JSON.stringify({\n  model: 'llama-3.3-70b-versatile',\n  temperature: 0.2,\n  messages: [\n    { role: 'system', content: systemPrompt },\n    { role: 'user', content: item.textContent }\n  ]\n});\nreturn [{ json: { ...item, requestBody } }];"},
+      "id": "node-prep-llm-body",
+      "name": "Prep LLM Body",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [896, 144]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.groq.com/openai/v1/chat/completions",
+        "sendHeaders": true,
+        "headerParameters": {"parameters": [{"name": "Authorization", "value": "={{ 'Bearer ' + $credentials.groq.apiKey }}"}]},
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "={{ $json.requestBody }}",
+        "options": {}
+      },
+      "id": "node-gen-config",
+      "name": "Generate Config (Groq)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1120, 144]
+    },
+    {
+      "parameters": {"jsCode": "const item = $input.first().json;\nconst raw = item?.choices?.[0]?.message?.content ?? item?.text ?? '';\nconst chatId    = $('Classify Message').first().json?.chatId ?? '';\nconst firstName = $('Classify Message').first().json?.firstName ?? 'there';\ntry {\n  const cleaned = raw.replace(/```(?:json)?\\s*/gi, '').replace(/```/g, '').trim();\n  const config = JSON.parse(cleaned);\n  if (!config.name)     throw new Error('Missing field: name');\n  if (!config.criteria) throw new Error('Missing field: criteria');\n  config.criteria.maxParticipants = config.criteria.maxParticipants ?? 100;\n  config.criteria.variantARatio   = config.criteria.variantARatio   ?? 50;\n  return [{ json: { ok: true, config, chatId, firstName } }];\n} catch (e) {\n  return [{ json: { ok: false, error: e.message, raw, chatId, firstName } }];\n}"},
+      "id": "node-parse-config",
+      "name": "Parse Config JSON",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1344, 144]
+    },
+    {
+      "parameters": {"conditions": {"options": {"caseSensitive": true, "leftValue": "", "typeValidation": "strict"}, "combinator": "and", "conditions": [{"id": "ok-cond", "leftValue": "={{ $json.ok }}", "rightValue": true, "operator": {"type": "boolean", "operation": "true"}}]}, "options": {}},
+      "id": "node-parse-ok",
+      "name": "Parse OK?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [1568, 144]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://test-service:8081/api/tests",
+        "sendHeaders": true,
+        "headerParameters": {"parameters": [{"name": "Content-Type", "value": "application/json"}]},
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "={{ JSON.stringify($json.config) }}",
+        "options": {}
+      },
+      "id": "node-create-test",
+      "name": "Create Test in Service",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1792, 0]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ 'https://api.telegram.org/bot' + $credentials.telegram.botToken + '/sendMessage' }}",
+        "sendBody": true,
+        "contentType": "json",
+        "jsonBody": "={{ JSON.stringify({ chat_id: $('Parse Config JSON').item.json.chatId, text: '✅ *A/B Тест создан!*\\n\\n📌 *Название:* ' + ($json.name ?? '?') + '\\n📝 *Описание:* ' + ($json.description ?? '') + '\\n\\n👥 *Макс. участников:* ' + ($json.criteria?.maxParticipants ?? 100) + '\\n⚖️ *Сплит:* A ' + ($json.criteria?.variantARatio ?? 50) + '% / B ' + (100 - ($json.criteria?.variantARatio ?? 50)) + '%\\n\\nСтатус: *DRAFT*\\n👉 Админ → A/B Тесты → Запустить', parse_mode: 'Markdown' }) }}",
+        "options": {}
+      },
+      "id": "node-reply-success",
+      "name": "Reply: Success",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [2016, 0]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ 'https://api.telegram.org/bot' + $credentials.telegram.botToken + '/sendMessage' }}",
+        "sendBody": true,
+        "contentType": "json",
+        "jsonBody": "={{ JSON.stringify({ chat_id: $json.chatId, text: '❌ *Не получилось создать тест*\\n\\n_Ошибка:_ `' + $json.error + '`\\n\\nПример:\\n_\"Тест для русскоязычных 18-40 лет, 200 участников, сплит 50/50\"_', parse_mode: 'Markdown' }) }}",
+        "options": {}
+      },
+      "id": "node-reply-error",
+      "name": "Reply: Error",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1792, 304]
+    }
+  ],
+  "connections": {
+    "Poll Every 5s":          {"main": [[{"node": "Prepare Poll", "type": "main", "index": 0}]]},
+    "Prepare Poll":           {"main": [[{"node": "Get Updates", "type": "main", "index": 0}]]},
+    "Get Updates":            {"main": [[{"node": "Classify Message", "type": "main", "index": 0}]]},
+    "Classify Message":       {"main": [[{"node": "Is Command?", "type": "main", "index": 0}]]},
+    "Is Command?":            {"main": [[{"node": "Build Command Reply", "type": "main", "index": 0}], [{"node": "Is Voice?", "type": "main", "index": 0}]]},
+    "Build Command Reply":    {"main": [[{"node": "Reply: Command", "type": "main", "index": 0}]]},
+    "Is Voice?":              {"main": [[{"node": "Get File Info", "type": "main", "index": 0}], [{"node": "Set Text", "type": "main", "index": 0}]]},
+    "Get File Info":          {"main": [[{"node": "Download Voice", "type": "main", "index": 0}]]},
+    "Download Voice":         {"main": [[{"node": "Normalize Voice Binary", "type": "main", "index": 0}]]},
+    "Normalize Voice Binary": {"main": [[{"node": "Transcribe Voice (Groq)", "type": "main", "index": 0}]]},
+    "Transcribe Voice (Groq)":{"main": [[{"node": "Set Voice Text", "type": "main", "index": 0}]]},
+    "Set Voice Text":         {"main": [[{"node": "Prep LLM Body", "type": "main", "index": 0}]]},
+    "Set Text":               {"main": [[{"node": "Prep LLM Body", "type": "main", "index": 0}]]},
+    "Prep LLM Body":          {"main": [[{"node": "Generate Config (Groq)", "type": "main", "index": 0}]]},
+    "Generate Config (Groq)": {"main": [[{"node": "Parse Config JSON", "type": "main", "index": 0}]]},
+    "Parse Config JSON":      {"main": [[{"node": "Parse OK?", "type": "main", "index": 0}]]},
+    "Parse OK?":              {"main": [[{"node": "Create Test in Service", "type": "main", "index": 0}], [{"node": "Reply: Error", "type": "main", "index": 0}]]},
+    "Create Test in Service": {"main": [[{"node": "Reply: Success", "type": "main", "index": 0}]]}
+  },
+  "id": "telegram-ab-test-creator",
+  "tags": []
+}

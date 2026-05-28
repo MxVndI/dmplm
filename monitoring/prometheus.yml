@@ -1,0 +1,40 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  external_labels:
+    monitor: 'diplom-shop'
+
+scrape_configs:
+  - job_name: 'diplom-shop'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ['shop:8080']
+
+  - job_name: 'diplom-test-service'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ['test:8081']
+
+  - job_name: 'diplom-selector-service'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ['selector:8082']
+
+  - job_name: 'diplom-demographic-service'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ['demographic:8084']
+
+  - job_name: 'diplom-notification-service'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ['notification:8083']
+
+  - job_name: 'diplom-clustering-service'
+    metrics_path: '/metrics'
+    static_configs:
+      - targets: ['clustering:8085']
+
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']

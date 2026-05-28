@@ -1,0 +1,57 @@
+server:
+  port: 8083
+
+spring:
+  application:
+    name: diplom-notification-service
+  data:
+    mongodb:
+      uri: ${MONGO_URI:mongodb://mongo:27017/diplom_notifications}
+  mail:
+    host: ${MAIL_HOST:smtp.gmail.com}
+    port: ${MAIL_PORT:587}
+    username: ${MAIL_USERNAME:}
+    password: ${MAIL_PASSWORD:}
+    # Flat property keys — Spring Boot maps these directly to JavaMail Session properties.
+    # Nested YAML (mail.smtp.auth: true) is NOT reliably flattened for Map<String,String>.
+    properties:
+      "mail.smtp.auth": "true"
+      "mail.smtp.starttls.enable": "true"
+      # Require TLS — prevents JavaMail from falling back to plain-text auth,
+      # which causes Gmail to reject with "Please sign in via browser" (534-5.7.14).
+      "mail.smtp.starttls.required": "true"
+      "mail.smtp.connectiontimeout": "10000"
+      "mail.smtp.timeout": "10000"
+      "mail.smtp.writetimeout": "10000"
+
+app:
+  notification:
+    email-enabled: ${NOTIFICATION_EMAIL_ENABLED:true}
+    telegram-enabled: ${NOTIFICATION_TELEGRAM_ENABLED:false}
+  telegram:
+    bot-token: ${TELEGRAM_BOT_TOKEN:}
+    # Comma-separated Telegram chat IDs of admin users, e.g. "111222333,444555666"
+    admin-chat-ids: ${TELEGRAM_ADMIN_CHAT_IDS:}
+  mail:
+    from: ${MAIL_FROM:noreply@diplom-shop.local}
+  shop-url: ${SHOP_URL:http://shop:8080}
+  test-service-url: ${TEST_SERVICE_URL:http://test:8081}
+
+logging:
+  level:
+    com.diplom: DEBUG
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,prometheus
+      base-path: /actuator
+  endpoint:
+    health:
+      show-details: never
+    prometheus:
+      enabled: true
+  metrics:
+    tags:
+      application: diplom-notification-service

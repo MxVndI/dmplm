@@ -1,0 +1,165 @@
+{
+  "annotations": {
+    "list": []
+  },
+  "editable": true,
+  "gnetId": null,
+  "graphTooltip": 0,
+  "id": null,
+  "links": [],
+  "panels": [
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "color": {"mode": "thresholds"},
+          "mappings": [],
+          "thresholds": {"mode": "absolute", "steps": []}
+        },
+        "overrides": []
+      },
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 0},
+      "id": 2,
+      "options": {"orientation": "auto", "textMode": "auto"},
+      "pluginVersion": "8.0.0",
+      "targets": [
+        {
+          "expr": "count(http_server_requests_seconds_count{uri=~\"/api/tests.*\"}) by (status)",
+          "refId": "A"
+        }
+      ],
+      "title": "API Requests by Status",
+      "type": "stat"
+    },
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "color": {"mode": "palette-classic"},
+          "custom": {"axisLabel": "", "axisPlacement": "auto", "barAlignment": 0, "drawStyle": "line", "fillOpacity": 10}
+        },
+        "overrides": []
+      },
+      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 0},
+      "id": 3,
+      "options": {"legend": {"calcs": [], "displayMode": "list", "placement": "bottom"}},
+      "targets": [
+        {
+          "expr": "rate(http_server_requests_seconds_sum{uri=~\"/api/tests.*\"}[5m]) / rate(http_server_requests_seconds_count{uri=~\"/api/tests.*\"}[5m])",
+          "legendFormat": "Test API Latency",
+          "refId": "A"
+        },
+        {
+          "expr": "rate(http_server_requests_seconds_sum{uri=~\"/api/cluster.*\"}[5m]) / rate(http_server_requests_seconds_count{uri=~\"/api/cluster.*\"}[5m])",
+          "legendFormat": "Clustering Latency",
+          "refId": "B"
+        }
+      ],
+      "title": "API Latencies (seconds)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": {
+        "defaults": {"color": {"mode": "palette-classic"}, "custom": {"drawStyle": "line", "fillOpacity": 10}},
+        "overrides": []
+      },
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 8},
+      "id": 4,
+      "targets": [
+        {
+          "expr": "rate(http_server_requests_seconds_count{uri=~\"/api/tests.*\", status=~\"5..\"}[5m])",
+          "legendFormat": "Test Service Errors/sec",
+          "refId": "A"
+        },
+        {
+          "expr": "rate(http_server_requests_seconds_count{uri=~\"/api/cluster.*\", status=~\"5..\"}[5m])",
+          "legendFormat": "Clustering Errors/sec",
+          "refId": "B"
+        }
+      ],
+      "title": "Error Rates (5xx)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": {
+        "defaults": {"color": {"mode": "palette-classic"}, "custom": {"drawStyle": "line", "fillOpacity": 10}},
+        "overrides": []
+      },
+      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 8},
+      "id": 5,
+      "targets": [
+        {
+          "expr": "jvm_memory_used_bytes{area=\"heap\"} / jvm_memory_max_bytes{area=\"heap\"}",
+          "legendFormat": "Heap Usage %",
+          "refId": "A"
+        },
+        {
+          "expr": "jvm_threads_live_threads",
+          "legendFormat": "Live Threads",
+          "refId": "B"
+        }
+      ],
+      "title": "JVM Metrics",
+      "type": "timeseries"
+    },
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": {
+        "defaults": {"color": {"mode": "palette-classic"}, "custom": {"drawStyle": "line", "fillOpacity": 10}},
+        "overrides": []
+      },
+      "gridPos": {"h": 8, "w": 24, "x": 0, "y": 16},
+      "id": 6,
+      "targets": [
+        {
+          "expr": "rate(http_server_requests_seconds_count{job=\"test-service\"}[5m])",
+          "legendFormat": "Test Service RPS",
+          "refId": "A"
+        },
+        {
+          "expr": "rate(http_server_requests_seconds_count{job=\"shop\"}[5m])",
+          "legendFormat": "Shop RPS",
+          "refId": "B"
+        },
+        {
+          "expr": "rate(http_server_requests_seconds_count{job=\"selector-service\"}[5m])",
+          "legendFormat": "Selector Service RPS",
+          "refId": "C"
+        }
+      ],
+      "title": "Requests Per Second by Service",
+      "type": "timeseries"
+    },
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": {
+        "defaults": {"color": {"mode": "palette-classic"}, "custom": {"drawStyle": "line", "fillOpacity": 10}},
+        "overrides": []
+      },
+      "gridPos": {"h": 8, "w": 24, "x": 0, "y": 24},
+      "id": 7,
+      "targets": [
+        {
+          "expr": "process_cpu_usage",
+          "legendFormat": "CPU Usage {{job}}",
+          "refId": "A"
+        }
+      ],
+      "title": "Process CPU Usage",
+      "type": "timeseries"
+    }
+  ],
+  "refresh": "30s",
+  "schemaVersion": 36,
+  "style": "dark",
+  "tags": ["ab-test", "e-commerce"],
+  "templating": {"list": []},
+  "time": {"from": "now-1h", "to": "now"},
+  "timepicker": {},
+  "timezone": "",
+  "title": "A/B Testing & Microservices Dashboard",
+  "uid": "ab-tests",
+  "version": 1
+}

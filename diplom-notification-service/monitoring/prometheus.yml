@@ -1,0 +1,34 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+scrape_configs:
+  - job_name: 'shop'
+    static_configs:
+      - targets: ['shop:8080']
+    metrics_path: '/actuator/prometheus'
+
+  - job_name: 'test-service'
+    static_configs:
+      - targets: ['test:8081']
+    metrics_path: '/actuator/prometheus'
+
+  - job_name: 'selector-service'
+    static_configs:
+      - targets: ['selector:8082']
+    metrics_path: '/actuator/prometheus'
+
+  - job_name: 'notification-service'
+    static_configs:
+      - targets: ['notification:8083']
+    metrics_path: '/actuator/prometheus'
+
+  - job_name: 'demographic-service'
+    static_configs:
+      - targets: ['demographic:8084']
+    metrics_path: '/actuator/prometheus'
+
+  - job_name: 'clustering-service'
+    static_configs:
+      - targets: ['clustering:8085']
+    metrics_path: '/metrics'

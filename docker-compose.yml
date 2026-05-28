@@ -1,0 +1,640 @@
+#version: '3.8'
+#
+#services:
+#  # ============================================================================
+#  # Infrastructure Layer
+#  # ============================================================================
+#
+#  mongo:
+#    image: mongo:7.0
+#    container_name: diplom-mongo
+#    environment:
+#      MONGO_INITDB_ROOT_USERNAME: admin
+#      MONGO_INITDB_ROOT_PASSWORD: Admin1234!
+#    ports:
+#      - "27017:27017"
+#    volumes:
+#      - mongo_data:/data/db
+#      - ./init-mongo.js:/docker-entrypoint-initdb.d/init-mongo.js
+#    networks:
+#      - diplom-network
+#    healthcheck:
+#      test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/test --quiet
+#      interval: 10s
+#      timeout: 5s
+#      retries: 5
+#
+#  kafka:
+#    image: confluentinc/cp-kafka:7.5.0
+#    container_name: diplom-kafka
+#    environment:
+#      KAFKA_NODE_ID: 1
+#      KAFKA_PROCESS_ROLES: broker,controller
+#      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:9093
+#      KAFKA_CONTROLLER_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT
+#      KAFKA_BROKER_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_INTERNAL:PLAINTEXT
+#      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,PLAINTEXT_INTERNAL://kafka:29092
+#      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT_INTERNAL
+#      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+#      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+#      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+#      KAFKA_LOG_RETENTION_HOURS: 168
+#      KAFKA_AUTO_CREATE_TOPICS_ENABLE: 'true'
+#    ports:
+#      - "9092:9092"
+#      - "29092:29092"
+#      - "9093:9093"
+#    volumes:
+#      - kafka_data:/var/lib/kafka/data
+#    networks:
+#      - diplom-network
+#    healthcheck:
+#      test: kafka-broker-api-versions --bootstrap-server kafka:9092 || exit 1
+#      interval: 10s
+#      timeout: 5s
+#      retries: 5
+#
+#  minio:
+#    image: minio/minio:latest
+#    container_name: diplom-minio
+#    environment:
+#      MINIO_ROOT_USER: minioadmin
+#      MINIO_ROOT_PASSWORD: minioadmin
+#    ports:
+#      - "9000:9000"
+#      - "9001:9001"
+#    volumes:
+#      - minio_data:/minio_data
+#    networks:
+#      - diplom-network
+#    command: minio server /minio_data --console-address ":9001"
+#    healthcheck:
+#      test: curl -f http://localhost:9000/minio/health/live || exit 1
+#      interval: 10s
+#      timeout: 5s
+#      retries: 5
+#
+#  minio-init:
+#    image: minio/mc:latest
+#    container_name: diplom-minio-init
+#    depends_on:
+#      minio:
+#        condition: service_healthy
+#    entrypoint: >
+#      /bin/sh -c "
+#      /usr/bin/mc config host add minio http://minio:9000 minioadmin minioadmin;
+#      /usr/bin/mc mb minio/diplom-shop;
+#      exit 0;
+#      "
+#    networks:
+#      - diplom-network
+#
+#  prometheus:
+#    image: prom/prometheus:latest
+#    container_name: diplom-prometheus
+#    ports:
+#      - "9090:9090"
+#    volumes:
+#      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
+#      - prometheus_data:/prometheus
+#    command:
+#      - '--config.file=/etc/prometheus/prometheus.yml'
+#      - '--storage.tsdb.path=/prometheus'
+#    networks:
+#      - diplom-network
+#    healthcheck:
+#      test: wget --quiet --tries=1 --spider http://localhost:9090/graph || exit 1
+#      interval: 10s
+#      timeout: 5s
+#      retries: 5
+#
+#  grafana:
+#    image: grafana/grafana:latest
+#    container_name: diplom-grafana
+#    environment:
+#      GF_SECURITY_ADMIN_USER: admin
+#      GF_SECURITY_ADMIN_PASSWORD: admin
+#      GF_INSTALL_PLUGINS: grafana-piechart-panel
+#    ports:
+#      - "3000:3000"
+#    volumes:
+#      - grafana_data:/var/lib/grafana
+#      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning
+#    depends_on:
+#      prometheus:
+#        condition: service_healthy
+#    networks:
+#      - diplom-network
+#    healthcheck:
+#      test: curl -f http://localhost:3000/api/health || exit 1
+#      interval: 10s
+#      timeout: 5s
+#      retries: 5
+#
+#  # ============================================================================
+#  # Microservices
+#  # ============================================================================
+#
+#  shop:
+#    build:
+#      context: .
+#      dockerfile: diplom/Dockerfile
+#    container_name: diplom-shop
+#    environment:
+#      SPRING_DATA_MONGODB_URI: mongodb://admin:Admin1234!@mongo:27017/diplom_shop?authSource=admin
+#      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+#      APP_TEST_SERVICE_URL: http://test:8081
+#      APP_DEMOGRAPHIC_SERVICE_URL: http://demographic:8084
+#      APP_NOTIFICATION_SERVICE_URL: http://notification:8083
+#      S3_ENDPOINT: http://minio:9000
+#      S3_ACCESS_KEY: minioadmin
+#      S3_SECRET_KEY: minioadmin
+#      S3_BUCKET: diplom-shop
+#      MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE: prometheus
+#    ports:
+#      - "8080:8080"
+#    depends_on:
+#      mongo:
+#        condition: service_healthy
+#      kafka:
+#        condition: service_healthy
+#      minio-init:
+#        condition: service_completed_successfully
+#    networks:
+#      - diplom-network
+#    healthcheck:
+#      test: curl -f http://localhost:8080/actuator/health || exit 1
+#      interval: 15s
+#      timeout: 5s
+#      retries: 5
+#
+#  test:
+#    build:
+#      context: ./diplom-test-service
+#      dockerfile: Dockerfile
+#    container_name: diplom-test
+#    environment:
+#      SPRING_DATA_MONGODB_URI: mongodb://admin:Admin1234!@mongo:27017/diplom_tests?authSource=admin
+#      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+#      APP_DEMOGRAPHIC_SERVICE_URL: http://demographic:8084
+#      MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE: prometheus
+#    ports:
+#      - "8081:8081"
+#    depends_on:
+#      mongo:
+#        condition: service_healthy
+#      kafka:
+#        condition: service_healthy
+#    networks:
+#      - diplom-network
+#    healthcheck:
+#      test: curl -f http://localhost:8081/actuator/health || exit 1
+#      interval: 15s
+#      timeout: 5s
+#      retries: 5
+#
+#  selector:
+#    build:
+#      context: ./diplom-selector-service
+#      dockerfile: Dockerfile
+#    container_name: diplom-selector
+#    environment:
+#      SPRING_DATA_MONGODB_URI: mongodb://admin:Admin1234!@mongo:27017/diplom_tests?authSource=admin
+#      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+#      APP_DEMOGRAPHIC_SERVICE_URL: http://demographic:8084
+#      MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE: prometheus
+#    ports:
+#      - "8082:8082"
+#    depends_on:
+#      mongo:
+#        condition: service_healthy
+#      kafka:
+#        condition: service_healthy
+#    networks:
+#      - diplom-network
+#    healthcheck:
+#      test: curl -f http://localhost:8082/actuator/health || exit 1
+#      interval: 15s
+#      timeout: 5s
+#      retries: 5
+#
+#  demographic:
+#    build:
+#      context: ./diplom-demographic-service
+#      dockerfile: Dockerfile
+#    container_name: diplom-demographic
+#    environment:
+#      SPRING_DATA_MONGODB_URI: mongodb://admin:Admin1234!@mongo:27017/diplom_demographics?authSource=admin
+#      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+#      MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE: prometheus
+#    ports:
+#      - "8084:8084"
+#    depends_on:
+#      mongo:
+#        condition: service_healthy
+#      kafka:
+#        condition: service_healthy
+#    networks:
+#      - diplom-network
+#    healthcheck:
+#      test: curl -f http://localhost:8084/actuator/health || exit 1
+#      interval: 15s
+#      timeout: 5s
+#      retries: 5
+#
+#  notification:
+#    build:
+#      context: ./diplom-notification-service
+#      dockerfile: Dockerfile
+#    container_name: diplom-notification
+#    environment:
+#      SPRING_DATA_MONGODB_URI: mongodb://admin:Admin1234!@mongo:27017/diplom_notifications?authSource=admin
+#      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+#      MAIL_HOST: smtp.gmail.com
+#      MAIL_PORT: 587
+#      MAIL_USERNAME: ${MAIL_USERNAME:-your-email@gmail.com}
+#      MAIL_PASSWORD: ${MAIL_PASSWORD:-your-app-password}
+#      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN:-}
+#      TELEGRAM_ADMIN_CHAT_IDS: ${TELEGRAM_ADMIN_CHAT_IDS:-}
+#      MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE: prometheus
+#    ports:
+#      - "8083:8083"
+#    depends_on:
+#      mongo:
+#        condition: service_healthy
+#      kafka:
+#        condition: service_healthy
+#    networks:
+#      - diplom-network
+#    healthcheck:
+#      test: curl -f http://localhost:8083/actuator/health || exit 1
+#      interval: 15s
+#      timeout: 5s
+#      retries: 5
+#
+#volumes:
+#  mongo_data:
+#  kafka_data:
+#  minio_data:
+#  prometheus_data:
+#  grafana_data:
+#
+#networks:
+#  diplom-network:
+#    driver: bridge
+services:
+  # ============================================================================
+  # Infrastructure Layer
+  # ============================================================================
+
+  mongo:
+    image: mongo:7.0
+    container_name: diplom-mongo
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: Admin1234!
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+      - ./init-mongo.js:/docker-entrypoint-initdb.d/init-mongo.js
+    networks:
+      - diplom-network
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/test --quiet
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  kafka:
+    image: confluentinc/cp-kafka:7.5.0
+    container_name: diplom-kafka
+    environment:
+      CLUSTER_ID: "MkU3OEVBNTcwNTJENDM2Qk"
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:9093
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_CONTROLLER_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,PLAINTEXT_INTERNAL://0.0.0.0:29092,CONTROLLER://0.0.0.0:9093
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,PLAINTEXT_INTERNAL://kafka:29092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_INTERNAL:PLAINTEXT,CONTROLLER:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT_INTERNAL
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_LOG_RETENTION_HOURS: 168
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: 'true'
+    ports:
+      - "9092:9092"
+      - "29092:29092"
+      - "9093:9093"
+    volumes:
+      - kafka_data:/var/lib/kafka/data
+    networks:
+      - diplom-network
+    healthcheck:
+      test: kafka-broker-api-versions --bootstrap-server kafka:9092 || exit 1
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  minio:
+    image: minio/minio:latest
+    container_name: diplom-minio
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - minio_data:/minio_data
+    networks:
+      - diplom-network
+    command: minio server /minio_data --console-address ":9001"
+    healthcheck:
+      test: curl -f http://localhost:9000/minio/health/live || exit 1
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  minio-init:
+    image: minio/mc:latest
+    container_name: diplom-minio-init
+    depends_on:
+      minio:
+        condition: service_healthy
+    entrypoint: >
+      /bin/sh -c "
+      /usr/bin/mc config host add minio http://minio:9000 minioadmin minioadmin;
+      /usr/bin/mc mb minio/diplom-shop;
+      exit 0;
+      "
+    networks:
+      - diplom-network
+
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: diplom-prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+    networks:
+      - diplom-network
+    healthcheck:
+      test: wget --quiet --tries=1 --spider http://localhost:9090/graph || exit 1
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: diplom-grafana
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: admin
+      GF_INSTALL_PLUGINS: grafana-piechart-panel
+    ports:
+      - "3000:3000"
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning
+    depends_on:
+      prometheus:
+        condition: service_healthy
+    networks:
+      - diplom-network
+    healthcheck:
+      test: curl -f http://localhost:3000/api/health || exit 1
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ============================================================================
+  # Microservices (все строятся из корня проекта)
+  # ============================================================================
+
+  shop:
+    build:
+      context: .
+      dockerfile: diplom/Dockerfile
+    container_name: diplom-shop
+    environment:
+      SPRING_DATA_MONGODB_URI: mongodb://admin:Admin1234!@mongo:27017/diplom_shop?authSource=admin
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      APP_TEST_SERVICE_URL: http://test:8081
+      APP_DEMOGRAPHIC_SERVICE_URL: http://demographic:8084
+      APP_NOTIFICATION_SERVICE_URL: http://notification:8083
+      S3_ENDPOINT: http://minio:9000
+      S3_ACCESS_KEY: minioadmin
+      S3_SECRET_KEY: minioadmin
+      S3_BUCKET: diplom-shop
+      MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE: prometheus
+    ports:
+      - "8080:8080"
+    depends_on:
+      mongo:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+      minio-init:
+        condition: service_completed_successfully
+    networks:
+      - diplom-network
+    healthcheck:
+      test: curl -f http://localhost:8080/actuator/health || exit 1
+      interval: 15s
+      timeout: 5s
+      retries: 5
+
+  test:
+    build:
+      context: .
+      dockerfile: diplom-test-service/Dockerfile
+    container_name: diplom-test
+    environment:
+      SPRING_DATA_MONGODB_URI: mongodb://admin:Admin1234!@mongo:27017/diplom_tests?authSource=admin
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      APP_DEMOGRAPHIC_SERVICE_URL: http://demographic:8084
+      APP_PARTICIPANT_SERVICE_URL: http://participant:8085
+      APP_CLUSTERING_SERVICE_URL: http://clustering:8085
+      MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE: prometheus
+    ports:
+      - "8081:8081"
+    depends_on:
+      mongo:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+      participant:
+        condition: service_started
+    networks:
+      - diplom-network
+    healthcheck:
+      test: curl -f http://localhost:8081/actuator/health || exit 1
+      interval: 15s
+      timeout: 5s
+      retries: 5
+
+  selector:
+    build:
+      context: .
+      dockerfile: diplom-selector-service/Dockerfile
+    container_name: diplom-selector
+    environment:
+      SPRING_DATA_MONGODB_URI: mongodb://admin:Admin1234!@mongo:27017/diplom_tests?authSource=admin
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      APP_DEMOGRAPHIC_SERVICE_URL: http://demographic:8084
+      APP_CLUSTERING_SERVICE_URL: http://clustering:8085
+      MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE: prometheus
+    ports:
+      - "8082:8082"
+    depends_on:
+      mongo:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+    networks:
+      - diplom-network
+    healthcheck:
+      test: curl -f http://localhost:8082/actuator/health || exit 1
+      interval: 15s
+      timeout: 5s
+      retries: 5
+
+  participant:
+    build:
+      context: .
+      dockerfile: diplom-participant-service/Dockerfile
+    container_name: diplom-participant
+    environment:
+      SPRING_DATA_MONGODB_URI: mongodb://admin:Admin1234!@mongo:27017/diplom_tests?authSource=admin
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE: prometheus
+    ports:
+      - "8085:8085"
+    depends_on:
+      mongo:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+    networks:
+      - diplom-network
+    healthcheck:
+      test: curl -f http://localhost:8085/actuator/health || exit 1
+      interval: 15s
+      timeout: 5s
+      retries: 5
+
+  demographic:
+    build:
+      context: .
+      dockerfile: diplom-demographic-service/Dockerfile
+    container_name: diplom-demographic
+    environment:
+      SPRING_DATA_MONGODB_URI: mongodb://admin:Admin1234!@mongo:27017/diplom_demographics?authSource=admin
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE: prometheus
+    ports:
+      - "8084:8084"
+    depends_on:
+      mongo:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+    networks:
+      - diplom-network
+    healthcheck:
+      test: curl -f http://localhost:8084/actuator/health || exit 1
+      interval: 15s
+      timeout: 5s
+      retries: 5
+
+  n8n:
+    image: n8nio/n8n:latest
+    container_name: diplom-n8n
+    restart: unless-stopped
+    ports:
+      - "5678:5678"
+    environment:
+      N8N_PORT: "5678"
+      N8N_PROTOCOL: http
+      N8N_HOST: localhost
+      WEBHOOK_URL: "http://localhost:5678/"
+      N8N_EDITOR_BASE_URL: "http://localhost:5678/"
+      GENERIC_TIMEZONE: Europe/Moscow
+      TZ: Europe/Moscow
+      TELEGRAM_BOT_TOKEN: "7466629748:AAHs2TfX8KJtPzJJIsFIRMSlaDYWsgijb4g"
+      GROQ_API_KEY: "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"
+      TEST_SERVICE_INTERNAL_URL: "http://test:8081"
+      SHOP_BASE_URL: "http://shop:8080"
+      TELEGRAM_ADMIN_CHAT_IDS: "787209390"
+    volumes:
+      - n8n_data:/home/node/.n8n
+    networks:
+      - diplom-network
+    depends_on:
+      - test
+
+  notification:
+    build:
+      context: .
+      dockerfile: diplom-notification-service/Dockerfile
+    container_name: diplom-notification
+    environment:
+      SPRING_DATA_MONGODB_URI: mongodb://admin:Admin1234!@mongo:27017/diplom_notifications?authSource=admin
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      MAIL_HOST: smtp.gmail.com
+      MAIL_PORT: 587
+      MAIL_USERNAME: "fsdfdsfsdf76@gmail.com"
+      MAIL_PASSWORD: "ghkgceicszvnfrpk"
+      TELEGRAM_BOT_TOKEN: "7466629748:AAHs2TfX8KJtPzJJIsFIRMSlaDYWsgijb4g"
+      TELEGRAM_ADMIN_CHAT_IDS: "787209390"
+      MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE: prometheus
+    ports:
+      - "8083:8083"
+    depends_on:
+      mongo:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+    networks:
+      - diplom-network
+    healthcheck:
+      test: curl -f http://localhost:8083/actuator/health || exit 1
+      interval: 15s
+      timeout: 5s
+      retries: 5
+
+  clustering:
+    build:
+      context: .
+      dockerfile: diplom-clustering-service/Dockerfile
+    container_name: diplom-clustering
+    ports:
+      - "8086:8085"
+    networks:
+      - diplom-network
+    healthcheck:
+      test: curl -f http://localhost:8085/health || exit 1
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+volumes:
+  mongo_data:
+  kafka_data:
+  minio_data:
+  prometheus_data:
+  grafana_data:
+  n8n_data:
+
+networks:
+  diplom-network:
+    driver: bridge

@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ru">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Редактирование товара — Админ</title>
+    <link rel="stylesheet" th:href="@{/css/styles.css}"/>
+</head>
+<body>
+<div th:replace="~{fragments/nav :: navbar}"></div>
+
+<div class="page-wrapper" style="max-width:900px">
+    <h1 class="page-title">Редактирование товара</h1>
+
+    <div class="admin-section">
+        <form th:action="@{/admin/products/{id}/edit(id=${product.id})}" method="post" enctype="multipart/form-data"
+              th:object="${dto}" style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem 1.5rem">
+            <div class="form-group">
+                <label>Название *</label>
+                <input type="text" th:field="*{name}" required/>
+                <span class="field-error" th:if="${#fields.hasErrors('name')}" th:errors="*{name}"></span>
+            </div>
+
+            <div class="form-group">
+                <label>Цена ($) *</label>
+                <input type="number" th:field="*{price}" step="0.01" min="0.01" required/>
+                <span class="field-error" th:if="${#fields.hasErrors('price')}" th:errors="*{price}"></span>
+            </div>
+
+            <div class="form-group" style="grid-column:1/-1">
+                <label>Описание</label>
+                <textarea th:field="*{description}" rows="4"></textarea>
+                <span class="field-error" th:if="${#fields.hasErrors('description')}" th:errors="*{description}"></span>
+            </div>
+
+            <div class="form-group">
+                <label>Количество *</label>
+                <input type="number" th:field="*{availableQuantity}" min="0" required/>
+                <span class="field-error" th:if="${#fields.hasErrors('availableQuantity')}" th:errors="*{availableQuantity}"></span>
+            </div>
+
+            <div class="form-group">
+                <label>Новое фото</label>
+                <input type="file" name="photo" accept="image/*"/>
+            </div>
+
+            <div style="grid-column:1/-1;display:flex;gap:.75rem">
+                <button type="submit" class="btn btn-success">Сохранить</button>
+                <a th:href="@{/admin/products}" class="btn btn-outline">Назад</a>
+            </div>
+        </form>
+    </div>
+</div>
+<script th:src="@{/js/main.js}"></script>
+</body>
+</html>
