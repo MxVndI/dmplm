@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <title>Настраиваемые A/B Тесты — Админ</title>
     <link rel="stylesheet" th:href="@{/css/styles.css}"/>
-    <!-- CSRF for fetch() POST/PATCH calls through the proxy -->
+    <!-- CSRF для запросов через прокси -->
     <meta id="csrf-token"  th:content="${_csrf.token}"      content=""/>
     <meta id="csrf-header" th:content="${_csrf.headerName}" content="X-CSRF-TOKEN"/>
     <style>
@@ -101,10 +101,10 @@
 <body>
 <div th:replace="~{fragments/nav :: navbar}"></div>
 
-<!-- Toast notification -->
+<!-- Уведомление -->
 <div id="toast"></div>
 
-<!-- Stats/Participants modal -->
+<!-- Окно статистики и участников -->
 <div class="modal-backdrop" id="statsModal">
     <div class="modal">
         <button class="modal-close" onclick="closeModal('statsModal')">×</button>
@@ -113,7 +113,7 @@
     </div>
 </div>
 
-<!-- Edit Test Modal -->
+<!-- Окно редактирования теста -->
 <div class="modal-backdrop" id="editModal">
     <div class="modal">
         <button class="modal-close" onclick="closeModal('editModal')">×</button>
@@ -164,14 +164,14 @@
         </div>
 
         <div class="form-group">
-            <label> Страны <span style="font-weight:400;color:#999">— нажмите Enter для добавления</span></label>
+            <label> Страны <span style="font-weight:400;color:#999">— нажмите Ввод для добавления</span></label>
             <div class="tag-input-wrap" id="e-wrap-countries" onclick="this.querySelector('input').focus()">
                 <input class="tag-real-input" id="e-inp-countries" placeholder="напр. Россия" onkeydown="eTagKey(event,'countries')"/>
             </div>
         </div>
 
         <div class="form-group">
-            <label> Языки <span style="font-weight:400;color:#999">— нажмите Enter для добавления</span></label>
+            <label> Языки <span style="font-weight:400;color:#999">— нажмите Ввод для добавления</span></label>
             <div class="tag-input-wrap" id="e-wrap-languages" onclick="this.querySelector('input').focus()">
                 <input class="tag-real-input" id="e-inp-languages" placeholder="напр. Русский" onkeydown="eTagKey(event,'languages')"/>
             </div>
@@ -194,28 +194,28 @@
         </div>
 
         <div class="form-group">
-            <label> Уровень дохода <span style="font-weight:400;color:#999">— нажмите Enter для добавления</span></label>
+            <label> Уровень дохода <span style="font-weight:400;color:#999">— нажмите Ввод для добавления</span></label>
             <div class="tag-input-wrap" id="e-wrap-incomeLevels" onclick="this.querySelector('input').focus()">
-                <input class="tag-real-input" id="e-inp-incomeLevels" placeholder="напр. LOW" onkeydown="eTagKey(event,'incomeLevels')"/>
+                <input class="tag-real-input" id="e-inp-incomeLevels" placeholder="напр. низкий" onkeydown="eTagKey(event,'incomeLevels')"/>
             </div>
         </div>
 
         <div class="form-group">
-            <label> Образование <span style="font-weight:400;color:#999">— нажмите Enter для добавления</span></label>
+            <label> Образование <span style="font-weight:400;color:#999">— нажмите Ввод для добавления</span></label>
             <div class="tag-input-wrap" id="e-wrap-educationLevels" onclick="this.querySelector('input').focus()">
-                <input class="tag-real-input" id="e-inp-educationLevels" placeholder="напр. HIGHER" onkeydown="eTagKey(event,'educationLevels')"/>
+                <input class="tag-real-input" id="e-inp-educationLevels" placeholder="напр. высшее" onkeydown="eTagKey(event,'educationLevels')"/>
             </div>
         </div>
 
         <div class="form-group">
-            <label> Занятость <span style="font-weight:400;color:#999">— нажмите Enter для добавления</span></label>
+            <label> Занятость <span style="font-weight:400;color:#999">— нажмите Ввод для добавления</span></label>
             <div class="tag-input-wrap" id="e-wrap-occupations" onclick="this.querySelector('input').focus()">
-                <input class="tag-real-input" id="e-inp-occupations" placeholder="напр. EMPLOYED" onkeydown="eTagKey(event,'occupations')"/>
+                <input class="tag-real-input" id="e-inp-occupations" placeholder="напр. работает" onkeydown="eTagKey(event,'occupations')"/>
             </div>
         </div>
 
         <div class="form-group">
-            <label> Интересы <span style="font-weight:400;color:#999">— нажмите Enter для добавления</span></label>
+            <label> Интересы <span style="font-weight:400;color:#999">— нажмите Ввод для добавления</span></label>
             <div class="tag-input-wrap" id="e-wrap-interests" onclick="this.querySelector('input').focus()">
                 <input class="tag-real-input" id="e-inp-interests" placeholder="напр. технологии" onkeydown="eTagKey(event,'interests')"/>
             </div>
@@ -239,7 +239,7 @@
     </div>
 </div>
 
-<!-- Create Test Modal -->
+<!-- Окно создания теста -->
 <div class="modal-backdrop" id="createModal">
     <div class="modal">
         <button class="modal-close" onclick="closeModal('createModal')">×</button>
@@ -289,7 +289,7 @@
         </div>
 
         <div class="form-group">
-            <label> Страны <span style="font-weight:400;color:#999">— нажмите Enter для добавления</span></label>
+            <label> Страны <span style="font-weight:400;color:#999">— нажмите Ввод для добавления</span></label>
             <div class="tag-input-wrap" id="wrap-countries" onclick="this.querySelector('input').focus()">
                 <input class="tag-real-input" id="inp-countries" placeholder="напр. Россия" onkeydown="tagKey(event,'countries')"/>
             </div>
@@ -297,7 +297,7 @@
         </div>
 
         <div class="form-group">
-            <label> Языки <span style="font-weight:400;color:#999">— нажмите Enter для добавления</span></label>
+            <label> Языки <span style="font-weight:400;color:#999">— нажмите Ввод для добавления</span></label>
             <div class="tag-input-wrap" id="wrap-languages" onclick="this.querySelector('input').focus()">
                 <input class="tag-real-input" id="inp-languages" placeholder="напр. Русский" onkeydown="tagKey(event,'languages')"/>
             </div>
@@ -321,28 +321,28 @@
         </div>
 
         <div class="form-group">
-            <label>Уровень дохода <span style="font-weight:400;color:#999">— нажмите Enter для добавления</span></label>
+            <label>Уровень дохода <span style="font-weight:400;color:#999">— нажмите Ввод для добавления</span></label>
             <div class="tag-input-wrap" id="wrap-incomeLevels" onclick="this.querySelector('input').focus()">
-                <input class="tag-real-input" id="inp-incomeLevels" placeholder="напр. LOW" onkeydown="tagKey(event,'incomeLevels')"/>
+                <input class="tag-real-input" id="inp-incomeLevels" placeholder="напр. низкий" onkeydown="tagKey(event,'incomeLevels')"/>
             </div>
         </div>
 
         <div class="form-group">
-            <label> Образование <span style="font-weight:400;color:#999">— нажмите Enter для добавления</span></label>
+            <label> Образование <span style="font-weight:400;color:#999">— нажмите Ввод для добавления</span></label>
             <div class="tag-input-wrap" id="wrap-educationLevels" onclick="this.querySelector('input').focus()">
-                <input class="tag-real-input" id="inp-educationLevels" placeholder="напр. HIGHER" onkeydown="tagKey(event,'educationLevels')"/>
+                <input class="tag-real-input" id="inp-educationLevels" placeholder="напр. высшее" onkeydown="tagKey(event,'educationLevels')"/>
             </div>
         </div>
 
         <div class="form-group">
-            <label> Занятость <span style="font-weight:400;color:#999">— нажмите Enter для добавления</span></label>
+            <label> Занятость <span style="font-weight:400;color:#999">— нажмите Ввод для добавления</span></label>
             <div class="tag-input-wrap" id="wrap-occupations" onclick="this.querySelector('input').focus()">
-                <input class="tag-real-input" id="inp-occupations" placeholder="напр. EMPLOYED" onkeydown="tagKey(event,'occupations')"/>
+                <input class="tag-real-input" id="inp-occupations" placeholder="напр. работает" onkeydown="tagKey(event,'occupations')"/>
             </div>
         </div>
 
         <div class="form-group">
-            <label> Интересы <span style="font-weight:400;color:#999">— нажмите Enter для добавления</span></label>
+            <label> Интересы <span style="font-weight:400;color:#999">— нажмите Ввод для добавления</span></label>
             <div class="tag-input-wrap" id="wrap-interests" onclick="this.querySelector('input').focus()">
                 <input class="tag-real-input" id="inp-interests" placeholder="напр. технологии" onkeydown="tagKey(event,'interests')"/>
             </div>
@@ -407,7 +407,7 @@
 
             <div id="tplUploadTab" style="display:none">
                 <div class="form-group" style="margin-bottom:.5rem">
-                    <label>HTML файл</label>
+                    <label>HTML-файл</label>
                     <input type="file" id="tplFile" accept=".html" onchange="previewTplFile(this)"/>
                 </div>
                 <div id="tplPreviewWrap" style="display:none;margin-bottom:.5rem">
@@ -887,7 +887,7 @@
     async function submitEdit() {
         const id   = document.getElementById('e-id').value;
         const name = document.getElementById('e-name').value.trim();
-        if (!name) { alert('Обязательно укажите нНазвание теста.'); return; }
+        if (!name) { alert('Обязательно укажите название теста.'); return; }
 
         const ageMin  = document.getElementById('e-ageMin').value;
         const ageMax  = document.getElementById('e-ageMax').value;
@@ -1179,7 +1179,7 @@
         } catch (e) {
             tplSelectedPreset = null;
             info.style.color = '#dc3545';
-            info.textContent = 'Ошибка загрузки HTML пресета';
+            info.textContent = 'Ошибка загрузки HTML-пресета';
         }
     }
 
@@ -1208,7 +1208,7 @@
             });
         } else {
             const file = document.getElementById('tplFile').files[0];
-            if (!file) { toast('Выберите HTML файл', false); return; }
+            if (!file) { toast('Выберите HTML-файл', false); return; }
             pendingTemplates.push({
                 type: 'upload', variant, pagePattern, pageName,
                 name: file.name.replace(/\.html$/i, ''), file
@@ -1240,7 +1240,7 @@
     /* ── Create test ────────────────────────────────────────── */
     async function submitCreate() {
         const name = document.getElementById('f-name').value.trim();
-        if (!name) { alert('Обязательно укажите нНазвание теста.'); return; }
+        if (!name) { alert('Обязательно укажите название теста.'); return; }
 
         const ageMin  = document.getElementById('f-ageMin').value;
         const ageMax  = document.getElementById('f-ageMax').value;

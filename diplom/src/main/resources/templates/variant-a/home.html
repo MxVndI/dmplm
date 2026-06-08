@@ -101,12 +101,12 @@
                 <div class="product-card-name" th:text="${p.name}">Товар</div>
                 <!-- Звёзды (визуальные) -->
                 <div class="va-stars"
-                     th:attr="data-stars=${pStat.index % 3 == 0 ? 5 : (pStat.index % 3 == 1 ? 4 : 5)}">
+                     th:attr="data-stars=${pStat.index % 3 == 0 ₽ 5 : (pStat.index % 3 == 1 ? 4 : 5)}">
                     <span>★★★★★</span>
                     <span class="va-stars__count"
                           th:text="'(' + ${12 + (pStat.index * 7 % 88)} + ')'"></span>
                 </div>
-                <div class="product-card-price" th:text="'$' + ${p.price}">$0.00</div>
+                <div class="product-card-price" th:text="${p.price} + ' ₽'">0 ₽</div>
                 <div class="product-card-desc" th:text="${p.description}">Описание</div>
                 <div class="product-card-qty"
                      th:classappend="${p.availableQuantity == 0} ? 'out' : ''"

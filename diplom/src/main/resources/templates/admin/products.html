@@ -85,7 +85,7 @@
                         <td>
                             <a th:href="@{/products/{id}(id=${p.id})}" th:text="${p.name}" style="color:#667eea;font-weight:600">-</a>
                         </td>
-                        <td th:text="'$' + ${p.price}">-</td>
+                        <td th:text="${p.price} + ' ₽'">-</td>
                         <td>
                             <span th:classappend="${p.availableQuantity == 0} ? 'text-danger' : 'text-success'"
                                   th:text="${p.availableQuantity}">-</span>

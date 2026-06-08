@@ -14,15 +14,6 @@ import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.Optional;
 
-/**
- * Delegates variant-assignment decisions to the external assignment service
- * (diplom-selector-service). Falls back transparently to the local ABTestService
- * if the remote service is unavailable — the shop never needs to know which path
- * was taken.
- *
- * This is the single integration point for A/B assignment, keeping the shop
- * decoupled from assignment logic.
- */
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -34,10 +25,6 @@ public class AssignmentServiceClient {
     @Value("${app.assignment-service-url:}")
     private String assignmentServiceUrl;
 
-    /**
-     * Returns the active participation for a user.
-     * Tries the remote assignment service first; falls back to local lookup.
-     */
     public Optional<UserTestParticipationEntity> getAssignment(String userId) {
         if (assignmentServiceUrl != null && !assignmentServiceUrl.isBlank()) {
             try {
@@ -62,13 +49,11 @@ public class AssignmentServiceClient {
                 }
                 return Optional.empty();
             } catch (HttpClientErrorException.NotFound e) {
-                // The selector service is available, user just has no active assignment.
                 return Optional.empty();
             } catch (Exception e) {
                 log.debug("Assignment service unavailable ({}); falling back to local lookup.", e.getMessage());
             }
         }
-        // Local fallback
         return abTestService.findActiveParticipation(userId);
     }
 }

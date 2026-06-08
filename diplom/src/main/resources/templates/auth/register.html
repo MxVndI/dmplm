@@ -47,7 +47,7 @@
                 </div>
 
                 <div class="form-group">
-                    <label for="email">Email <span style="color: var(--color-error)">*</span></label>
+                    <label for="email">Электронная почта <span style="color: var(--color-error)">*</span></label>
                     <input type="email" id="email" th:field="*{email}" placeholder="ivan@example.com" required/>
                     <span class="field-error" th:if="${#fields.hasErrors('email')}" th:errors="*{email}"></span>
                 </div>
@@ -131,7 +131,7 @@
                                     <option value="BASIC">Начальное</option>
                                     <option value="SECONDARY">Среднее</option>
                                     <option value="HIGHER">Высшее</option>
-                                    <option value="ACADEMIC">Магистратура / PhD</option>
+                                    <option value="ACADEMIC">Магистратура / аспирантура</option>
                                 </select>
                             </div>
                         </div>

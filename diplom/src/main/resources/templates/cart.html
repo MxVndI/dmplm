@@ -14,20 +14,20 @@
 <div th:replace="~{fragments/nav :: navbar}"></div>
 
 <div class="page-wrapper" style="max-width: 1100px">
-    <!-- Header -->
+    <!-- Заголовок -->
     <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 3rem">
         <a th:href="@{/}" style="color: var(--color-secondary); text-decoration: none; font-weight: 600; transition: all var(--duration-fast)"
            onmouseover="this.style.color='var(--color-primary)'"
            onmouseout="this.style.color='var(--color-secondary)'"
-           title="Home"></a>
+           title="Главная"></a>
         <h1 class="page-title" style="margin: 0">Корзина</h1>
     </div>
 
-    <!-- Messages -->
+    <!-- Сообщения -->
     <div th:if="${cartError}" class="alert alert-error" role="alert" th:text="${cartError}"></div>
     <div th:if="${orderSuccess}" class="alert alert-success" role="alert" th:text="${orderSuccess}"></div>
 
-    <!-- Empty Cart -->
+    <!-- Пустая корзина -->
     <div th:if="${#lists.isEmpty(cartItems)}" class="empty-state">
         <div class="empty-state__icon">🛒</div>
         <h2 class="empty-state__title">Ваша корзина пуста</h2>
@@ -35,9 +35,9 @@
         <a th:href="@{/products}" class="btn btn-primary">Смотреть каталог</a>
     </div>
 
-    <!-- Cart with Items -->
+    <!-- Корзина с товарами -->
     <div th:unless="${#lists.isEmpty(cartItems)}">
-        <!-- Products Table -->
+        <!-- Таблица товаров -->
         <div class="table-wrapper" style="margin-bottom: 3rem">
             <table style="width: 100%">
                 <thead>
@@ -51,27 +51,27 @@
                 </thead>
                 <tbody>
                     <tr th:each="item : ${cartItems}" style="border-bottom: 1px solid var(--color-border); transition: background var(--duration-fast)">
-                        <!-- Product Name -->
+                        <!-- Название товара -->
                         <td style="padding: var(--space-md); color: var(--color-primary); font-weight: 600">
-                            <span th:text="${item.productName()}">Product</span>
+                            <span th:text="${item.productName()}">Товар</span>
                         </td>
 
-                        <!-- Unit Price -->
+                        <!-- Цена за единицу -->
                         <td style="padding: var(--space-md); text-align: center; color: var(--color-primary); font-weight: 700; font-family: 'Courier New', monospace">
-                            <span th:text="'$' + ${#numbers.formatDecimal(item.price(), 1, 2)}">$0.00</span>
+                            <span th:text="${#numbers.formatDecimal(item.price(), 1, 2)} + ' ₽'">0,00 ₽</span>
                         </td>
 
-                        <!-- Quantity -->
+                        <!-- Количество -->
                         <td style="padding: var(--space-md); text-align: center; color: var(--color-secondary)">
-                            <span th:text="${item.quantity()}">1</span> x
+                            <span th:text="${item.quantity()}">1</span> ×
                         </td>
 
-                        <!-- Subtotal -->
+                        <!-- Сумма -->
                         <td style="padding: var(--space-md); text-align: right; color: var(--color-primary); font-weight: 700; font-family: 'Courier New', monospace">
-                            <span th:text="'$' + ${#numbers.formatDecimal(item.subtotal(), 1, 2)}">$0.00</span>
+                            <span th:text="${#numbers.formatDecimal(item.subtotal(), 1, 2)} + ' ₽'">0,00 ₽</span>
                         </td>
 
-                        <!-- Remove Button -->
+                        <!-- Удаление -->
                         <td style="padding: var(--space-md); text-align: center">
                             <form th:action="@{/cart/remove}" method="post" style="margin: 0">
                                 <input type="hidden" name="productId" th:value="${item.productId()}"/>
@@ -90,9 +90,9 @@
             </table>
         </div>
 
-        <!-- Summary & Checkout -->
+        <!-- Итоги и оформление -->
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 3rem">
-            <!-- Left: Actions -->
+            <!-- Действия -->
             <div>
                 <a th:href="@{/products}" class="btn btn-secondary btn-full" style="margin-bottom: 1rem; min-height: 48px">
                     Продолжить покупки
@@ -102,9 +102,9 @@
                 </a>
             </div>
 
-            <!-- Right: Totals & Checkout -->
+            <!-- Итоги -->
             <div style="display: flex; flex-direction: column; gap: 1.5rem">
-                <!-- Summary Box -->
+                <!-- Блок итогов -->
                 <div style="padding: 2rem; background: var(--color-muted); border-radius: var(--radius-lg); border-left: 3px solid var(--color-primary); border: 1px solid var(--color-border)">
                     <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 1.5rem">
                         <span style="font-size: 1.05rem; color: var(--color-secondary); font-weight: 600">Всего товаров:</span>
@@ -112,14 +112,14 @@
                     </div>
                     <div style="display: flex; justify-content: space-between; align-items: baseline; padding: 1.5rem 0; border-top: 1px solid var(--color-border); border-bottom: 1px solid var(--color-border)">
                         <span style="font-size: 1.3rem; color: var(--color-primary); font-weight: 700">Итого:</span>
-                        <span style="font-size: 2rem; font-weight: 700; color: var(--color-primary); font-family: 'Courier New', monospace" th:text="'$' + ${#numbers.formatDecimal(cartTotal, 1, 2)}">$0.00</span>
+                        <span style="font-size: 2rem; font-weight: 700; color: var(--color-primary); font-family: 'Courier New', monospace" th:text="${#numbers.formatDecimal(cartTotal, 1, 2)} + ' ₽'">0,00 ₽</span>
                     </div>
                     <p style="margin: 1rem 0 0; font-size: 0.9rem; color: var(--color-secondary)">
                         Доставка рассчитывается при оформлении
                     </p>
                 </div>
 
-                <!-- Checkout Form -->
+                <!-- Форма оформления -->
                 <form th:action="@{/cart/checkout}" method="post" style="margin: 0"
                       data-track="checkout"
                       th:data-cart-items="${#lists.size(cartItems)}"
@@ -127,8 +127,8 @@
                     <button type="submit"
                             class="btn btn-primary btn-full"
                             style="font-size: 1.05rem; padding: 1rem; min-height: 50px; margin-bottom: 0.75rem"
-                            onclick="return confirm('Подтвердить заказ на $' + document.querySelector('[data-cart-total]').getAttribute('data-cart-total') + '?')"
-                            th:aria-label="'Оформить заказ на $' + ${#numbers.formatDecimal(cartTotal, 1, 2)}">
+                            onclick="return confirm('Подтвердить заказ на ' + document.querySelector('[data-cart-total]').getAttribute('data-cart-total') + ' ₽?')"
+                            th:aria-label="'Оформить заказ на ' + ${#numbers.formatDecimal(cartTotal, 1, 2)} + ' ₽'">
                         Оформить заказ
                     </button>
                 </form>

@@ -64,10 +64,10 @@
         <a th:href="@{/}" class="btn btn-secondary">На главную</a>
     </div>
 
-    <!-- Products Grid -->
+    <!-- Сетка товаров -->
     <div class="products-grid" th:unless="${#lists.isEmpty(products)}">
         <article class="product-card" th:each="p : ${products}" tabindex="0">
-            <!-- Product Image -->
+            <!-- Изображение товара -->
             <a th:href="@{/products/{id}(id=${p.id})}"
                style="display: block; overflow: hidden; height: 240px"
                th:aria-label="'View product: ' + ${p.name}">
@@ -79,11 +79,11 @@
                 <div class="product-card-no-img" th:unless="${p.photoKey != null and !p.photoKey.isEmpty()}"></div>
             </a>
 
-            <!-- Product Info -->
+            <!-- Информация о товаре -->
             <div class="product-card-body">
                 <h3 class="product-card-name" th:text="${p.name}">Название товара</h3>
 
-                <div class="product-card-price" th:text="'$' + ${#numbers.formatDecimal(p.price, 1, 2)}">$0.00</div>
+                <div class="product-card-price" th:text="${#numbers.formatDecimal(p.price, 1, 2)} + ' ₽'">0,00 ₽</div>
 
                 <p class="product-card-desc" th:text="${p.description}">Описание товара</p>
 

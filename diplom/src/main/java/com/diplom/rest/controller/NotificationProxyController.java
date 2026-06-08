@@ -8,12 +8,6 @@ import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.RestTemplate;
 
-/**
- * Proxies notification campaign API calls from the browser to notification-service.
- *
- * Browser → /admin/api/proxy/campaigns/**
- *         → http://notification-service:8083/api/campaigns/**
- */
 @Slf4j
 @RestController
 @RequestMapping("/admin/api/proxy/campaigns")

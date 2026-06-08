@@ -11,7 +11,10 @@ import org.apache.kafka.streams.state.QueryableStoreTypes;
 import org.apache.kafka.streams.state.ReadOnlyKeyValueStore;
 import org.springframework.http.ResponseEntity;
 import org.springframework.kafka.config.StreamsBuilderFactoryBean;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -43,17 +46,17 @@ public class SegmentController {
             }
 
             Map<String, Object> body = new LinkedHashMap<>();
-            body.put("userId",             state.getUserId());
-            body.put("segment",            state.getCurrentSegment());
-            body.put("visitCount7Days",    state.getVisitCount7Days());
-            body.put("productViewCount",   state.getProductViewCount());
-            body.put("purchaseCount",      state.getPurchaseCount());
-            body.put("totalSpent",         state.getTotalSpent());
-            body.put("cartAddCount",       state.getCartAddCount());
+            body.put("userId", state.getUserId());
+            body.put("segment", state.getCurrentSegment());
+            body.put("visitCount7Days", state.getVisitCount7Days());
+            body.put("productViewCount", state.getProductViewCount());
+            body.put("purchaseCount", state.getPurchaseCount());
+            body.put("totalSpent", state.getTotalSpent());
+            body.put("cartAddCount", state.getCartAddCount());
             body.put("cartAbandoned",
                     state.getLastCartAddTimestamp() != null && !state.isPurchasedAfterLastCart());
             body.put("lastEventTimestamp", state.getLastEventTimestamp());
-            body.put("segmentChangedAt",   state.getSegmentChangedAt());
+            body.put("segmentChangedAt", state.getSegmentChangedAt());
 
             return ResponseEntity.ok(body);
 
@@ -63,13 +66,12 @@ public class SegmentController {
         }
     }
 
-    /** Health / readiness: returns the Kafka Streams state. */
     @GetMapping("/status")
     public Map<String, Object> status() {
         KafkaStreams ks = streams();
         Map<String, Object> body = new LinkedHashMap<>();
         body.put("streamsState", ks != null ? ks.state().toString() : "NOT_STARTED");
-        body.put("running",      ks != null && ks.state() == KafkaStreams.State.RUNNING);
+        body.put("running", ks != null && ks.state() == KafkaStreams.State.RUNNING);
         return body;
     }
 }

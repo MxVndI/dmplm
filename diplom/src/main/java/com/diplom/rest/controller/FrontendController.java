@@ -11,11 +11,6 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 
-/**
- * Renders the home page. Always returns the default template — A/B test page
- * overrides are applied by TemplateOverrideInterceptor only when the admin has
- * explicitly configured a custom HTML template for "/" on the user's test/variant.
- */
 @Slf4j
 @Controller
 @RequiredArgsConstructor

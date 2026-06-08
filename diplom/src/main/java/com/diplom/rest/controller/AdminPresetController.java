@@ -4,18 +4,15 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
-import java.util.Map;
 
-/**
- * Serves the built-in preset template gallery.
- * GET /admin/api/presets        — list of preset metadata
- * GET /admin/api/presets/{id}/html — raw HTML of a preset
- */
 @Slf4j
 @RestController
 @RequestMapping("/admin/api/presets")
@@ -23,63 +20,52 @@ import java.util.Map;
 public class AdminPresetController {
 
     record PresetInfo(String id, String name, String description,
-                      String pagePattern, String pageName, String thumbnail) {}
+                      String pagePattern, String pageName, String thumbnail) {
+    }
 
     private static final List<PresetInfo> PRESETS = List.of(
-        new PresetInfo(
-            "home-promo",
-            "Главная: Акция",
-            "Яркий баннер со скидкой, блок преимуществ и кнопка перехода в каталог",
-            "/", "Главная страница", "🎉"
-        ),
-        new PresetInfo(
-            "home-minimal",
-            "Главная: Минимализм",
-            "Чистый двухколоночный лэйаут с призывом к действию без лишних деталей",
-            "/", "Главная страница", "✨"
-        ),
-        new PresetInfo(
-            "home-dark",
-            "Главная: Тёмная тема",
-            "Тёмный стиль с градиентным заголовком и карточками возможностей",
-            "/", "Главная страница", "🌙"
-        ),
-        new PresetInfo(
-            "products-sale",
-            "Товары: Распродажа",
-            "Сетка товаров со значками скидок и таймером акции",
-            "/products", "Список товаров", "🔥"
-        ),
-        new PresetInfo(
-            "profile-loyalty",
-            "Профиль: Программа лояльности",
-            "Виджет с баллами, статусом и прогресс-баром до следующего уровня",
-            "/profile", "Профиль пользователя", "👑"
-        ),
-        new PresetInfo(
-            "button-test-A",
-            "Тест кнопок A: Красная vs Зелёная",
-            "Два цветных CTA. Вариант A: красная кнопка слева, зелёная справа",
-            "/button-test", "Тест кнопок", "🔴"
-        ),
-        new PresetInfo(
-            "button-test-B",
-            "Тест кнопок B: Зелёная vs Фиолетовая",
-            "Вариант B: зелёная кнопка слева, фиолетовая справа",
-            "/button-test", "Тест кнопок", "🟢"
-        ),
-        new PresetInfo(
-            "button-test-C",
-            "Тест кнопок C: Синяя vs Оранжевая",
-            "Вариант C: синяя кнопка слева, оранжевая справа",
-            "/button-test", "Тест кнопок", "🔵"
-        ),
-        new PresetInfo(
-            "button-test-D",
-            "Тест кнопок D: Бирюзовая vs Розовая",
-            "Вариант D: бирюзовая кнопка слева, розовая справа",
-            "/button-test", "Тест кнопок", "🩵"
-        )
+            new PresetInfo(
+                    "home-promo",
+                    "Главная: Акция",
+                    "Яркий баннер со скидкой, блок преимуществ и кнопка перехода в каталог",
+                    "/", "Главная страница", "🎉"
+            ),
+            new PresetInfo(
+                    "home-minimal",
+                    "Главная: Минимализм",
+                    "Чистый двухколоночный лэйаут с призывом к действию без лишних деталей",
+                    "/", "Главная страница", "✨"
+            ),
+            new PresetInfo(
+                    "home-dark",
+                    "Главная: Тёмная тема",
+                    "Тёмный стиль с градиентным заголовком и карточками возможностей",
+                    "/", "Главная страница", "🌙"
+            ),
+            new PresetInfo(
+                    "products-sale",
+                    "Товары: Распродажа",
+                    "Сетка товаров со значками скидок и таймером акции",
+                    "/products", "Список товаров", "🔥"
+            ),
+            new PresetInfo(
+                    "profile-loyalty",
+                    "Профиль: Программа лояльности",
+                    "Виджет с баллами, статусом и прогресс-баром до следующего уровня",
+                    "/profile", "Профиль пользователя", "👑"
+            ),
+            new PresetInfo(
+                    "button-test-A",
+                    "Тест кнопок A: Красная vs Зелёная",
+                    "Два цветных CTA. Вариант A: красная кнопка слева, зелёная справа",
+                    "/button-test", "Тест кнопок", "🔴"
+            ),
+            new PresetInfo(
+                    "button-test-B",
+                    "Тест кнопок B: Зелёная vs Фиолетовая",
+                    "Вариант B: зелёная кнопка слева, фиолетовая справа",
+                    "/button-test", "Тест кнопок", "🟢"
+            )
     );
 
     @GetMapping

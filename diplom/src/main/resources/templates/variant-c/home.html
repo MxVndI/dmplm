@@ -117,7 +117,7 @@
                     <span style="color:#64748b;font-size:.8rem"
                           th:text="'(' + ${15 + (pStat.index * 11 % 75)} + ' отзывов)'"></span>
                 </div>
-                <div class="product-card-price" th:text="'$' + ${p.price}">$0.00</div>
+                <div class="product-card-price" th:text="${p.price} + ' ₽'">0 ₽</div>
                 <div class="product-card-desc" th:text="${p.description}">Описание</div>
                 <div class="product-card-qty"
                      th:classappend="${p.availableQuantity == 0} ? 'out' : ''"

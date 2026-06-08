@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    <meta name="description" content="DiplomShop — современный магазин с A/B тестированием"/>
+    <meta name="description" content="DiplomShop — современный интернет-магазин с A/B-тестированием"/>
     <title>Главная — DiplomShop</title>
     <link rel="stylesheet" th:href="@{/css/styles.css}"/>
 </head>
@@ -12,39 +12,42 @@
 
 <div th:replace="~{fragments/nav :: navbar}"></div>
 
-<!-- Hero Section -->
-<section style="background: linear-gradient(to bottom, #e3f0fa 0%, #ccdff1 100%); padding: 5rem 1.5rem; text-align: center; position: relative; overflow: hidden">    <div style="position: relative; z-index: 1; max-width: 700px; margin: 0 auto">
-        <h1 style="font-size: clamp(2.5rem, 6vw, 4rem); font-weight: 700; margin: 0 0 1rem; letter-spacing: -0.03em; font-family: var(--font-heading); color: var(--color-primary)">
-            Добро пожаловать в DiplomShop
-        </h1>
-        <p style="font-size: 1.1rem; color: var(--color-secondary); max-width: 600px; margin: 0 auto 2.5rem; line-height: 1.7">
-            Современный магазин с интегрированным A/B тестированием. Откройте товары, подобранные под ваши предпочтения.
+<section class="home-hero">
+    <div class="home-hero__content">
+        <p class="home-hero__eyebrow">Интернет-магазин с исследованием интерфейса</p>
+        <h1 class="home-hero__title">Добро пожаловать в DiplomShop</h1>
+        <p class="home-hero__text">
+            Здесь можно посмотреть каталог товаров, оформить заказ и принять участие в коротком исследовании выбора цвета кнопок. Все действия помогают показать работу A/B-тестирования в реальном интерфейсе.
         </p>
-        <a th:href="@{/products}" class="btn btn-primary" style="font-size: 1.05rem; padding: 0.85rem 2.5rem; min-height: 50px">
-            Смотреть каталог
-        </a>
+        <div class="home-hero__actions">
+            <a th:href="@{/products}" class="btn btn-primary">Смотреть каталог</a>
+            <a sec:authorize="isAuthenticated()" th:href="@{/button-test}" class="btn btn-accent">Пройти тест кнопок</a>
+            <a sec:authorize="!isAuthenticated()" th:href="@{/auth/login}" class="btn btn-accent">Войти и пройти тест</a>
+        </div>
     </div>
+    <aside class="home-hero__panel">
+        <div class="home-hero__panel-icon">🛍️</div>
+        <h2>Каталог рядом</h2>
+        <p>Откройте товары, добавьте их в корзину и оформите заказ для демонстрации основного сценария магазина.</p>
+        <a th:href="@{/products}" class="home-hero__panel-link">Перейти в каталог →</a>
+    </aside>
 </section>
 
 <div class="page-wrapper">
-    <!-- Search -->
-    <form th:action="@{/products}" method="get" class="search-bar" style="margin-top: 3rem">
+    <form th:action="@{/products}" method="get" class="search-bar home-search">
         <input type="text"
                name="search"
                placeholder="Поиск товаров..."
                th:value="${search}"
-               aria-label="Поиск товаров"
-               style="background: white;"/>
+               aria-label="Поиск товаров"/>
         <button type="submit" class="btn btn-primary">Искать</button>
     </form>
 
-    <!-- Section Title -->
-    <div style="display: flex; align-items: baseline; justify-content: space-between; margin: 3rem 0 2rem; gap: 1rem">
-        <h2 class="page-title" style="margin: 0">Рекомендуемые товары</h2>
-        <a th:href="@{/products}" style="font-size: 0.9rem; color: var(--color-primary); font-weight: 600; transition: all var(--duration-fast); border-bottom: 2px solid transparent" onmouseover="this.style.borderBottomColor='var(--color-primary)'" onmouseout="this.style.borderBottomColor='transparent'">Все товары →</a>
+    <div class="section-heading">
+        <h2 class="page-title">Рекомендуемые товары</h2>
+        <a th:href="@{/products}" class="section-heading__link">Все товары →</a>
     </div>
 
-    <!-- Empty State -->
     <div th:if="${#lists.isEmpty(products)}" class="empty-state">
         <div class="empty-state__icon">📦</div>
         <h3 class="empty-state__title">Товаров нет</h3>
@@ -52,35 +55,26 @@
         <a th:href="@{/}" class="btn btn-secondary">На главную</a>
     </div>
 
-    <!-- Товары с glassmorphism дизайном -->
     <div class="products-grid" th:unless="${#lists.isEmpty(products)}">
         <div class="product-card" th:each="p : ${products}" tabindex="0">
-            <!-- Изображение -->
-            <a th:href="@{/products/{id}(id=${p.id})}" style="display: block; overflow: hidden">
+            <a th:href="@{/products/{id}(id=${p.id})}" class="product-card-media">
                 <img th:if="${p.photoKey != null and !p.photoKey.isEmpty()}"
                      th:src="@{'/images/' + ${p.photoKey}}"
                      th:alt="${p.name}"
-                     loading="lazy"
-                     style="transition: transform 0.3s ease"/>
+                     loading="lazy"/>
                 <div class="product-card-no-img" th:unless="${p.photoKey != null and !p.photoKey.isEmpty()}">📷</div>
             </a>
 
-            <!-- Информация -->
             <div class="product-card-body">
                 <h3 class="product-card-name" th:text="${p.name}">Товар</h3>
-
-                <div class="product-card-price" th:text="'$' + ${#numbers.formatDecimal(p.price, 1, 2)}">$0.00</div>
-
+                <div class="product-card-price" th:text="${#numbers.formatDecimal(p.price, 1, 2)} + ' ₽'">0,00 ₽</div>
                 <p class="product-card-desc" th:text="${p.description}">Описание товара...</p>
-
                 <div class="product-card-qty"
                      th:classappend="${p.availableQuantity == 0} ? 'out' : ''"
-                     th:text="${p.availableQuantity > 0} ? '✓ В наличии: ' + ${p.availableQuantity} + ' шт.' : '✕ Нет в наличии'"
-                     style="margin-top: auto">
+                     th:text="${p.availableQuantity > 0} ? '✓ В наличии: ' + ${p.availableQuantity} + ' шт.' : '✕ Нет в наличии'">
                 </div>
             </div>
 
-            <!-- Действие -->
             <div class="product-card-footer">
                 <a th:href="@{/products/{id}(id=${p.id})}"
                    class="btn btn-primary btn-sm btn-full"
@@ -91,26 +85,9 @@
         </div>
     </div>
 
-    <!-- A/B Test Card - Button Preference -->
-    <div sec:authorize="isAuthenticated()" style="margin-top: 4rem; padding: 2.5rem; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: var(--radius-lg); text-align: center; box-shadow: var(--shadow-lg); color: white">
-        <h3 style="margin: 0 0 1rem; font-size: 1.4rem; font-weight: 700">
-            🧪 Участвуйте в исследовании цвета
-        </h3>
-        <p style="margin: 0 0 1.5rem; font-size: 0.95rem; opacity: 0.95; line-height: 1.6">
-            Помогите нам понять предпочтения в отношении цветов в дизайне интерфейса. Нажмите ниже, чтобы участвовать в нашем быстром тесте.
-        </p>
-        <a th:href="@{/button-test}" style="display: inline-block; background: white; color: #667eea; padding: 0.75rem 2rem; border-radius: var(--radius-md); font-weight: 700; text-decoration: none; transition: all var(--duration-fast); border: 2px solid white">
-            Пройти тест →
-        </a>
-        <p style="margin: 1rem 0 0; font-size: 0.8rem; opacity: 0.85">
-            Займет меньше минуты • Результаты помогают улучшить DiplomShop
-        </p>
-    </div>
-
-    <!-- Info Banner -->
-    <div style="margin-top: 3rem; padding: 2rem; background: var(--color-muted); border-radius: var(--radius-lg); border-left: 3px solid var(--color-primary); text-align: center">
-        <p style="margin: 0; color: var(--color-secondary); font-size: 0.95rem">
-            <strong>Примечание:</strong> Вы просматриваете этот магазин как часть A/B теста. Некоторые элементы интерфейса могут отличаться.
+    <div class="info-banner">
+        <p>
+            <strong>Примечание:</strong> магазин открыт в рамках A/B-теста, поэтому отдельные элементы интерфейса могут отличаться у разных пользователей.
         </p>
     </div>
 </div>

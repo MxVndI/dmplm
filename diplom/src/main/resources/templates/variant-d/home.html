@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    <title>Магазин — Flash-распродажа!</title>
+    <title>Магазин — Молниеносная распродажа!</title>
     <link rel="stylesheet" th:href="@{/css/styles.css}"/>
     <meta name="ab-test-variant" content="D"/>
     <style>
@@ -21,7 +21,7 @@
     </style>
 </head>
 <!--
-     ВАРИАНТ D — Flash-распродажа. Срочность, красный цвет, обратный отсчёт.
+     ВАРИАНТ D — Молниеносная распродажа. Срочность, красный цвет, обратный отсчёт.
      Акцент на скидки и ограниченное время.
 -->
 <body class="variant-d">
@@ -29,7 +29,7 @@
 <!-- TOPBAR -->
 <div class="vd-topbar">
     🔥 МЕГА РАСПРОДАЖА — Скидки до 50%! Ограниченное время. Используйте промокод
-    <span style="background:#fff;color:#dc2626;padding:0 .4rem;border-radius:.2rem">SAVE20</span> при оформлении
+    <span style="background:#fff;color:#dc2626;padding:0 .4rem;border-radius:.2rem">СКИДКА20</span> при оформлении
 </div>
 
 <div th:replace="~{fragments/nav :: navbar}"></div>
@@ -53,7 +53,7 @@
             </div>
         </div>
         <h1 style="font-size:2.5rem;font-weight:900;margin:.5rem 0">
-            ⚡ Flash-распродажа
+            ⚡ Молниеносная распродажа
         </h1>
         <p style="font-size:1.1rem;opacity:.9;margin-bottom:1.5rem">
             Скидки до 50% на избранные товары. Только сегодня!
@@ -103,9 +103,9 @@
             <div class="product-card-body">
                 <div class="product-card-name" th:text="${p.name}">Товар</div>
                 <div style="display:flex;align-items:center;gap:.5rem;margin:.25rem 0">
-                    <span class="product-card-price" th:text="'$' + ${p.price}" style="color:#dc2626">$0.00</span>
+                    <span class="product-card-price" th:text="${p.price} + ' ₽'" style="color:#dc2626">0 ₽</span>
                     <span style="color:#94a3b8;text-decoration:line-through;font-size:.85rem"
-                          th:text="'$' + ${#numbers.formatDecimal(p.price * 1.2, 1, 0)}">$0</span>
+                          th:text="${#numbers.formatDecimal(p.price * 1.2, 1, 0)} + ' ₽'">0 ₽</span>
                 </div>
                 <div class="product-card-desc" th:text="${p.description}">Описание</div>
                 <div class="product-card-qty"

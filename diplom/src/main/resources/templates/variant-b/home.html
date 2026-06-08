@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    <title>Магазин — Premium Tech &amp; Lifestyle</title>
+    <title>Магазин — техника и товары для жизни</title>
     <link rel="stylesheet" th:href="@{/css/styles.css}"/>
     <meta name="ab-test-variant" content="B"/>
 </head>
@@ -25,7 +25,7 @@
 
 <div th:replace="~{fragments/nav :: navbar}"></div>
 
-<!-- HERO -->
+<!-- Главный экран -->
 <section class="vb-hero">
     <div class="vb-hero__inner page-wrapper">
         <div class="vb-hero__text">
@@ -115,7 +115,7 @@
 
             <!-- Цена + CTA -->
             <div class="vb-product-row__action">
-                <div class="vb-product-row__price" th:text="'$' + ${p.price}">$0.00</div>
+                <div class="vb-product-row__price" th:text="${p.price} + ' ₽'">0 ₽</div>
                 <a th:href="@{/products/{id}(id=${p.id})}" class="btn btn-primary btn-sm">
                     Подробнее
                 </a>

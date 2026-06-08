@@ -12,17 +12,9 @@ public class ABRuleEntity {
 
     @Id
     private String id;
-
-    /** Null means the rule applies to ALL users (global rule). */
     private String userId;
-
     private String pathPattern;
-
-    /** References ABConfig.id that this rule activates. */
     private String abTestId;
-
-    /** Tie-breaker: higher integer wins. */
     private int priority;
-
     private boolean active = true;
 }

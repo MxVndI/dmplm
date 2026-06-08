@@ -13,12 +13,10 @@ import java.util.List;
 import java.util.Objects;
 
 @Slf4j
-public class UserStateTransformer
-        extends ContextualProcessor<String, UserEvent, String, UserSegmentChangedEvent> {
+public class UserStateTransformer extends ContextualProcessor<String, UserEvent, String, UserSegmentChangedEvent> {
 
     private final SegmentEvaluator evaluator;
     private final String storeName;
-    /** Sliding-window size in milliseconds (default: 7 days). */
     private final long windowMillis;
 
     private KeyValueStore<String, UserAggregateState> stateStore;
@@ -104,7 +102,6 @@ public class UserStateTransformer
         }
     }
 
-    /** Adds {@code ts} to the visit-timestamps list and evicts stale entries. */
     private void addVisit(UserAggregateState state, long ts) {
         List<Long> visits = state.getVisitTimestamps();
         visits.add(ts);

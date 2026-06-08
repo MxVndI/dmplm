@@ -221,7 +221,7 @@
         <ol>
             <li>Нажмите <strong>«+ Новая рассылка»</strong> для разовой отправки всем или участникам конкретного A/B теста.</li>
             <li>Нажмите <strong>«A/B Пара»</strong>, чтобы создать две кампании с разными текстами для вариантов A и B одного теста.</li>
-            <li>После создания кампания имеет статус <strong>«DRAFT»</strong> — нажмите <strong>«▶ Отправить»</strong> для немедленной отправки.</li>
+            <li>После создания кампания имеет статус <strong>«Черновик»</strong> — нажмите <strong>«▶ Отправить»</strong> для немедленной отправки.</li>
             <li>Для просмотра статистики нажмите <strong>«📊 Статистика»</strong> рядом с кампанией.</li>
         </ol>
         <div th:if="${#lists.isEmpty(activeTests)}" class="step-note">
@@ -470,7 +470,7 @@
                 data.map(function(item) {
                     var c = item.campaign;
                     var total = (item.sent||0) + (item.failed||0);
-                    var pct = total > 0 ? Math.round(item.sent/total*100) : 0;
+                    var pct = total > 0 ₽ Math.round(item.sent/total*100) : 0;
                     var color = c.testVariant === 'A' ? '#1d4ed8' : '#7e22ce';
                     var bg    = c.testVariant === 'A' ? '#eff6ff' : '#fdf4ff';
                     return '<div style="background:'+bg+';border:1.5px solid '+color+'30;border-radius:.75rem;padding:1.25rem">' +

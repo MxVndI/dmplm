@@ -8,11 +8,7 @@ import org.springframework.stereotype.Service;
 import software.amazon.awssdk.core.exception.SdkException;
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.services.s3.S3Client;
-import software.amazon.awssdk.services.s3.model.CreateBucketRequest;
-import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
-import software.amazon.awssdk.services.s3.model.HeadBucketRequest;
-import software.amazon.awssdk.services.s3.model.NoSuchBucketException;
-import software.amazon.awssdk.services.s3.model.PutObjectRequest;
+import software.amazon.awssdk.services.s3.model.*;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -35,14 +31,6 @@ public class StorageService {
     @Value("${app.s3.endpoint:}")
     private String endpoint;
 
-    /**
-     * Ensures the target bucket exists on startup. Fresh MinIO containers come
-     * up without any buckets, and S3 PutObject fails with NoSuchBucket — which
-     * is exactly what was blocking product-image uploads.
-     *
-     * Best-effort: if the broker is unreachable at boot the service still starts
-     * and the bucket will be created on first upload attempt instead.
-     */
     @PostConstruct
     public void ensureBucketExists() {
         if (bucket == null || bucket.isBlank()) {
@@ -64,9 +52,6 @@ public class StorageService {
         }
     }
 
-    /**
-     * Uploads a file to S3/MinIO and returns its public URL.
-     */
     public String uploadFile(String key, InputStream inputStream, String contentType) {
         try {
             byte[] bytes = inputStream.readAllBytes();
@@ -106,8 +91,6 @@ public class StorageService {
                     .build());
             log.debug("Deleted s3://{}/{}", bucket, key);
         } catch (SdkException e) {
-            // Deletion failures shouldn't block the surrounding operation (e.g. replacing
-            // an old photo); log and move on.
             log.warn("Failed to delete s3://{}/{}: {}", bucket, key, e.getMessage());
         }
     }
@@ -116,8 +99,6 @@ public class StorageService {
         if (publicUrlBase != null && !publicUrlBase.isBlank()) {
             return publicUrlBase.stripTrailing() + "/" + bucket + "/" + key;
         }
-        // No public URL configured → proxy through ImageController.
-        // Works for MinIO (not publicly addressable from the browser) and AWS S3 alike.
         return "/images/" + key;
     }
 }

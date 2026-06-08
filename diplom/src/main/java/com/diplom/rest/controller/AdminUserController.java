@@ -7,12 +7,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
 
@@ -53,11 +48,6 @@ public class AdminUserController {
         return "redirect:/admin/users?unblocked=true";
     }
 
-    /**
-     * Re-publishes ALL user profiles to the 'user-profiles' Kafka topic.
-     * Use this to re-populate the selector-service GlobalKTable after a restart
-     * or if users were created while Kafka was temporarily unavailable.
-     */
     @PostMapping("/sync-profiles")
     @ResponseBody
     @PreAuthorize("hasRole('ADMIN')")
@@ -65,8 +55,8 @@ public class AdminUserController {
         var users = userRepository.findAll();
         users.forEach(userService::publishProfile);
         return ResponseEntity.ok(Map.of(
-            "published", users.size(),
-            "message", "Профили " + users.size() + " пользователей отправлены в Kafka"
+                "published", users.size(),
+                "message", "Профили " + users.size() + " пользователей отправлены в Kafka"
         ));
     }
 }

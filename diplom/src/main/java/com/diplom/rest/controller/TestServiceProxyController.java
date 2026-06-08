@@ -14,16 +14,6 @@ import org.springframework.web.client.RestTemplate;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 
-/**
- * Proxies all A/B test management API calls from the browser
- * through the shop container to the test-service container.
- *
- * Browser → /admin/api/proxy/tests/** (same-origin, no CORS)
- *         → http://test-service:8081/api/tests/** (Docker internal network)
- *
- * This avoids all CORS complexity — the browser never speaks directly
- * to port 8081.
- */
 @Slf4j
 @RestController
 @RequestMapping("/admin/api/proxy/tests")
@@ -61,37 +51,31 @@ public class TestServiceProxyController {
         return h;
     }
 
-    // ── GET /api/tests ────────────────────────────────────────
     @GetMapping
     public ResponseEntity<String> getAll() {
         return forward(HttpMethod.GET, base(), null);
     }
 
-    // ── POST /api/tests ───────────────────────────────────────
     @PostMapping
     public ResponseEntity<String> create(@RequestBody String body) {
         return forwardWithAuth(HttpMethod.POST, base(), body);
     }
 
-    // ── GET /api/tests/{id} ───────────────────────────────────
     @GetMapping("/{id}")
     public ResponseEntity<String> getById(@PathVariable String id) {
         return forward(HttpMethod.GET, base() + "/" + id, null);
     }
 
-    // ── POST /api/tests/{id}/trigger ──────────────────────────
     @PostMapping("/{id}/trigger")
     public ResponseEntity<String> trigger(@PathVariable String id) {
         return forwardWithAuth(HttpMethod.POST, base() + "/" + id + "/trigger", null);
     }
 
-    // ── PATCH /api/tests/{id}/activate ────────────────────────
     @PatchMapping("/{id}/activate")
     public ResponseEntity<String> activate(@PathVariable String id) {
         return forwardWithAuth(HttpMethod.PATCH, base() + "/" + id + "/activate", null);
     }
 
-    // ── PATCH /api/tests/{id}/complete ────────────────────────
     @PatchMapping("/{id}/complete")
     public ResponseEntity<String> complete(@PathVariable String id) {
         ResponseEntity<String> response = forwardWithAuth(HttpMethod.PATCH, base() + "/" + id + "/complete", null);
@@ -102,32 +86,27 @@ public class TestServiceProxyController {
         return response;
     }
 
-    // ── GET /api/tests/{id}/participants ──────────────────────
     @GetMapping("/{id}/participants")
     public ResponseEntity<String> participants(@PathVariable String id) {
         return forward(HttpMethod.GET, base() + "/" + id + "/participants", null);
     }
 
-    // ── GET /api/tests/{id}/stats ─────────────────────────────
     @GetMapping("/{id}/stats")
     public ResponseEntity<String> stats(@PathVariable String id) {
         return forward(HttpMethod.GET, base() + "/" + id + "/stats", null);
     }
 
-    // ── PUT /api/tests/{id} — update test ─────────────────────
     @PutMapping("/{id}")
     public ResponseEntity<String> update(@PathVariable String id, @RequestBody String body) {
         return forwardWithAuth(HttpMethod.PUT, base() + "/" + id, body);
     }
 
-    // ── POST /api/tests/{id}/restart ──────────────────────────
     @PostMapping("/{id}/restart")
     public ResponseEntity<String> restart(@PathVariable String id) {
         participationRepository.deleteByTestId(id);
         return forwardWithAuth(HttpMethod.POST, base() + "/" + id + "/restart", null);
     }
 
-    // ── DELETE /api/tests/{id} ────────────────────────────────
     @DeleteMapping("/{id}")
     public ResponseEntity<String> delete(@PathVariable String id) {
         ResponseEntity<String> response = forwardWithAuth(HttpMethod.DELETE, base() + "/" + id, null);
@@ -138,7 +117,6 @@ public class TestServiceProxyController {
         return response;
     }
 
-    // ── Internal proxy helpers ────────────────────────────────
     private ResponseEntity<String> forward(HttpMethod method, String url, String body) {
         try {
             HttpEntity<String> entity = new HttpEntity<>(body, jsonHeaders());

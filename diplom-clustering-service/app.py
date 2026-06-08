@@ -3,7 +3,7 @@ K-means Clustering Service for A/B Test Variant Assignment
 Distributes test participants into clusters and assigns variants based on similarity.
 """
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Response
 from pydantic import BaseModel
 from typing import Dict, Optional
 import logging
@@ -13,9 +13,23 @@ from sklearn.cluster import KMeans
 import pickle
 import os
 from datetime import datetime
+from prometheus_client import Counter, Gauge, generate_latest, CONTENT_TYPE_LATEST
 
 app = FastAPI(title="Diplom Clustering Service", version="1.0.0")
 logger = logging.getLogger("clustering")
+cluster_assignments_total = Counter(
+    "clustering_assignments_total",
+    "Total number of cluster assignment requests",
+    ["variant"]
+)
+cluster_model_trained = Gauge(
+    "clustering_model_trained",
+    "Whether the clustering model is trained"
+)
+cluster_count = Gauge(
+    "clustering_clusters",
+    "Number of configured clusters"
+)
 
 # Configure logging
 logging.basicConfig(
@@ -138,6 +152,8 @@ model = ClusteringModel()
 @app.get("/health")
 async def health_check():
     """Health check endpoint"""
+    cluster_model_trained.set(1 if model.is_trained else 0)
+    cluster_count.set(model.n_clusters)
     return {
         "status": "healthy",
         "service": "diplom-clustering",
@@ -146,11 +162,20 @@ async def health_check():
     }
 
 
+@app.get("/metrics")
+async def metrics():
+    """Prometheus metrics endpoint"""
+    cluster_model_trained.set(1 if model.is_trained else 0)
+    cluster_count.set(model.n_clusters)
+    return Response(generate_latest(), media_type=CONTENT_TYPE_LATEST)
+
+
 @app.post("/api/cluster/assign", response_model=ClusterAssignment)
 async def assign_cluster(request: FeatureVector):
     """Assign user to cluster and determine variant"""
     try:
         cluster_id, variant, distance = model.predict_cluster_and_variant(request.features)
+        cluster_assignments_total.labels(variant=variant).inc()
         return ClusterAssignment(
             userId=request.userId,
             clusterId=cluster_id,

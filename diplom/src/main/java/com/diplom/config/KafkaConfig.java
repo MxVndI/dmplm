@@ -28,8 +28,6 @@ public class KafkaConfig {
     @Value("${spring.kafka.bootstrap-servers}")
     private String bootstrapServers;
 
-    // ── Topics ──────────────────────────────────────────────────────────────
-
     @Bean
     public NewTopic userProfilesTopic() {
         return TopicBuilder.name("user-profiles").partitions(3).replicas(1)
@@ -44,19 +42,15 @@ public class KafkaConfig {
         return TopicBuilder.name("test-participants-result").partitions(3).replicas(1).build();
     }
 
-    /** Behavioural events consumed by diplom-selector-service for stream segmentation. */
     @Bean
     public NewTopic userEventsTopic() {
         return TopicBuilder.name("user-events").partitions(3).replicas(1).build();
     }
 
-    /** Segment-change events published by diplom-selector-service. */
     @Bean
     public NewTopic userSegmentChangesTopic() {
         return TopicBuilder.name("user-segment-changes").partitions(3).replicas(1).build();
     }
-
-    // ── Consumer factory for TestParticipantEvent ───────────────────────────
 
     @Bean
     public ConsumerFactory<String, TestParticipantEvent> participantConsumerFactory() {
@@ -83,8 +77,6 @@ public class KafkaConfig {
         return factory;
     }
 
-    // ── Producer template for UserProfileEvent (user-profiles topic) ────────
-
     @Bean
     public ProducerFactory<String, com.diplom.event.UserProfileEvent> profileProducerFactory() {
         Map<String, Object> configProps = new HashMap<>();
@@ -98,8 +90,6 @@ public class KafkaConfig {
     public KafkaTemplate<String, com.diplom.event.UserProfileEvent> kafkaTemplate() {
         return new KafkaTemplate<>(profileProducerFactory());
     }
-
-    // ── Producer template for generic events (user-events topic) ──────────────
 
     @Bean
     public ProducerFactory<String, Object> eventProducerFactory() {

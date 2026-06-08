@@ -37,7 +37,6 @@ public class AdminDemographicsController {
         List<UserEntity> users = userService.findAll();
         model.addAttribute("users", users);
 
-        // Fetch all demographic records from demographic-service
         Map<String, Map<String, Object>> demoMap = new LinkedHashMap<>();
         try {
             ResponseEntity<List<Map<String, Object>>> resp = restTemplate.exchange(
@@ -58,9 +57,6 @@ public class AdminDemographicsController {
         return "admin/demographics";
     }
 
-    /**
-     * Manually sync demographics for a single user (creates/updates the record).
-     */
     @PostMapping("/sync")
     public String sync(@RequestParam String userId) {
         userService.findById(userId).ifPresent(user -> {
@@ -85,9 +81,6 @@ public class AdminDemographicsController {
         return "redirect:/admin/demographics";
     }
 
-    /**
-     * Sync demographics for ALL users (bulk backfill).
-     */
     @PostMapping("/sync-all")
     public String syncAll() {
         userService.findAll().forEach(user -> {

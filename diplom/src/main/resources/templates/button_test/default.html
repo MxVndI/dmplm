@@ -11,18 +11,16 @@
 <body>
 <div th:replace="~{fragments/nav :: navbar}"></div>
 
-<div class="page-wrapper" style="max-width: 800px; margin: 5rem auto; text-align: center">
-    <h1 style="font-size: 2.5rem; margin-bottom: 1rem; color: #ffffff;">Тест кнопок</h1>
-    <p style="font-size: 1.1rem; color: #ffffff; margin-bottom: 3rem">
-        Это страница для тестирования кнопок. Вы не зарегистрированы ни в одном из вариантов теста.
-    </p>
-
-    <div style="margin-top: 4rem; padding: 2rem; background: var(--color-muted); border-radius: var(--radius-lg)">
-        <p style="color: var(--color-secondary); font-size: 0.95rem">
-            <strong>Стандартный вариант:</strong> Вариант не назначен
+<main class="button-test-page">
+    <section class="button-test-card">
+        <p class="button-test-kicker">Исследование интерфейса</p>
+        <h1>Тест кнопок</h1>
+        <p>
+            Сейчас вам не назначен вариант теста. Войдите в аккаунт или обновите участие в тестировании, чтобы увидеть доступные кнопки.
         </p>
-    </div>
-</div>
+        <a th:href="@{/}" class="btn btn-primary">Вернуться на главную</a>
+    </section>
+</main>
 
 <script th:src="@{/js/button-test.js}"></script>
 <script th:src="@{/js/main.js}"></script>

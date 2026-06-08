@@ -20,10 +20,6 @@ public class GlobalExceptionHandler {
         return "error";
     }
 
-    /**
-     * 404 — static resource or route not found.
-     * Logged at DEBUG to avoid noise from health-check probes and missing assets.
-     */
     @ResponseStatus(HttpStatus.NOT_FOUND)
     @ExceptionHandler(NoResourceFoundException.class)
     public String handleNoResource(NoResourceFoundException e, Model model) {

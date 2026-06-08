@@ -33,10 +33,6 @@ public class AdminTemplateController {
         return templateService.findByTestId(testId);
     }
 
-    /**
-     * Upload a new (or replace existing) template.
-     * Multipart fields: testId, variant (A/B/C/D), pagePattern (e.g. /products/*), pageName, name, file
-     */
     @PostMapping(consumes = "multipart/form-data")
     public ResponseEntity<TestTemplateEntity> upload(
             @RequestParam String testId,
@@ -59,9 +55,6 @@ public class AdminTemplateController {
         return ResponseEntity.status(HttpStatus.CREATED).body(result);
     }
 
-    /**
-     * Apply a preset template (HTML from classpath) to a test/variant/page.
-     */
     @PostMapping("/apply-preset")
     public ResponseEntity<TestTemplateEntity> applyPreset(
             @RequestBody Map<String, String> body) {

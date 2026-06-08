@@ -15,11 +15,6 @@ import org.springframework.web.servlet.ModelAndView;
 
 import java.util.Optional;
 
-/**
- * Injects A/B test tracking context (userId, testId, variant) into every
- * Thymeleaf ModelAndView so that the shared nav fragment can emit tracking
- * meta-tags read by the JavaScript tracker in main.js.
- */
 @Component
 @RequiredArgsConstructor
 public class MetricsInterceptor implements HandlerInterceptor {
@@ -31,7 +26,6 @@ public class MetricsInterceptor implements HandlerInterceptor {
     public void postHandle(HttpServletRequest request, HttpServletResponse response,
                            Object handler, ModelAndView mav) {
         if (mav == null || mav.getViewName() == null) return;
-        // Skip REST/redirect responses
         String view = mav.getViewName();
         if (view.startsWith("redirect:") || view.startsWith("forward:")) return;
 
@@ -51,7 +45,6 @@ public class MetricsInterceptor implements HandlerInterceptor {
                 mav.addObject("_trackVariant", part.getVariant());
             });
 
-            // Cart badge count
             try {
                 jakarta.servlet.http.HttpSession session = request.getSession(false);
                 if (session != null) {
@@ -71,7 +64,6 @@ public class MetricsInterceptor implements HandlerInterceptor {
                 }
             } catch (Exception ignored2) {}
         } catch (Exception ignored) {
-            // never break the page render due to tracking
         }
     }
 }

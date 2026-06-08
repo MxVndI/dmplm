@@ -1,4 +1,4 @@
-#version: '3.8'
+﻿#version: '3.8'
 #
 #services:
 #  # ============================================================================
@@ -150,7 +150,7 @@
 #      S3_ACCESS_KEY: minioadmin
 #      S3_SECRET_KEY: minioadmin
 #      S3_BUCKET: diplom-shop
-#      MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE: prometheus
+#      MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE: health,prometheus
 #    ports:
 #      - "8080:8080"
 #    depends_on:
@@ -177,7 +177,7 @@
 #      SPRING_DATA_MONGODB_URI: mongodb://admin:Admin1234!@mongo:27017/diplom_tests?authSource=admin
 #      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
 #      APP_DEMOGRAPHIC_SERVICE_URL: http://demographic:8084
-#      MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE: prometheus
+#      MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE: health,prometheus
 #    ports:
 #      - "8081:8081"
 #    depends_on:
@@ -202,7 +202,7 @@
 #      SPRING_DATA_MONGODB_URI: mongodb://admin:Admin1234!@mongo:27017/diplom_tests?authSource=admin
 #      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
 #      APP_DEMOGRAPHIC_SERVICE_URL: http://demographic:8084
-#      MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE: prometheus
+#      MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE: health,prometheus
 #    ports:
 #      - "8082:8082"
 #    depends_on:
@@ -226,7 +226,7 @@
 #    environment:
 #      SPRING_DATA_MONGODB_URI: mongodb://admin:Admin1234!@mongo:27017/diplom_demographics?authSource=admin
 #      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
-#      MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE: prometheus
+#      MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE: health,prometheus
 #    ports:
 #      - "8084:8084"
 #    depends_on:
@@ -256,7 +256,7 @@
 #      MAIL_PASSWORD: ${MAIL_PASSWORD:-your-app-password}
 #      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN:-}
 #      TELEGRAM_ADMIN_CHAT_IDS: ${TELEGRAM_ADMIN_CHAT_IDS:-}
-#      MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE: prometheus
+#      MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE: health,prometheus
 #    ports:
 #      - "8083:8083"
 #    depends_on:
@@ -435,7 +435,7 @@ services:
       S3_ACCESS_KEY: minioadmin
       S3_SECRET_KEY: minioadmin
       S3_BUCKET: diplom-shop
-      MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE: prometheus
+      MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE: health,prometheus
     ports:
       - "8080:8080"
     depends_on:
@@ -464,7 +464,7 @@ services:
       APP_DEMOGRAPHIC_SERVICE_URL: http://demographic:8084
       APP_PARTICIPANT_SERVICE_URL: http://participant:8085
       APP_CLUSTERING_SERVICE_URL: http://clustering:8085
-      MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE: prometheus
+      MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE: health,prometheus
     ports:
       - "8081:8081"
     depends_on:
@@ -492,7 +492,7 @@ services:
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
       APP_DEMOGRAPHIC_SERVICE_URL: http://demographic:8084
       APP_CLUSTERING_SERVICE_URL: http://clustering:8085
-      MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE: prometheus
+      MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE: health,prometheus
     ports:
       - "8082:8082"
     depends_on:
@@ -516,7 +516,7 @@ services:
     environment:
       SPRING_DATA_MONGODB_URI: mongodb://admin:Admin1234!@mongo:27017/diplom_tests?authSource=admin
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
-      MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE: prometheus
+      MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE: health,prometheus
     ports:
       - "8085:8085"
     depends_on:
@@ -540,7 +540,7 @@ services:
     environment:
       SPRING_DATA_MONGODB_URI: mongodb://admin:Admin1234!@mongo:27017/diplom_demographics?authSource=admin
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
-      MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE: prometheus
+      MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE: health,prometheus
     ports:
       - "8084:8084"
     depends_on:
@@ -596,7 +596,7 @@ services:
       MAIL_PASSWORD: "ghkgceicszvnfrpk"
       TELEGRAM_BOT_TOKEN: "7466629748:AAHs2TfX8KJtPzJJIsFIRMSlaDYWsgijb4g"
       TELEGRAM_ADMIN_CHAT_IDS: "787209390"
-      MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE: prometheus
+      MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE: health,prometheus
     ports:
       - "8083:8083"
     depends_on:
@@ -622,7 +622,7 @@ services:
     networks:
       - diplom-network
     healthcheck:
-      test: curl -f http://localhost:8085/health || exit 1
+      test: python -c "import requests; requests.get('http://localhost:8085/health').raise_for_status()"
       interval: 10s
       timeout: 5s
       retries: 3
@@ -638,3 +638,4 @@ volumes:
 networks:
   diplom-network:
     driver: bridge
+

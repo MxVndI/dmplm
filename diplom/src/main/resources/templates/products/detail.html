@@ -30,7 +30,7 @@
     <!-- Main Content -->
     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 4rem; align-items: start">
 
-        <!-- Left: Product Image -->
+        <!-- Слева: изображение товара -->
         <div>
             <div style="background: var(--color-background); border-radius: var(--radius-lg); overflow: hidden; box-shadow: var(--shadow-md); aspect-ratio: 1; border: 1px solid var(--color-border)">
                 <img th:if="${product.photoKey != null and !product.photoKey.isEmpty()}"
@@ -44,7 +44,7 @@
             </div>
         </div>
 
-        <!-- Right: Product Info -->
+        <!-- Справа: информация о товаре -->
         <div th:attr="data-product-id=${product.id}, data-product-name=${product.name}, data-product-price=${product.price}">
             <!-- Title -->
             <h1 style="font-size: 2.5rem; font-weight: 700; margin: 0 0 1rem; line-height: 1.2; letter-spacing: -0.02em; font-family: var(--font-heading); color: var(--color-primary)" th:text="${product.name}">
@@ -53,7 +53,7 @@
 
             <!-- Price -->
             <div style="font-size: 2.5rem; font-weight: 700; color: var(--color-primary); margin-bottom: 2rem; font-family: 'Courier New', monospace"
-                 th:text="'$' + ${#numbers.formatDecimal(product.price, 1, 2)}">
+                 th:text="${#numbers.formatDecimal(product.price, 1, 2)} + ' ₽'">
                 $0.00
             </div>
 

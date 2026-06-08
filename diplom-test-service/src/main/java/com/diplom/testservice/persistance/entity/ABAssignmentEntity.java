@@ -16,12 +16,8 @@ public class ABAssignmentEntity {
 
     @Id
     private String id;
-
     private String userId;
     private String abTestId;
-
-    /** Assigned variant name, e.g. "A" or "B". */
     private String variant;
-
     private Instant assignedAt;
 }

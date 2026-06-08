@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<html xmlns:th="http://www.thymeleaf.org" lang="ru">
 <head>
     <meta charset="UTF-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    <title>Error — DiplomShop</title>
+    <title>Ошибка — DiplomShop</title>
     <link rel="stylesheet" th:href="@{/css/styles.css}"/>
     <link rel="preconnect" href="https://fonts.googleapis.com"/>
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
@@ -15,10 +15,10 @@
 <div class="page-wrapper error-page">
     <div>
         <div class="error-code" style="font-size: 5rem; font-weight: 700; color: var(--color-secondary); margin: 0">⚠</div>
-        <h2 style="font-size: 2rem; color: var(--color-primary); margin: 1rem 0; font-family: var(--font-heading); font-weight: 700">Something Went Wrong</h2>
-        <p class="error-msg" style="color: var(--color-secondary); font-size: 1.05rem; margin-bottom: 2rem" th:text="${error != null ? error : 'An unexpected error has occurred.'}">Error message</p>
+        <h2 style="font-size: 2rem; color: var(--color-primary); margin: 1rem 0; font-family: var(--font-heading); font-weight: 700">Что-то пошло не так</h2>
+        <p class="error-msg" style="color: var(--color-secondary); font-size: 1.05rem; margin-bottom: 2rem" th:text="${error != null ? error : 'Произошла непредвиденная ошибка.'}">Сообщение об ошибке</p>
         <div style="margin-top: 2rem">
-            <a th:href="@{/}" class="btn btn-primary" style="min-height: 48px; font-size: 1.05rem">Return Home</a>
+            <a th:href="@{/}" class="btn btn-primary" style="min-height: 48px; font-size: 1.05rem">На главную</a>
         </div>
     </div>
 </div>

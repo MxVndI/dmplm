@@ -14,21 +14,6 @@ import org.springframework.web.servlet.HandlerInterceptor;
 
 import java.util.Optional;
 
-/**
- * Pre-handle interceptor that resolves the A/B test routing for every
- * authenticated page request.
- *
- * Sets two request attributes that controllers read to choose a template:
- *   request.getAttribute("abTestId") → String, e.g. "profile_test"
- *   request.getAttribute("variant")  → String, e.g. "A" or "B"
- *
- * When no test applies (unauthenticated, no matching rule, service down),
- * the attributes are simply not set and controllers fall back to their
- * default templates.
- *
- * This interceptor never throws — failures are silently swallowed so that
- * a broken A/B service cannot take down the shop.
- */
 @Slf4j
 @Component
 @RequiredArgsConstructor
@@ -54,12 +39,8 @@ public class ABInterceptor implements HandlerInterceptor {
 
             String userId = userOpt.get().getId();
 
-            // 1. Try rule-based resolution (old system: ABRuleEntity + ABConfigEntity).
             Optional<ABResolution> resolution = abTestResolver.resolve(request, userId);
 
-            // 2. Fallback to selector-service participation (new system: TestConfigEntity).
-            //    This is what gives templates configured via the config-tests UI a chance
-            //    to apply — without it, TemplateOverrideInterceptor never fires.
             if (resolution.isEmpty()) {
                 resolution = assignmentServiceClient.getAssignment(userId)
                         .filter(p -> p.getTestId() != null && p.getVariant() != null)
@@ -74,7 +55,6 @@ public class ABInterceptor implements HandlerInterceptor {
                         r.abTestId(), r.variant());
             });
         } catch (Exception e) {
-            // Never let A/B resolution break a page render.
             log.debug("ABInterceptor non-fatal error: {}", e.getMessage());
         }
         return true;

@@ -19,13 +19,6 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Set;
 
-/**
- * Seeds the database with a realistic set of users and products on first startup.
- * Idempotent — skips seeding if data already exists.
- *
- * After saving each user, publishes a UserProfileEvent to Kafka so the selector
- * service can build its GlobalKTable from the start.
- */
 @Slf4j
 @Component
 @RequiredArgsConstructor
@@ -43,16 +36,15 @@ public class DataInitializer implements CommandLineRunner {
         seedUsers();
         seedProducts();
         seedABTests();
-        republishAllUserProfiles();   // always sync GlobalKTable on startup
+        republishAllUserProfiles();
     }
 
-    // ── Admin ────────────────────────────────────────────────────────────────
     private String generateSlug(String name) {
         return name.toLowerCase()
-                .replaceAll("[^a-z0-9\\s-]", "")  // убираем спецсимволы
+                .replaceAll("[^a-z0-9\\s-]", "")
                 .trim()
-                .replaceAll("\\s+", "-")          // пробелы → дефисы
-                .replaceAll("-+", "-");           // убираем повторяющиеся дефисы
+                .replaceAll("\\s+", "-")
+                .replaceAll("-+", "-");
     }
 
     private void seedAdmin() {
@@ -65,10 +57,7 @@ public class DataInitializer implements CommandLineRunner {
         log.warn("=== Default admin created: login=admin  password=Admin1234! — CHANGE THIS! ===");
     }
 
-    // ── Users ────────────────────────────────────────────────────────────────
-
     private void seedUsers() {
-        // Guard: skip only if the first seed user already exists
         if (userRepository.existsByLogin("ivan_petrov")) {
             log.info("Users already seeded, skipping.");
             return;
@@ -95,13 +84,11 @@ public class DataInitializer implements CommandLineRunner {
         for (UserEntity u : users) {
             if (!userRepository.existsByLogin(u.getLogin())) {
                 UserEntity saved = userRepository.save(u);
-                userService.publishProfile(saved);   // publish to Kafka for selector
+                userService.publishProfile(saved);
             }
         }
         log.info("Seeded {} test users.", users.size());
     }
-
-    // ── Products ─────────────────────────────────────────────────────────────
 
     private static final int EXPECTED_PRODUCT_COUNT = 32;
 
@@ -117,7 +104,6 @@ public class DataInitializer implements CommandLineRunner {
         }
 
         List<ProductEntity> products = List.of(
-                // ── Electronics: Audio & Input ────────────────────────────
                 buildProduct("Wireless Noise-Cancelling Headphones",
                         new BigDecimal("149.99"), 50,
                         "Premium over-ear headphones with 30h battery and ANC technology."),
@@ -137,7 +123,6 @@ public class DataInitializer implements CommandLineRunner {
                         new BigDecimal("69.00"), 80,
                         "25 600 DPI optical sensor, 70h battery, 2.4 GHz + BT dual-mode, 6 programmable buttons."),
 
-                // ── Electronics: Display & Accessories ───────────────────
                 buildProduct("4K USB-C Monitor 27\"",
                         new BigDecimal("399.00"), 15,
                         "IPS panel, 3840×2160, 60 Hz, USB-C 65 W power delivery, sRGB 99%."),
@@ -148,7 +133,6 @@ public class DataInitializer implements CommandLineRunner {
                         new BigDecimal("55.00"), 90,
                         "Aluminium alloy, 6 height levels, foldable, compatible with laptops 10–17 \"."),
 
-                // ── Electronics: Storage & Power ─────────────────────────
                 buildProduct("Portable SSD 1 TB",
                         new BigDecimal("79.95"), 200,
                         "USB 3.2 Gen2, up to 1000 MB/s read speed, shock-resistant metal casing."),
@@ -162,7 +146,6 @@ public class DataInitializer implements CommandLineRunner {
                         new BigDecimal("39.99"), 120,
                         "15 W Qi2 MagSafe compatible, watch + earbuds charging spots, braided cable."),
 
-                // ── Electronics: Smart & Wearables ───────────────────────
                 buildProduct("Smart Watch 45mm",
                         new BigDecimal("249.00"), 60,
                         "AMOLED display, heart rate, SpO2, GPS, 7-day battery, iOS & Android."),
@@ -173,12 +156,10 @@ public class DataInitializer implements CommandLineRunner {
                         new BigDecimal("34.99"), 100,
                         "RGBW 16M colours, 800 lm, E27, Wi-Fi, voice control (Alexa, Google, Siri)."),
 
-                // ── Electronics: Entertainment ────────────────────────────
                 buildProduct("Mini Projector 1080p",
                         new BigDecimal("289.00"), 12,
                         "Full HD 1080p, 800 ANSI lm, built-in Android 11, Wi-Fi & BT, 30 000 h lamp life."),
 
-                // ── Furniture & Office ────────────────────────────────────
                 buildProduct("Ergonomic Office Chair",
                         new BigDecimal("329.00"), 8,
                         "Adjustable lumbar support, mesh back, 3D armrests, max load 120 kg."),
@@ -189,7 +170,6 @@ public class DataInitializer implements CommandLineRunner {
                         new BigDecimal("49.99"), 65,
                         "5 colour temperatures, 10 brightness levels, wireless charging base, foldable arm."),
 
-                // ── Kitchen & Home ────────────────────────────────────────
                 buildProduct("Coffee Capsule Machine",
                         new BigDecimal("119.00"), 35,
                         "Compatible with Nespresso pods, 19-bar pump, 0.7 L tank, 25-sec heat-up."),
@@ -206,12 +186,10 @@ public class DataInitializer implements CommandLineRunner {
                         new BigDecimal("34.99"), 110,
                         "S/M/L sizes, food-safe bamboo, juice groove, non-slip feet, dishwasher safe."),
 
-                // ── Home Automation ───────────────────────────────────────
                 buildProduct("Robot Vacuum Cleaner 4500 Pa",
                         new BigDecimal("349.00"), 10,
                         "4500 Pa suction, LiDAR mapping, mop function, self-emptying dock, app + voice control."),
 
-                // ── Sports & Health ───────────────────────────────────────
                 buildProduct("Resistance Bands Set 5-piece",
                         new BigDecimal("24.99"), 200,
                         "5 resistance levels 5–40 kg, natural latex, includes carry bag and guide booklet."),
@@ -225,7 +203,6 @@ public class DataInitializer implements CommandLineRunner {
                         new BigDecimal("19.99"), 200,
                         "LCD counter tracks jumps & calories, ball-bearing handles, adjustable 3 m cable."),
 
-                // ── Accessories & Lifestyle ───────────────────────────────
                 buildProduct("RFID Leather Wallet Slim",
                         new BigDecimal("44.99"), 120,
                         "Genuine top-grain leather, RFID-blocking, 8 card slots, 2 cash pockets, gift box."),
@@ -237,8 +214,6 @@ public class DataInitializer implements CommandLineRunner {
         productRepository.saveAll(products);
         log.info("Seeded {} products.", products.size());
     }
-
-    // ── AB Tests ──────────────────────────────────────────────────────────────
 
     private void seedABTests() {
         if (abTestRepository.count() > 0) {
@@ -279,8 +254,6 @@ public class DataInitializer implements CommandLineRunner {
         return t;
     }
 
-    // ── Builders ──────────────────────────────────────────────────────────────
-
     private UserEntity buildUser(String login, String rawPassword, String firstName, String lastName,
                            String country, String language, Gender gender, int age,
                            String phone, String email, Set<String> roles) {
@@ -310,11 +283,6 @@ public class DataInitializer implements CommandLineRunner {
         return p;
     }
 
-    /**
-     * Publishes every user already in MongoDB to the Kafka 'user-profiles' topic.
-     * This re-fills the selector-service GlobalKTable after restarts, ensuring
-     * that users created before Kafka was added are visible during selection.
-     */
     private void republishAllUserProfiles() {
         List<UserEntity> allUsers = userRepository.findAll();
         allUsers.forEach(userService::publishProfile);

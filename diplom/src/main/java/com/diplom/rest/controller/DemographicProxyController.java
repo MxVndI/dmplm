@@ -8,9 +8,6 @@ import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.RestTemplate;
 
-/**
- * Proxies demographic API calls to demographic-service.
- */
 @Slf4j
 @RestController
 @RequestMapping("/admin/api/proxy/demographics")

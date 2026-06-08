@@ -3,8 +3,8 @@
       xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <body>
 
-<!-- Navigation Bar -->
-<nav th:fragment="navbar" class="navbar" role="navigation" aria-label="Main navigation">
+<!-- Навигация -->
+<nav th:fragment="navbar" class="navbar" role="navigation" aria-label="Основная навигация">
     <div class="container">
         <a th:href="@{/}" class="navbar-brand">DiplomShop</a>
         <ul class="navbar-links">
@@ -41,6 +41,11 @@
                 </a>
             </li>
 
+
+            <li sec:authorize="isAuthenticated()">
+                <a th:href="@{/button-test}" class="nav-test-link" title="Тест кнопок">Тест кнопок</a>
+            </li>
+
             <li sec:authorize="isAuthenticated()">
                 <a th:href="@{/cart}" title="Корзина покупок">
                     Корзина <span class="nav-badge" id="cart-count-badge"
@@ -63,8 +68,15 @@
             </li>
         </ul>
     </div>
+    <div class="header-research-card" sec:authorize="isAuthenticated()">
+        <div class="header-research-card__text">
+            <strong>Участвуйте в исследовании цвета</strong>
+            <span>Помогите понять, какие цвета лучше работают в интерфейсе. Тест займёт меньше минуты.</span>
+        </div>
+        <a th:href="@{/button-test}" class="header-research-card__button">Пройти тест →</a>
+    </div>
 
-    <!--/* Inject tracking context for main.js — never visible to the user */-->
+    <!--/* Контекст отслеживания для main.js — пользователю не показывается */-->
     <script th:inline="javascript">
     window.__tracking = {
         userId:  /*[[${_trackUserId}]]*/ null,

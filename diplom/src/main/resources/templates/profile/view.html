@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<html xmlns:th="http://www.thymeleaf.org" lang="ru">
 <head>
     <meta charset="UTF-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    <title>My Profile — DiplomShop</title>
+    <title>Мой профиль — DiplomShop</title>
     <link rel="stylesheet" th:href="@{/css/styles.css}"/>
     <link rel="preconnect" href="https://fonts.googleapis.com"/>
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
@@ -13,60 +13,60 @@
 <div th:replace="~{fragments/nav :: navbar}"></div>
 
 <div class="page-wrapper" style="max-width: 700px">
-    <h1 class="page-title">My Profile</h1>
+    <h1 class="page-title">Мой профиль</h1>
 
-    <div th:if="${param.updated}" class="alert alert-success">Profile updated successfully.</div>
+    <div th:if="${param.updated}" class="alert alert-success">Профиль успешно обновлён.</div>
 
     <div class="profile-card">
 
         <div class="profile-row">
-            <span class="profile-label">Username</span>
+            <span class="profile-label">Имя пользователя</span>
             <span class="profile-value" th:text="${user.login}">—</span>
         </div>
         <div class="profile-row">
-            <span class="profile-label">First Name</span>
+            <span class="profile-label">Имя</span>
             <span class="profile-value" th:text="${user.firstName}">—</span>
         </div>
         <div class="profile-row">
-            <span class="profile-label">Last Name</span>
+            <span class="profile-label">Фамилия</span>
             <span class="profile-value" th:text="${user.lastName}">—</span>
         </div>
         <div class="profile-row">
-            <span class="profile-label">Country</span>
+            <span class="profile-label">Страна</span>
             <span class="profile-value" th:text="${user.country}">—</span>
         </div>
         <div class="profile-row">
-            <span class="profile-label">Language</span>
+            <span class="profile-label">Язык</span>
             <span class="profile-value" th:text="${user.language}">—</span>
         </div>
         <div class="profile-row">
-            <span class="profile-label">Gender</span>
+            <span class="profile-label">Пол</span>
             <span class="profile-value" th:text="${user.gender}">—</span>
         </div>
         <div class="profile-row">
-            <span class="profile-label">Age</span>
+            <span class="profile-label">Возраст</span>
             <span class="profile-value" th:text="${user.age}">—</span>
         </div>
         <div class="profile-row">
-            <span class="profile-label">Phone</span>
+            <span class="profile-label">Телефон</span>
             <span class="profile-value" th:text="${user.phone != null ? user.phone : '—'}">—</span>
         </div>
         <div class="profile-row">
-            <span class="profile-label">Email</span>
+            <span class="profile-label">Электронная почта</span>
             <span class="profile-value" th:text="${user.email}">—</span>
         </div>
         <div class="profile-row">
-            <span class="profile-label">Telegram Chat ID</span>
+            <span class="profile-label">ID чата Telegram</span>
             <span class="profile-value" th:text="${user.telegramChatId != null and !user.telegramChatId.isEmpty() ? user.telegramChatId : '—'}">—</span>
         </div>
         <div class="profile-row">
-            <span class="profile-label">Joined</span>
+            <span class="profile-label">Дата регистрации</span>
             <span class="profile-value" th:text="${#temporals.format(user.createdAt, 'dd MMM yyyy')}">—</span>
         </div>
 
         <div style="margin-top: 2rem; display: flex; gap: 1rem">
-            <a th:href="@{/profile/edit}" class="btn btn-primary" style="flex: 1">Edit Profile</a>
-            <a th:href="@{/orders}" class="btn btn-secondary" style="flex: 1">View Orders</a>
+            <a th:href="@{/profile/edit}" class="btn btn-primary" style="flex: 1">Редактировать профиль</a>
+            <a th:href="@{/orders}" class="btn btn-secondary" style="flex: 1">Мои заказы</a>
         </div>
     </div>
 </div>

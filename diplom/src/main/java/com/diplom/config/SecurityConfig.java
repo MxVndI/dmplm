@@ -34,7 +34,6 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-        // Use cookie-based CSRF so JS on any page can read the token from the XSRF-TOKEN cookie
         CookieCsrfTokenRepository csrfRepo = CookieCsrfTokenRepository.withHttpOnlyFalse();
         CsrfTokenRequestAttributeHandler csrfHandler = new CsrfTokenRequestAttributeHandler();
 
@@ -42,8 +41,6 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf
                         .csrfTokenRepository(csrfRepo)
                         .csrfTokenRequestHandler(csrfHandler)
-                        // REST API endpoints are called server-side or from JS with cookie token;
-                        // internal/* is called by other services — no session/cookie available there.
                         .ignoringRequestMatchers("/api/**", "/internal/**")
                 )
                 .authorizeHttpRequests(auth -> auth

@@ -14,21 +14,13 @@ public class TestConfigEntity {
 
     @Id
     private String id;
-
     private String name;
     private String description;
-
     private TestCriteria criteria;
-
     private TestStatus status;
-
-    /** Number of participants enrolled after the last selection run. */
     private int enrolledCount;
-
     private LocalDateTime createdAt;
     private LocalDateTime triggeredAt;
     private LocalDateTime completedAt;
-
-    /** When set, the test is automatically completed after this moment. */
     private LocalDateTime expiresAt;
 }

@@ -83,8 +83,6 @@
                 <select id="pm-variant">
                     <option value="A">Вариант A</option>
                     <option value="B">Вариант B</option>
-                    <option value="C">Вариант C</option>
-                    <option value="D">Вариант D</option>
                 </select>
             </div>
             <div class="form-group">
@@ -132,7 +130,7 @@
     <div id="pane-upload" style="display:none">
         <div class="tpl-grid">
             <div>
-                <p class="section-title">Загрузить HTML файл</p>
+                <p class="section-title">Загрузить HTML-файл</p>
                 <div class="form-card">
                     <div class="form-group">
                         <label>Название шаблона *</label>
@@ -148,8 +146,6 @@
                             <select id="u-variant">
                                 <option value="A">Вариант A</option>
                                 <option value="B">Вариант B</option>
-                                <option value="C">Вариант C</option>
-                                <option value="D">Вариант D</option>
                             </select>
                         </div>
                     </div>
@@ -182,9 +178,9 @@
                     </div>
 
                     <div class="form-group">
-                        <label>HTML файл *</label>
+                        <label>HTML-файл *</label>
                         <input type="file" id="u-file" accept=".html" onchange="previewFile(this)"/>
-                        <p class="hint">Загрузите .html файл. Содержимое будет вставлено внутрь страницы магазина (после навбара).</p>
+                        <p class="hint">Загрузите .html-файл. Содержимое будет вставлено внутрь страницы магазина (после навбара).</p>
                     </div>
 
                     <div style="display:flex;gap:.75rem;margin-top:1.5rem">
@@ -196,7 +192,7 @@
             <div>
                 <p class="section-title">Предпросмотр файла</p>
                 <div style="background:#f8fafc;border:1px dashed #cbd5e1;border-radius:.75rem;height:400px;display:flex;align-items:center;justify-content:center;color:#94a3b8;font-size:.9rem" id="preview-placeholder">
-                    Выберите HTML файл для предпросмотра
+                    Выберите HTML-файл для предпросмотра
                 </div>
                 <iframe id="preview-iframe" class="preview-frame" style="display:none"></iframe>
             </div>

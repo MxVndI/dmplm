@@ -6,11 +6,11 @@ import lombok.NoArgsConstructor;
 
 import java.time.Instant;
 
-/** Forwarded to topic {@code test-participants-result} for downstream consumers. */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 public class TestParticipantEvent {
+
     private String testId;
     private String userId;
     private String variant;
