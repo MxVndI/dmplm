@@ -10,12 +10,6 @@ import org.springframework.stereotype.Service;
 
 import java.time.ZoneId;
 
-/**
- * Listens on {@code test-participants-result} topic and keeps the shop's local
- * {@code user_test_participations} collection in sync with the selector service output.
- *
- * The shop is the consumer of selection results — it does NOT drive the test creation.
- */
 @Slf4j
 @Service
 @RequiredArgsConstructor

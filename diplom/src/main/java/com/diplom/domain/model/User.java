@@ -12,7 +12,6 @@ import java.util.Set;
 public class User {
 
     private String id;
-
     private String password;
     private String firstName;
     private String lastName;
@@ -20,10 +19,7 @@ public class User {
     private String language;
     private Gender gender;
     private Integer age;
-
-    /** Telegram chat ID — set when user links their Telegram account via /start */
     private String telegramChatId;
-
     private Set<String> roles;
     private LocalDateTime createdAt;
 }

@@ -15,7 +15,6 @@ public class WebMvcConfig implements WebMvcConfigurer {
 
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
-        // 1. A/B interceptor (preHandle): resolves test/variant and sets request attributes.
         registry.addInterceptor(abInterceptor)
                 .addPathPatterns("/**")
                 .excludePathPatterns(
@@ -23,8 +22,6 @@ public class WebMvcConfig implements WebMvcConfigurer {
                         "/css/**", "/js/**", "/images/**", "/webjars/**",
                         "/login", "/register");
 
-        // 2. Template override interceptor (postHandle): swaps the view with a custom HTML
-        //    template if one is configured for this test/variant/path combination.
         registry.addInterceptor(templateOverrideInterceptor)
                 .addPathPatterns("/**")
                 .excludePathPatterns(
@@ -32,7 +29,6 @@ public class WebMvcConfig implements WebMvcConfigurer {
                         "/css/**", "/js/**", "/images/**", "/webjars/**",
                         "/login", "/register");
 
-        // 3. Metrics interceptor (postHandle): injects tracking metadata into the model.
         registry.addInterceptor(metricsInterceptor)
                 .addPathPatterns("/**")
                 .excludePathPatterns("/api/**", "/internal/**",

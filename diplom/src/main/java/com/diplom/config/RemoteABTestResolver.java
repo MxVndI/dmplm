@@ -11,16 +11,6 @@ import org.springframework.web.util.UriComponentsBuilder;
 import java.util.Map;
 import java.util.Optional;
 
-/**
- * Resolves A/B tests by calling diplom-test-service GET /api/ab/resolve.
- *
- * Falls back silently (returns empty) when the service is unavailable,
- * so the shop always renders the default template rather than throwing an error.
- *
- * Configuration:
- *   app.ab-rule-service-url — base URL of diplom-test-service
- *   (defaults to the same URL as test-service, i.e. http://localhost:8081)
- */
 @Slf4j
 @Component
 public class RemoteABTestResolver implements ABTestResolver {
@@ -54,7 +44,6 @@ public class RemoteABTestResolver implements ABTestResolver {
                     return Optional.of(new ABResolution(abTestId, variant));
                 }
             }
-            // 204 No Content or empty body → no test for this user/path
             return Optional.empty();
         } catch (Exception e) {
             log.debug("AB rule service unavailable ({}); using default template.", e.getMessage());

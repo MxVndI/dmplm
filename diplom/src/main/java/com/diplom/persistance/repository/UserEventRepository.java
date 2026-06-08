@@ -7,10 +7,6 @@ import org.springframework.stereotype.Repository;
 import java.time.LocalDateTime;
 import java.util.List;
 
-/**
- * Repository for user behaviour metrics.
- * Extended query methods will be added when metrics collection is implemented.
- */
 @Repository
 
 public interface UserEventRepository extends MongoRepository<UserEventEntity, String> {

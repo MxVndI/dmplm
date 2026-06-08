@@ -48,7 +48,6 @@ public class ABTestService {
         test.setActive(false);
         test.setEndedAt(LocalDateTime.now());
         abTestRepository.save(test);
-        // Remove all participant records so users get back the default UI
         participationRepository.deleteByTestId(testId);
         log.info("Test {} deactivated; all participant records removed.", testId);
     }
@@ -59,7 +58,6 @@ public class ABTestService {
         log.info("Test {} deleted along with all participant records.", testId);
     }
 
-    /** Auto-deactivate tests whose expiresAt is in the past. Runs every minute. */
     @Scheduled(fixedDelay = 60_000)
     public void deactivateExpiredTests() {
         List<ABTestEntity> expired = abTestRepository.findByActive(true).stream()
@@ -71,13 +69,6 @@ public class ABTestService {
         }
     }
 
-    /**
-     * Enroll a user in a test.
-     *
-     * @param testId  id of the test
-     * @param userId  id of the user
-     * @param variant explicit variant ("A" or "B"), or {@code null} for random assignment
-     */
     public UserTestParticipationEntity enrollUser(String testId, String userId, String variant) {
         if (participationRepository.findByTestIdAndUserId(testId, userId).isPresent()) {
             throw new IllegalArgumentException("User is already enrolled in this test.");
@@ -100,25 +91,17 @@ public class ABTestService {
         participationRepository.deleteById(participationId);
     }
 
-    /**
-     * Find the best participation for routing:
-     * 1. Prefers a participation tied to a currently active old-system ABTest.
-     * 2. Falls back to the most recent new-system participation (selector-service)
-     *    within the last 30 days, so users enrolled via Kafka also see their variant.
-     */
     public Optional<UserTestParticipationEntity> findActiveParticipation(String userId) {
         List<ABTestEntity> activeTests = abTestRepository.findByActive(true).stream()
                 .filter(t -> t.getExpiresAt() == null || t.getExpiresAt().isAfter(LocalDateTime.now()))
                 .toList();
         List<UserTestParticipationEntity> userParticipations = participationRepository.findByUserId(userId);
 
-        // 1. Old-system active tests
         Optional<UserTestParticipationEntity> fromOldSystem = userParticipations.stream()
                 .filter(p -> activeTests.stream().anyMatch(t -> t.getId().equals(p.getTestId())))
                 .findFirst();
         if (fromOldSystem.isPresent()) return fromOldSystem;
 
-        // 2. New-system (selector-service via Kafka) — most recent within 30 days
         LocalDateTime cutoff = LocalDateTime.now().minusDays(30);
         return userParticipations.stream()
                 .filter(p -> p.getEnrolledAt() != null && p.getEnrolledAt().isAfter(cutoff))

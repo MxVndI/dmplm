@@ -1,11 +1,11 @@
 package com.diplom.domain.service;
 
-import com.diplom.rest.dto.UserRegistrationDto;
-import com.diplom.rest.dto.UserUpdateDto;
 import com.diplom.event.UserProfileEvent;
 import com.diplom.mapper.UserMapper;
 import com.diplom.persistance.entity.UserEntity;
 import com.diplom.persistance.repository.UserRepository;
+import com.diplom.rest.dto.UserRegistrationDto;
+import com.diplom.rest.dto.UserUpdateDto;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -20,12 +20,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
 import java.time.LocalDateTime;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -61,12 +56,6 @@ public class UserService {
         }
     }
 
-    /**
-     * Creates (or upserts) a demographics record using the SAME user ID,
-     * so the two records are always matched 1:1 across services.
-     * Extended optional fields from registration are forwarded when present.
-     * Best-effort — a failure does NOT roll back user creation.
-     */
     private void syncDemographics(UserEntity user, UserRegistrationDto dto) {
         try {
             Map<String, Object> body = new HashMap<>();
@@ -106,22 +95,13 @@ public class UserService {
         );
         kafkaTemplate.send("user-profiles", user.getId(), event);
         log.debug("Published user-profile event for user={}", user.getId());
-
-        // Bootstrap segmentation state: emit a synthetic LOGIN event so the
-        // selector-service creates an aggregate-state entry for this user even
-        // before they generate any behavioural events.
         publishLoginEvent(user.getId());
     }
 
-    /**
-     * Publishes a synthetic LOGIN event to the {@code user-events} topic so that
-     * diplom-selector-service initialises the user's aggregate state and assigns
-     * an initial segment immediately on registration.
-     */
     private void publishLoginEvent(String userId) {
         try {
             Map<String, Object> payload = new HashMap<>();
-            payload.put("userId",    userId);
+            payload.put("userId", userId);
             payload.put("eventType", "LOGIN");
             payload.put("timestamp", System.currentTimeMillis());
             eventKafkaTemplate.send("user-events", userId, payload);
@@ -147,8 +127,6 @@ public class UserService {
                 .orElseThrow(() -> new IllegalArgumentException("User not found"));
 
         userMapper.updateEntityFromDto(dto, user);
-        // Telegram chat ID has explicit "clear on blank" semantics — handled here
-        // because the mapper's IGNORE strategy would skip null assignments.
         user.setTelegramChatId(dto.getTelegramChatId() != null && !dto.getTelegramChatId().isBlank()
                 ? dto.getTelegramChatId() : null);
 
@@ -166,10 +144,10 @@ public class UserService {
         try {
             Map<String, Object> body = new HashMap<>();
             body.put("userId", user.getId());
-            if (user.getAge() != null)       body.put("age", user.getAge());
-            if (user.getCountry() != null && !user.getCountry().isBlank())   body.put("country", user.getCountry());
+            if (user.getAge() != null) body.put("age", user.getAge());
+            if (user.getCountry() != null && !user.getCountry().isBlank()) body.put("country", user.getCountry());
             if (user.getLanguage() != null && !user.getLanguage().isBlank()) body.put("language", user.getLanguage());
-            if (user.getGender() != null)    body.put("gender", user.getGender().name());
+            if (user.getGender() != null) body.put("gender", user.getGender().name());
             if (dto.getIncomeLevel() != null && !dto.getIncomeLevel().isBlank())
                 body.put("incomeLevel", dto.getIncomeLevel());
             if (dto.getEducationLevel() != null && !dto.getEducationLevel().isBlank())

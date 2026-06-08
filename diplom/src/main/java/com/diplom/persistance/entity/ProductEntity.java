@@ -15,17 +15,11 @@ public class ProductEntity {
 
     @Id
     private String id;
-
     private String name;
     private BigDecimal price;
     private String description;
-
-    /** S3 object key (used for deletion). */
     private String photoKey;
-
-    /** Public URL to the product photo. */
     private String photoUrl;
-
     private Integer availableQuantity;
     private LocalDateTime createdAt;
 }

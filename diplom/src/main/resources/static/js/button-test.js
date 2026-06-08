@@ -1,21 +1,9 @@
-/**
- * button-test.js — Button preference A/B test metrics tracker.
- *
- * Tracks:
- * - TIME_ON_PAGE: Total time spent on the page
- * - BUTTON_CLICK: Which button was clicked (left/right) and its color
- *
- * UX:
- * - Shows thank-you message after clicking
- * - Prevents re-participation via localStorage (per testId)
- */
 (function () {
     'use strict';
 
     const pageStartTime = Date.now();
     let buttonClicked = false;
 
-    // ── Participation guard ───────────────────────────────────
     function getTestKey() {
         const ctx = window.__tracking || {};
         return 'btn_test_done_' + (ctx.testId || window.location.pathname);
@@ -53,16 +41,14 @@
             '</div>';
     }
 
-    // ── On load: if already participated, show locked state ──
     if (hasParticipated()) {
         showAlreadyVoted();
     } else {
-        // Track button clicks
         const buttons = document.querySelectorAll('[data-button-id]');
         buttons.forEach(function (btn) {
             btn.addEventListener('click', function (e) {
                 e.preventDefault();
-                if (buttonClicked) return; // guard against double-click
+                if (buttonClicked) return;
 
                 const buttonId    = btn.dataset.buttonId;
                 const buttonColor = btn.dataset.buttonColor;
@@ -71,7 +57,6 @@
                 markParticipated(buttonColor);
                 showThankYou();
 
-                // Send BUTTON_CLICK event to metrics
                 const ctx = window.__tracking || {};
                 const payload = {
                     eventType: 'BUTTON_CLICK',
@@ -104,7 +89,6 @@
         });
     }
 
-    // ── Send TIME_ON_PAGE when leaving ────────────────────────
     window.addEventListener('pagehide', sendTimeOnPage);
     document.addEventListener('visibilitychange', function () {
         if (document.visibilityState === 'hidden') sendTimeOnPage();
@@ -138,7 +122,6 @@
         }).catch(function () {});
     }
 
-    // ── Session management ────────────────────────────────────
     const SESSION_KEY = 'ds_session';
     function getSessionId() {
         let sid = sessionStorage.getItem(SESSION_KEY);
@@ -149,7 +132,6 @@
         return sid;
     }
 
-    // ── CSRF token helper ─────────────────────────────────────
     function getCsrf() {
         const m = document.cookie.match(/(?:^|;\s*)XSRF-TOKEN=([^;]+)/);
         if (m) return { header: 'X-XSRF-TOKEN', token: decodeURIComponent(m[1]) };

@@ -24,7 +24,6 @@ public class MetricsService {
     private final OrderRepository orderRepository;
     private final KafkaTemplate<String, Object> kafkaTemplate;
 
-    /** Record and persist a user behaviour event, then publish it to Kafka for stream segmentation. */
     public void recordEvent(UserEventEntity event) {
         if (event.getTimestamp() == null) {
             event.setTimestamp(LocalDateTime.now());
@@ -36,11 +35,6 @@ public class MetricsService {
         publishToKafka(event);
     }
 
-    /**
-     * Publishes a lightweight projection of the event to the {@code user-events} Kafka topic.
-     * The selector-service consumes this topic to update per-user aggregate state and
-     * re-evaluate segments in near real-time.
-     */
     private void publishToKafka(UserEventEntity event) {
         if (event.getUserId() == null || event.getEventType() == null) return;
         try {
@@ -48,7 +42,6 @@ public class MetricsService {
                     ? event.getTimestamp().toInstant(ZoneOffset.UTC).toEpochMilli()
                     : System.currentTimeMillis();
 
-            // Extract optional amount from eventData (present on PURCHASE / ORDER events)
             Double amount = null;
             if (event.getEventData() != null) {
                 Object raw = event.getEventData().get("amount");
@@ -77,10 +70,6 @@ public class MetricsService {
         return userEventRepository.findByTestId(testId);
     }
 
-    /**
-     * Aggregate metrics for a given A/B test: per-variant summary with
-     * event counts, unique users, average session duration, and top pages.
-     */
     public Map<String, Object> getTestSummary(String testId) {
         List<UserEventEntity> events = userEventRepository.findByTestId(testId);
 
@@ -133,7 +122,6 @@ public class MetricsService {
             }
         }
 
-        // Finalise
         List<Map<String, Object>> variantList = new ArrayList<>();
         for (Map.Entry<String, Map<String, Object>> entry : byVariant.entrySet()) {
             Map<String, Object> vm = entry.getValue();
@@ -151,7 +139,6 @@ public class MetricsService {
                     : (long) durs.stream().mapToLong(Long::longValue).average().orElse(0));
             vm.remove("sessionDurations");
 
-            // Top 5 pages
             @SuppressWarnings("unchecked")
             Map<String, Integer> pc = (Map<String, Integer>) vm.get("pageCounts");
             List<Map.Entry<String, Integer>> topPages = pc.entrySet().stream()
@@ -170,7 +157,6 @@ public class MetricsService {
         result.put("testId", testId);
         result.put("totalEvents", events.size());
 
-        // Enrich with order/conversion data per variant
         List<OrderEntity> orders = orderRepository.findByTestId(testId);
         Map<String, List<OrderEntity>> ordersByVariant = orders.stream()
                 .collect(Collectors.groupingBy(o -> o.getVariant() != null ? o.getVariant() : "unknown"));
@@ -187,8 +173,6 @@ public class MetricsService {
 
         result.put("variants", variantList);
 
-        // ── Funnel per variant ────────────────────────────────────────────────
-        // Re-count funnel-relevant events to keep counts aligned with variantList
         Map<String, Map<String, Integer>> funnelByVariant = new LinkedHashMap<>();
         for (UserEventEntity e : events) {
             String v = e.getVariant() != null ? e.getVariant() : "unknown";
@@ -205,7 +189,6 @@ public class MetricsService {
                 funnelByVariant.get(v).merge(et, 1, Integer::sum);
             }
         }
-        // Add completed orders to funnel
         List<OrderEntity> allOrders = orderRepository.findByTestId(testId);
         for (OrderEntity o : allOrders) {
             String v = o.getVariant() != null ? o.getVariant() : "unknown";
@@ -213,23 +196,16 @@ public class MetricsService {
         }
         result.put("funnel", funnelByVariant);
 
-        // ── Statistical significance (A vs B, two-proportion z-test) ─────────
         result.put("significance", computeSignificance(variantList));
 
         return result;
     }
 
-    /**
-     * Two-proportion z-test for conversion rate between variant A and B.
-     * Returns a map with: zA (conversion rate A), zB (conversion rate B),
-     * zScore, pValue, significant (p < 0.05), winner.
-     */
     private Map<String, Object> computeSignificance(List<Map<String, Object>> variants) {
         Map<String, Object> empty = new LinkedHashMap<>();
         empty.put("available", false);
         if (variants.size() < 2) return empty;
 
-        // Find A and B (or first two variants)
         Map<String, Object> vA = null, vB = null;
         for (Map<String, Object> v : variants) {
             String name = (String) v.get("variant");
@@ -275,9 +251,7 @@ public class MetricsService {
         return sig;
     }
 
-    /** Upper-tail probability of standard normal: P(Z > z). */
     private static double normalCdfTail(double z) {
-        // Abramowitz & Stegun approximation 26.2.17
         double t = 1.0 / (1.0 + 0.2316419 * z);
         double poly = t * (0.319381530
                 + t * (-0.356563782
@@ -288,7 +262,6 @@ public class MetricsService {
         return phi * poly;
     }
 
-    /** Recent events across all tests (for admin overview). */
     public List<UserEventEntity> getRecentEvents(int limit) {
         return userEventRepository.findAll().stream()
                 .sorted(Comparator.comparing(UserEventEntity::getTimestamp,

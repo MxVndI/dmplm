@@ -7,9 +7,6 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
-/**
- * Persisted record of a completed purchase order.
- */
 @Data
 @NoArgsConstructor
 public class Order {
@@ -19,9 +16,8 @@ public class Order {
     private String userId;
     private List<OrderItem> items;
     private BigDecimal totalPrice;
-    private String status; // PENDING, COMPLETED, CANCELLED
+    private String status;
 
-    /** A/B test context at the time of purchase — key for conversion analysis. */
     private String testId;
     private String variant;
 

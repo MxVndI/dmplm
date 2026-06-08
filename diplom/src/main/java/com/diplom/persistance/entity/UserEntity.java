@@ -16,10 +16,8 @@ public class UserEntity {
 
     @Id
     private String id;
-
     @Indexed(unique = true)
     private String login;
-
     private String password;
     private String firstName;
     private String lastName;
@@ -29,13 +27,9 @@ public class UserEntity {
     private Integer age;
     @Indexed(unique = true, sparse = true)
     private String phone;
-
     @Indexed(unique = true, sparse = true)
     private String email;
-
-    /** Telegram chat ID — set when user links their Telegram account via /start */
     private String telegramChatId;
-
     private Set<String> roles;
     private boolean blocked;
     private LocalDateTime createdAt;

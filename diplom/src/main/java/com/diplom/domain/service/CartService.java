@@ -11,7 +11,9 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
 
 @Slf4j
 @Service
@@ -24,10 +26,10 @@ public class CartService {
     private final OrderRepository orderRepository;
     private final ABTestService abTestService;
 
-    // ── Internal cart model ──────────────────────────────────────────────────
-
     public record CartItem(String productId, String productName, BigDecimal price, int quantity) {
-        public BigDecimal subtotal() { return price.multiply(BigDecimal.valueOf(quantity)); }
+        public BigDecimal subtotal() {
+            return price.multiply(BigDecimal.valueOf(quantity));
+        }
     }
 
     @SuppressWarnings("unchecked")
@@ -75,14 +77,10 @@ public class CartService {
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 
-    /**
-     * Persist the order, decrement stock, and clear the cart.
-     */
     public OrderEntity checkout(jakarta.servlet.http.HttpSession session, String userId) {
         List<CartItem> cart = getCart(session);
         if (cart.isEmpty()) throw new IllegalArgumentException("Cart is empty.");
 
-        // Decrement stock
         for (CartItem item : cart) {
             productRepository.findById(item.productId()).ifPresent(p -> {
                 int newQty = Math.max(0, (p.getAvailableQuantity() == null ? 0 : p.getAvailableQuantity()) - item.quantity());
@@ -91,7 +89,6 @@ public class CartService {
             });
         }
 
-        // Build order items
         List<OrderEntity.OrderItem> orderItems = cart.stream().map(ci -> {
             OrderEntity.OrderItem oi = new OrderEntity.OrderItem();
             oi.setProductId(ci.productId());
@@ -101,7 +98,6 @@ public class CartService {
             return oi;
         }).toList();
 
-        // Attach A/B context
         Optional<UserTestParticipationEntity> participation = abTestService.findActiveParticipation(userId);
 
         OrderEntity order = new OrderEntity();

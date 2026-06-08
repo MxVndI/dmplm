@@ -30,14 +30,12 @@ public class SecurityConfig {
         http
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
-                        // API endpoints - публичные GET, админские POST/PUT/DELETE
                         .requestMatchers(HttpMethod.GET, "/api/tests/**", "/api/ab/**").permitAll()
                         .requestMatchers("/api/proxy/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/tests/**", "/api/ab/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.PUT, "/api/tests/**", "/api/ab/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.PATCH, "/api/tests/**", "/api/ab/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.DELETE, "/api/tests/**", "/api/ab/**").hasRole("ADMIN")
-                        // Все остальное требует аутентификации
                         .anyRequest().authenticated()
                 )
                 .httpBasic(Customizer.withDefaults());

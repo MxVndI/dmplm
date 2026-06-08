@@ -44,25 +44,13 @@ public class TestTemplateService {
         return repository.findByTestIdAndVariant(testId, variant);
     }
 
-    /**
-     * Finds the best-matching template for a given path using this priority:
-     * 1. Exact match:          /products/123  matches /products/123
-     * 2. Single-wildcard:      /products/123  matches /products/*
-     * 3. Multi-wildcard:       /a/b/c         matches /a/**
-     */
     public Optional<TestTemplateEntity> findTemplateForPath(String testId, String variant, String path) {
         List<TestTemplateEntity> candidates = repository.findByTestIdAndVariant(testId, variant);
         if (candidates.isEmpty()) return Optional.empty();
-
-        // Normalise path — strip trailing slash except root
         String normPath = path.endsWith("/") && path.length() > 1 ? path.substring(0, path.length() - 1) : path;
-
-        // 1. Exact match
         for (TestTemplateEntity t : candidates) {
             if (normPath.equals(t.getPagePattern())) return Optional.of(t);
         }
-
-        // 2. Single-wildcard  /foo/*  matches /foo/anything  (no nested slashes)
         for (TestTemplateEntity t : candidates) {
             String pat = t.getPagePattern();
             if (pat != null && pat.endsWith("/*")) {
@@ -72,8 +60,6 @@ public class TestTemplateService {
                 }
             }
         }
-
-        // 3. Multi-wildcard  /foo/**  matches /foo/any/depth
         for (TestTemplateEntity t : candidates) {
             String pat = t.getPagePattern();
             if (pat != null && pat.endsWith("/**")) {
@@ -81,14 +67,9 @@ public class TestTemplateService {
                 if (normPath.startsWith(prefix)) return Optional.of(t);
             }
         }
-
         return Optional.empty();
     }
 
-    /**
-     * Uploads an HTML template.
-     * If a template already exists for (testId, variant, pagePattern), it is replaced.
-     */
     public TestTemplateEntity upload(String testId, String variant, String pagePattern,
                                      String pageName, String name, MultipartFile file) {
         repository.findByTestIdAndVariantAndPagePattern(testId, variant, pagePattern).ifPresent(old -> {
@@ -119,9 +100,6 @@ public class TestTemplateService {
         return repository.save(template);
     }
 
-    /**
-     * Saves a preset template (HTML string, not a file upload).
-     */
     public TestTemplateEntity uploadPreset(String testId, String variant, String pagePattern,
                                            String pageName, String name, String html) {
         repository.findByTestIdAndVariantAndPagePattern(testId, variant, pagePattern).ifPresent(old -> {

@@ -13,13 +13,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-/**
- * Pushes A/B test business metrics to Micrometer / Prometheus.
- * Runs on a schedule and registers Gauges with dynamic tags so Prometheus
- * can track values over time (scrape interval: configured in prometheus.yml).
- *
- * Exposed at: GET /actuator/prometheus
- */
 @Slf4j
 @Component
 @RequiredArgsConstructor
@@ -29,7 +22,6 @@ public class ABTestMetricsExporter {
     private final ABTestService abTestService;
     private final MetricsService metricsService;
 
-    /** holder key → mutable double array used as Gauge supplier */
     private final ConcurrentHashMap<String, double[]> holders = new ConcurrentHashMap<>();
 
     @Scheduled(fixedDelay = 30_000, initialDelay = 15_000)
@@ -79,9 +71,7 @@ public class ABTestMetricsExporter {
         }
     }
 
-    /** Register a Gauge on first call; update its value on subsequent calls. */
     private void set(String name, Tags tags, double value) {
-        // Compound key: metric name + sorted tags
         StringBuilder keyBuilder = new StringBuilder(name).append('{');
         tags.stream().sorted(java.util.Comparator.comparing(io.micrometer.core.instrument.Tag::getKey))
                 .forEach(t -> keyBuilder.append(t.getKey()).append('=').append(t.getValue()).append(','));

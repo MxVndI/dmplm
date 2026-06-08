@@ -14,17 +14,6 @@ import org.springframework.web.servlet.ModelAndView;
 
 import java.util.Optional;
 
-/**
- * Post-handle interceptor that routes A/B test participants to test-specific pages.
- *
- * Routing priority:
- * 1. Custom DB template (admin-configured for this test/variant/path)
- * 2. Hardcoded variant-specific template (templates/{testId}/{variant}/{page}.html)
- * 3. Default template (no test-specific override)
- *
- * ABInterceptor (preHandle) sets abTestId/variant attributes first;
- * this interceptor reads them in postHandle and applies routing.
- */
 @Slf4j
 @Component
 @RequiredArgsConstructor
@@ -49,7 +38,6 @@ public class TemplateOverrideInterceptor implements HandlerInterceptor {
         String path = request.getRequestURI();
 
         try {
-            // 1. Check for custom DB template
             Optional<TestTemplateEntity> tmpl = templateService.findTemplateForPath(testId, variant, path);
             if (tmpl.isPresent()) {
                 String html = templateService.getHtmlContent(tmpl.get());
@@ -60,7 +48,6 @@ public class TemplateOverrideInterceptor implements HandlerInterceptor {
                 return;
             }
 
-            // 2. Try hardcoded variant-specific template: templates/{testId}/{variant}/{basePage}.html
             String basePage = extractPageName(viewName);
             String variantViewName = testId + "/" + variant + "/" + basePage;
 
@@ -70,7 +57,6 @@ public class TemplateOverrideInterceptor implements HandlerInterceptor {
                 return;
             }
 
-            // 3. No variant template found; keep default view
             log.debug("No variant template found for test={} variant={} path={}, using default: {}", testId, variant, path, viewName);
 
         } catch (Exception e) {
@@ -78,20 +64,12 @@ public class TemplateOverrideInterceptor implements HandlerInterceptor {
         }
     }
 
-    /**
-     * Extracts the base page name from a view name.
-     * E.g., "profile/view" → "view", "products/list" → "list", "home" → "home"
-     */
     private String extractPageName(String viewName) {
         if (viewName == null || viewName.isEmpty()) return "index";
         int lastSlash = viewName.lastIndexOf('/');
         return lastSlash >= 0 ? viewName.substring(lastSlash + 1) : viewName;
     }
 
-    /**
-     * Checks if a Thymeleaf template exists on the classpath.
-     * Thymeleaf templates are in resources/templates/
-     */
     private boolean templateExists(String templateName) {
         try {
             String path = "classpath:/templates/" + templateName + ".html";
