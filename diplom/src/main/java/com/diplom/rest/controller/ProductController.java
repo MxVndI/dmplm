@@ -1,5 +1,6 @@
 package com.diplom.rest.controller;
 
+import com.diplom.constant.AppConstants;
 import com.diplom.persistance.entity.ProductEntity;
 import com.diplom.domain.service.ProductService;
 import lombok.RequiredArgsConstructor;
@@ -28,7 +29,7 @@ public class ProductController {
     @GetMapping("/{id}")
     public String detail(@PathVariable String id, Model model) {
         ProductEntity product = productService.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Product not found: " + id));
+                .orElseThrow(() -> new IllegalArgumentException(AppConstants.PRODUCT_NOT_FOUND + id));
         model.addAttribute("product", product);
         return "products/detail";
     }

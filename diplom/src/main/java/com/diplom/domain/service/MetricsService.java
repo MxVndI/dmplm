@@ -1,5 +1,6 @@
 package com.diplom.domain.service;
 
+import com.diplom.constant.AppConstants;
 import com.diplom.persistance.entity.OrderEntity;
 import com.diplom.persistance.entity.UserEventEntity;
 import com.diplom.persistance.repository.OrderRepository;
@@ -56,7 +57,7 @@ public class MetricsService {
             payload.put("amount",    amount);
             payload.put("sessionId", event.getSessionId());
 
-            kafkaTemplate.send("user-events", event.getUserId(), payload);
+            kafkaTemplate.send(AppConstants.TOPIC_USER_EVENTS, event.getUserId(), payload);
         } catch (Exception e) {
             log.warn("Failed to publish user-event to Kafka for userId={}: {}", event.getUserId(), e.getMessage());
         }

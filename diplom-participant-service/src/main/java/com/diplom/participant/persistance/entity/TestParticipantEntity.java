@@ -20,5 +20,6 @@ public class TestParticipantEntity {
     private String testId;
     private String userId;
     private String variant;
+    private Integer clusterId;
     private Instant enrolledAt;
 }

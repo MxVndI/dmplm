@@ -1,5 +1,6 @@
 package com.diplom.selector.config;
 
+import com.diplom.selector.constant.AppConstants;
 import org.apache.kafka.clients.admin.AdminClientConfig;
 import org.apache.kafka.clients.admin.NewTopic;
 import org.springframework.beans.factory.annotation.Value;
@@ -23,28 +24,28 @@ public class TopicsConfig {
 
     @Bean
     public NewTopic userEventsTopic() {
-        return TopicBuilder.name("user-events").partitions(3).replicas(1).build();
+        return TopicBuilder.name(AppConstants.TOPIC_USER_EVENTS).partitions(3).replicas(1).build();
     }
 
     @Bean
     public NewTopic userProfilesTopic() {
-        return TopicBuilder.name("user-profiles").partitions(3).replicas(1)
-                .config("cleanup.policy", "compact")
+        return TopicBuilder.name(AppConstants.TOPIC_USER_PROFILES).partitions(3).replicas(1)
+                .config(AppConstants.CLEANUP_POLICY_CONFIG, AppConstants.CLEANUP_POLICY_COMPACT)
                 .build();
     }
 
     @Bean
     public NewTopic userSegmentChangesTopic() {
-        return TopicBuilder.name("user-segment-changes").partitions(3).replicas(1).build();
+        return TopicBuilder.name(AppConstants.TOPIC_SEGMENT_CHANGES).partitions(3).replicas(1).build();
     }
 
     @Bean
     public NewTopic testSelectionRequestsTopic() {
-        return TopicBuilder.name("test-selection-requests").partitions(3).replicas(1).build();
+        return TopicBuilder.name(AppConstants.TOPIC_SELECTION_REQUESTS).partitions(3).replicas(1).build();
     }
 
     @Bean
     public NewTopic testParticipantsResultTopic() {
-        return TopicBuilder.name("test-participants-result").partitions(3).replicas(1).build();
+        return TopicBuilder.name(AppConstants.TOPIC_PARTICIPANTS_RESULT).partitions(3).replicas(1).build();
     }
 }

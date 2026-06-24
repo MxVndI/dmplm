@@ -1,5 +1,6 @@
 package com.diplom.config;
 
+import com.diplom.constant.AppConstants;
 import com.diplom.event.TestParticipantEvent;
 import org.apache.kafka.clients.admin.NewTopic;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
@@ -30,34 +31,34 @@ public class KafkaConfig {
 
     @Bean
     public NewTopic userProfilesTopic() {
-        return TopicBuilder.name("user-profiles").partitions(3).replicas(1)
-                .config("cleanup.policy", "compact")
-                .config("min.cleanable.dirty.ratio", "0.01")
-                .config("segment.ms", "60000")
+        return TopicBuilder.name(AppConstants.TOPIC_USER_PROFILES).partitions(3).replicas(1)
+                .config(AppConstants.CLEANUP_POLICY_CONFIG, AppConstants.CLEANUP_POLICY_COMPACT)
+                .config(AppConstants.MIN_CLEANABLE_DIRTY_RATIO_CONFIG, AppConstants.MIN_CLEANABLE_DIRTY_RATIO)
+                .config(AppConstants.SEGMENT_MS_CONFIG, AppConstants.SEGMENT_MS)
                 .build();
     }
 
     @Bean
     public NewTopic testParticipantsResultTopic() {
-        return TopicBuilder.name("test-participants-result").partitions(3).replicas(1).build();
+        return TopicBuilder.name(AppConstants.TOPIC_PARTICIPANTS_RESULT).partitions(3).replicas(1).build();
     }
 
     @Bean
     public NewTopic userEventsTopic() {
-        return TopicBuilder.name("user-events").partitions(3).replicas(1).build();
+        return TopicBuilder.name(AppConstants.TOPIC_USER_EVENTS).partitions(3).replicas(1).build();
     }
 
     @Bean
     public NewTopic userSegmentChangesTopic() {
-        return TopicBuilder.name("user-segment-changes").partitions(3).replicas(1).build();
+        return TopicBuilder.name(AppConstants.TOPIC_SEGMENT_CHANGES).partitions(3).replicas(1).build();
     }
 
     @Bean
     public ConsumerFactory<String, TestParticipantEvent> participantConsumerFactory() {
         Map<String, Object> props = new HashMap<>();
         props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
-        props.put(ConsumerConfig.GROUP_ID_CONFIG, "diplom-shop-group");
-        props.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
+        props.put(ConsumerConfig.GROUP_ID_CONFIG, AppConstants.SHOP_GROUP_ID);
+        props.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, AppConstants.AUTO_OFFSET_EARLIEST);
 
         JsonDeserializer<TestParticipantEvent> valueDeseriaSzer =
                 new JsonDeserializer<>(TestParticipantEvent.class, false);

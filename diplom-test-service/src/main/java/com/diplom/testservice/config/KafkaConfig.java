@@ -1,5 +1,6 @@
 package com.diplom.testservice.config;
 
+import com.diplom.testservice.constant.AppConstants;
 import com.diplom.testservice.event.TestParticipantEvent;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.producer.ProducerConfig;
@@ -27,18 +28,18 @@ public class KafkaConfig {
 
 
     @Bean public NewTopic testSelectionRequestsTopic() {
-        return TopicBuilder.name("test-selection-requests").partitions(3).replicas(1).build();
+        return TopicBuilder.name(AppConstants.TOPIC_SELECTION_REQUESTS).partitions(3).replicas(1).build();
     }
     @Bean public NewTopic testParticipantsResultTopic() {
-        return TopicBuilder.name("test-participants-result").partitions(3).replicas(1).build();
+        return TopicBuilder.name(AppConstants.TOPIC_PARTICIPANTS_RESULT).partitions(3).replicas(1).build();
     }
 
     @Bean
     public ConsumerFactory<String, TestParticipantEvent> participantConsumerFactory() {
         Map<String, Object> props = new HashMap<>();
         props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
-        props.put(ConsumerConfig.GROUP_ID_CONFIG, "diplom-test-service-group");
-        props.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
+        props.put(ConsumerConfig.GROUP_ID_CONFIG, AppConstants.TEST_SERVICE_GROUP_ID);
+        props.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, AppConstants.AUTO_OFFSET_EARLIEST);
         return new DefaultKafkaConsumerFactory<>(
                 props,
                 new StringDeserializer(),

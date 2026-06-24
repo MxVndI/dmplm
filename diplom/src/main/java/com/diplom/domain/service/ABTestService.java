@@ -1,5 +1,6 @@
 package com.diplom.domain.service;
 
+import com.diplom.constant.AppConstants;
 import com.diplom.persistance.entity.ABTestEntity;
 import com.diplom.persistance.entity.UserTestParticipationEntity;
 import com.diplom.persistance.repository.ABTestRepository;
@@ -30,7 +31,7 @@ public class ABTestService {
 
     public ABTestEntity findTestById(String id) {
         return abTestRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("A/B Test not found: " + id));
+                .orElseThrow(() -> new IllegalArgumentException(AppConstants.AB_TEST_NOT_FOUND + id));
     }
 
     public ABTestEntity createTest(String name, String description, LocalDateTime expiresAt) {
@@ -71,12 +72,12 @@ public class ABTestService {
 
     public UserTestParticipationEntity enrollUser(String testId, String userId, String variant) {
         if (participationRepository.findByTestIdAndUserId(testId, userId).isPresent()) {
-            throw new IllegalArgumentException("User is already enrolled in this test.");
+            throw new IllegalArgumentException(AppConstants.USER_ALREADY_ENROLLED);
         }
 
         ABTestEntity test = findTestById(testId);
         if (!test.isActive()) {
-            throw new IllegalArgumentException("Cannot enroll: test is not active.");
+            throw new IllegalArgumentException(AppConstants.CANNOT_ENROLL_IN_INACTIVE_TEST);
         }
 
         UserTestParticipationEntity participation = new UserTestParticipationEntity();
@@ -114,6 +115,6 @@ public class ABTestService {
     }
 
     private String randomVariant() {
-        return ThreadLocalRandom.current().nextBoolean() ? "A" : "B";
+        return ThreadLocalRandom.current().nextBoolean() ? AppConstants.VARIANT_A : AppConstants.VARIANT_B;
     }
 }

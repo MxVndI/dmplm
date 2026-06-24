@@ -144,6 +144,7 @@
 #      SPRING_DATA_MONGODB_URI: mongodb://admin:Admin1234!@mongo:27017/diplom_shop?authSource=admin
 #      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
 #      APP_TEST_SERVICE_URL: http://test:8081
+#      APP_AB_RULE_SERVICE_URL: http://test:8081
 #      APP_DEMOGRAPHIC_SERVICE_URL: http://demographic:8084
 #      APP_NOTIFICATION_SERVICE_URL: http://notification:8083
 #      S3_ENDPOINT: http://minio:9000
@@ -429,6 +430,7 @@ services:
       SPRING_DATA_MONGODB_URI: mongodb://admin:Admin1234!@mongo:27017/diplom_shop?authSource=admin
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
       APP_TEST_SERVICE_URL: http://test:8081
+      APP_AB_RULE_SERVICE_URL: http://test:8081
       APP_DEMOGRAPHIC_SERVICE_URL: http://demographic:8084
       APP_NOTIFICATION_SERVICE_URL: http://notification:8083
       S3_ENDPOINT: http://minio:9000

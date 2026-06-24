@@ -1,5 +1,6 @@
 package com.diplom.notification.rest.controller;
 
+import com.diplom.notification.constant.AppConstants;
 import com.diplom.notification.domain.service.TelegramService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -21,23 +22,23 @@ public class TelegramNotificationController {
     public ResponseEntity<Map<String, String>> sendTelegramNotification(@RequestBody Map<String, Object> payload) {
         try {
             String text = (String) payload.get("text");
-            String channel = (String) payload.getOrDefault("channel", "default");
+            String channel = (String) payload.getOrDefault("channel", AppConstants.DEFAULT_CHANNEL);
 
             if (text == null || text.isBlank()) {
-                return ResponseEntity.badRequest().body(Map.of("error", "text is required"));
+                return ResponseEntity.badRequest().body(Map.of(AppConstants.ERROR_FIELD, AppConstants.TEXT_REQUIRED));
             }
 
-            if ("admin".equalsIgnoreCase(channel)) {
+            if (AppConstants.ADMIN_CHANNEL.equalsIgnoreCase(channel)) {
                 telegramService.notifyAdmins(text);
             } else {
                 log.warn("Unknown notification channel: {}", channel);
             }
 
-            return ResponseEntity.ok(Map.of("status", "sent"));
+            return ResponseEntity.ok(Map.of(AppConstants.STATUS_FIELD, AppConstants.STATUS_SENT));
         } catch (Exception e) {
             log.error("Error sending Telegram notification: {}", e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(Map.of("error", e.getMessage()));
+                    .body(Map.of(AppConstants.ERROR_FIELD, e.getMessage()));
         }
     }
 
@@ -46,20 +47,22 @@ public class TelegramNotificationController {
         try {
             String message = payload.get("message");
             if (message == null || message.isBlank()) {
-                return ResponseEntity.badRequest().body(Map.of("error", "message is required"));
+                return ResponseEntity.badRequest().body(Map.of(AppConstants.ERROR_FIELD, AppConstants.MESSAGE_REQUIRED));
             }
 
             telegramService.notifyAdmins(message);
-            return ResponseEntity.ok(Map.of("status", "alert_sent"));
+            return ResponseEntity.ok(Map.of(AppConstants.STATUS_FIELD, AppConstants.STATUS_ALERT_SENT));
         } catch (Exception e) {
             log.error("Error sending admin alert: {}", e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(Map.of("error", e.getMessage()));
+                    .body(Map.of(AppConstants.ERROR_FIELD, e.getMessage()));
         }
     }
 
     @GetMapping("/health")
     public ResponseEntity<Map<String, String>> health() {
-        return ResponseEntity.ok(Map.of("status", "healthy", "service", "telegram-notification"));
+        return ResponseEntity.ok(Map.of(
+                AppConstants.STATUS_FIELD, AppConstants.STATUS_HEALTHY,
+                AppConstants.SERVICE_FIELD, AppConstants.TELEGRAM_NOTIFICATION_SERVICE));
     }
 }

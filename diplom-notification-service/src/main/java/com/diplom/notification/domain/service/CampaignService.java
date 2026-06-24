@@ -1,5 +1,6 @@
 package com.diplom.notification.domain.service;
 
+import com.diplom.notification.constant.AppConstants;
 import com.diplom.notification.persistance.entity.CampaignStatus;
 import com.diplom.notification.persistance.entity.NotificationCampaignEntity;
 import com.diplom.notification.persistance.entity.NotificationDeliveryEntity;
@@ -35,7 +36,7 @@ public class CampaignService {
 
     public NotificationCampaignEntity findById(String id) {
         return campaignRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Campaign not found: " + id));
+                .orElseThrow(() -> new IllegalArgumentException(AppConstants.CAMPAIGN_NOT_FOUND + id));
     }
 
     public NotificationCampaignEntity create(CreateCampaignDto dto) {
@@ -53,24 +54,24 @@ public class CampaignService {
 
     public List<NotificationCampaignEntity> createAbPair(CreateAbCampaignDto dto) {
         NotificationCampaignEntity campaignA = new NotificationCampaignEntity();
-        campaignA.setName(dto.getBaseName() + " [Variant A]");
+        campaignA.setName(dto.getBaseName() + AppConstants.VARIANT_A_SUFFIX);
         campaignA.setChannel(dto.getChannel());
         campaignA.setSubject(dto.getSubjectA());
         campaignA.setBody(dto.getBodyA());
-        campaignA.setTargetType("SPECIFIC");
+        campaignA.setTargetType(AppConstants.TARGET_SPECIFIC);
         campaignA.setTestId(dto.getTestId());
-        campaignA.setTestVariant("A");
+        campaignA.setTestVariant(AppConstants.VARIANT_A);
         campaignA.setStatus(CampaignStatus.DRAFT);
         campaignA.setCreatedAt(LocalDateTime.now());
 
         NotificationCampaignEntity campaignB = new NotificationCampaignEntity();
-        campaignB.setName(dto.getBaseName() + " [Variant B]");
+        campaignB.setName(dto.getBaseName() + AppConstants.VARIANT_B_SUFFIX);
         campaignB.setChannel(dto.getChannel());
         campaignB.setSubject(dto.getSubjectB());
         campaignB.setBody(dto.getBodyB());
-        campaignB.setTargetType("SPECIFIC");
+        campaignB.setTargetType(AppConstants.TARGET_SPECIFIC);
         campaignB.setTestId(dto.getTestId());
-        campaignB.setTestVariant("B");
+        campaignB.setTestVariant(AppConstants.VARIANT_B);
         campaignB.setStatus(CampaignStatus.DRAFT);
         campaignB.setCreatedAt(LocalDateTime.now());
 
@@ -83,16 +84,16 @@ public class CampaignService {
     public NotificationCampaignEntity send(String campaignId) {
         NotificationCampaignEntity campaign = findById(campaignId);
         if (campaign.getStatus() == CampaignStatus.SENT) {
-            throw new IllegalStateException("Campaign already sent");
+            throw new IllegalStateException(AppConstants.CAMPAIGN_ALREADY_SENT);
         }
 
         List<String> targetUserIds = resolveTargetUsers(campaign);
         log.info("Sending campaign '{}' to {} users", campaign.getName(), targetUserIds.size());
 
         for (String userId : targetUserIds) {
-            if ("BOTH".equalsIgnoreCase(campaign.getChannel())) {
-                createDelivery(campaignId, userId, "EMAIL");
-                createDelivery(campaignId, userId, "TELEGRAM");
+            if (AppConstants.CHANNEL_BOTH.equalsIgnoreCase(campaign.getChannel())) {
+                createDelivery(campaignId, userId, AppConstants.CHANNEL_EMAIL);
+                createDelivery(campaignId, userId, AppConstants.CHANNEL_TELEGRAM);
             } else {
                 createDelivery(campaignId, userId, campaign.getChannel());
             }
@@ -137,7 +138,7 @@ public class CampaignService {
     public void delete(String campaignId) {
         NotificationCampaignEntity campaign = findById(campaignId);
         if (campaign.getStatus() == CampaignStatus.SENT) {
-            throw new IllegalStateException("Cannot delete a sent campaign");
+            throw new IllegalStateException(AppConstants.CANNOT_DELETE_SENT_CAMPAIGN);
         }
         deliveryRepository.deleteByCampaignId(campaignId);
         campaignRepository.deleteById(campaignId);
@@ -147,13 +148,13 @@ public class CampaignService {
     private List<String> resolveTargetUsers(NotificationCampaignEntity campaign) {
         List<String> userIds = new ArrayList<>();
 
-        if ("SPECIFIC".equalsIgnoreCase(campaign.getTargetType())) {
+        if (AppConstants.TARGET_SPECIFIC.equalsIgnoreCase(campaign.getTargetType())) {
             if (campaign.getTestId() != null) {
                 userIds.addAll(shopUserClient.getUsersByTest(campaign.getTestId(), campaign.getTestVariant()));
             } else if (campaign.getTargetUserIds() != null) {
                 userIds.addAll(campaign.getTargetUserIds());
             }
-        } else if ("ALL".equalsIgnoreCase(campaign.getTargetType())) {
+        } else if (AppConstants.TARGET_ALL.equalsIgnoreCase(campaign.getTargetType())) {
             userIds.addAll(shopUserClient.getAllUserIds());
         }
 

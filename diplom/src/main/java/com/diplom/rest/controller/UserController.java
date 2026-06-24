@@ -1,5 +1,6 @@
 package com.diplom.rest.controller;
 
+import com.diplom.constant.AppConstants;
 import com.diplom.mapper.UserMapper;
 import com.diplom.rest.dto.UserUpdateDto;
 import com.diplom.persistance.entity.UserEntity;
@@ -38,7 +39,7 @@ public class UserController {
     public String viewProfile(@AuthenticationPrincipal UserDetails userDetails,
                               Model model) {
         UserEntity user = userService.findByLogin(userDetails.getUsername())
-                .orElseThrow(() -> new IllegalStateException("User not found"));
+                .orElseThrow(() -> new IllegalStateException(AppConstants.USER_NOT_FOUND));
         model.addAttribute("user", user);
         return "profile/view";
     }
@@ -46,7 +47,7 @@ public class UserController {
     @GetMapping("/edit")
     public String editPage(@AuthenticationPrincipal UserDetails userDetails, Model model) {
         UserEntity user = userService.findByLogin(userDetails.getUsername())
-                .orElseThrow(() -> new IllegalStateException("User not found"));
+                .orElseThrow(() -> new IllegalStateException(AppConstants.USER_NOT_FOUND));
 
         UserUpdateDto dto = userMapper.toUpdateDto(user);
 
@@ -81,13 +82,13 @@ public class UserController {
                                 Model model) {
         if (bindingResult.hasErrors()) {
             UserEntity user = userService.findByLogin(userDetails.getUsername())
-                    .orElseThrow(() -> new IllegalStateException("User not found"));
+                    .orElseThrow(() -> new IllegalStateException(AppConstants.USER_NOT_FOUND));
             model.addAttribute("user", user);
             return "profile/edit";
         }
         try {
             UserEntity user = userService.findByLogin(userDetails.getUsername())
-                    .orElseThrow(() -> new IllegalStateException("User not found"));
+                    .orElseThrow(() -> new IllegalStateException(AppConstants.USER_NOT_FOUND));
             userService.update(user.getId(), dto);
             return "redirect:/profile?updated=true";
         } catch (IllegalArgumentException e) {

@@ -1,5 +1,6 @@
 package com.diplom.domain.service;
 
+import com.diplom.constant.AppConstants;
 import com.diplom.mapper.ProductMapper;
 import com.diplom.rest.dto.ProductDto;
 import com.diplom.persistance.entity.ProductEntity;
@@ -51,7 +52,7 @@ public class ProductService {
 
     public ProductEntity update(String id, ProductDto dto, MultipartFile photo) throws IOException {
         ProductEntity product = productRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Product not found: " + id));
+                .orElseThrow(() -> new IllegalArgumentException(AppConstants.PRODUCT_NOT_FOUND + id));
 
         productMapper.updateEntityFromDto(dto, product);
 
@@ -70,7 +71,7 @@ public class ProductService {
 
     public void delete(String id) {
         ProductEntity product = productRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Product not found: " + id));
+                .orElseThrow(() -> new IllegalArgumentException(AppConstants.PRODUCT_NOT_FOUND + id));
         if (product.getPhotoKey() != null) {
             storageService.deleteFile(product.getPhotoKey());
         }
@@ -78,8 +79,8 @@ public class ProductService {
     }
 
     private String buildPhotoKey(String originalFilename) {
-        String sanitized = (originalFilename == null ? "file" : originalFilename)
+        String sanitized = (originalFilename == null ? AppConstants.FALLBACK_FILE_NAME : originalFilename)
                 .replaceAll("[^a-zA-Z0-9._-]", "_");
-        return "products/" + UUID.randomUUID() + "/" + sanitized;
+        return AppConstants.PRODUCTS_FOLDER + UUID.randomUUID() + "/" + sanitized;
     }
 }

@@ -1,5 +1,6 @@
 package com.diplom.rest.controller;
 
+import com.diplom.constant.AppConstants;
 import com.diplom.rest.dto.UserRegistrationDto;
 import com.diplom.domain.service.UserService;
 import jakarta.validation.Valid;
@@ -21,9 +22,9 @@ public class AuthController {
                             @RequestParam(required = false) String logout,
                             @RequestParam(required = false) String registered,
                             Model model) {
-        if (error != null) model.addAttribute("error", "Invalid login or password.");
-        if (logout != null) model.addAttribute("message", "You have been logged out.");
-        if (registered != null) model.addAttribute("message", "Registration successful! Please log in.");
+        if (error != null) model.addAttribute("error", AppConstants.LOGIN_ERROR);
+        if (logout != null) model.addAttribute("message", AppConstants.LOGOUT_SUCCESS);
+        if (registered != null) model.addAttribute("message", AppConstants.REGISTRATION_SUCCESS);
         return "auth/login";
     }
 

@@ -1,5 +1,6 @@
 package com.diplom.selector.client;
 
+import com.diplom.selector.constant.AppConstants;
 import com.diplom.selector.domain.model.UserAggregateState;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
@@ -25,7 +26,7 @@ public class ClusteringServiceClient {
         this.clusteringServiceUrl = clusteringServiceUrl;
     }
 
-    public String assignVariant(String userId, UserAggregateState aggregateState) {
+    public ClusterResult assignCluster(String userId, UserAggregateState aggregateState) {
         try {
             Map<String, Object> request = new HashMap<>();
             request.put("userId", userId);
@@ -44,8 +45,8 @@ public class ClusteringServiceClient {
 
             String body = objectMapper.writeValueAsString(request);
             HttpRequest req = HttpRequest.newBuilder()
-                    .uri(URI.create(clusteringServiceUrl + "/api/cluster/assign"))
-                    .header("Content-Type", "application/json")
+                    .uri(URI.create(clusteringServiceUrl + AppConstants.CLUSTER_ASSIGN_PATH))
+                    .header(AppConstants.CONTENT_TYPE, AppConstants.APPLICATION_JSON)
                     .POST(HttpRequest.BodyPublishers.ofString(body))
                     .timeout(java.time.Duration.ofSeconds(5))
                     .build();
@@ -54,30 +55,32 @@ public class ClusteringServiceClient {
 
             if (resp.statusCode() >= 200 && resp.statusCode() < 300) {
                 Map<String, Object> responseBody = objectMapper.readValue(resp.body(), Map.class);
-                String variant = (String) responseBody.get("variant");
                 Integer clusterId = ((Number) responseBody.get("clusterId")).intValue();
                 Double distance = ((Number) responseBody.get("distance")).doubleValue();
-                log.debug("User {} assigned to cluster {} variant {} (distance={})", userId, clusterId, variant, distance);
-                return variant;
+                log.debug("User {} assigned to cluster {} (distance={})", userId, clusterId, distance);
+                return new ClusterResult(clusterId, distance);
             } else {
-                log.warn("Clustering service returned {}, falling back to random", resp.statusCode());
+                log.warn("Clustering service returned {}, using fallback cluster", resp.statusCode());
             }
         } catch (Exception e) {
-            log.warn("Clustering service unavailable ({}), falling back to random assignment", e.getMessage());
+            log.warn("Clustering service unavailable ({}), using fallback cluster", e.getMessage());
         }
 
-        return Math.random() < 0.5 ? "A" : "B";
+        return new ClusterResult(AppConstants.FALLBACK_CLUSTER_ID, null);
     }
 
     private double calculateDaysSinceLastEvent(Long lastEventTimestamp) {
-        if (lastEventTimestamp == null) return 365.0;
-        long daysDiff = (System.currentTimeMillis() - lastEventTimestamp) / (86_400_000L);
-        return Math.min(daysDiff, 365.0);
+        if (lastEventTimestamp == null) return AppConstants.MAX_DAYS_SINCE_EVENT;
+        long daysDiff = (System.currentTimeMillis() - lastEventTimestamp) / AppConstants.MILLIS_PER_DAY;
+        return Math.min(daysDiff, AppConstants.MAX_DAYS_SINCE_EVENT);
     }
 
     private double calculateHoursSinceLastCart(Long lastCartAddTimestamp) {
-        if (lastCartAddTimestamp == null) return 730.0;
-        long hoursDiff = (System.currentTimeMillis() - lastCartAddTimestamp) / (3_600_000L);
-        return Math.min(hoursDiff, 730.0);
+        if (lastCartAddTimestamp == null) return AppConstants.MAX_HOURS_SINCE_CART;
+        long hoursDiff = (System.currentTimeMillis() - lastCartAddTimestamp) / AppConstants.MILLIS_PER_HOUR;
+        return Math.min(hoursDiff, AppConstants.MAX_HOURS_SINCE_CART);
+    }
+
+    public record ClusterResult(int clusterId, Double distance) {
     }
 }

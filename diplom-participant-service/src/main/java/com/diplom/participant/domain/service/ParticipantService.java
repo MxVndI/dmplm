@@ -1,5 +1,6 @@
 package com.diplom.participant.domain.service;
 
+import com.diplom.participant.constant.AppConstants;
 import com.diplom.participant.persistance.entity.TestParticipantEntity;
 import com.diplom.participant.persistance.repository.TestParticipantRepository;
 import lombok.RequiredArgsConstructor;
@@ -15,7 +16,7 @@ public class ParticipantService {
 
     private final TestParticipantRepository participantRepository;
 
-    public void saveIfAbsent(String testId, String userId, String variant, Instant enrolledAt) {
+    public void saveIfAbsent(String testId, String userId, String variant, Integer clusterId, Instant enrolledAt) {
         if (participantRepository.findByTestIdAndUserId(testId, userId).isPresent()) {
             return;
         }
@@ -24,6 +25,7 @@ public class ParticipantService {
                 testId,
                 userId,
                 variant,
+                clusterId,
                 enrolledAt == null ? Instant.now() : enrolledAt
         ));
     }
@@ -39,8 +41,8 @@ public class ParticipantService {
 
     public Map<String, Long> distribution(String testId) {
         long total = participantRepository.countByTestId(testId);
-        long variantA = participantRepository.countByTestIdAndVariant(testId, "A");
-        long variantB = participantRepository.countByTestIdAndVariant(testId, "B");
+        long variantA = participantRepository.countByTestIdAndVariant(testId, AppConstants.VARIANT_A);
+        long variantB = participantRepository.countByTestIdAndVariant(testId, AppConstants.VARIANT_B);
         return Map.of("total", total, "variantA", variantA, "variantB", variantB);
     }
 

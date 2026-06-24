@@ -1,5 +1,6 @@
 package com.diplom.domain.service;
 
+import com.diplom.constant.AppConstants;
 import com.diplom.event.UserProfileEvent;
 import com.diplom.mapper.UserMapper;
 import com.diplom.persistance.entity.UserEntity;
@@ -42,7 +43,7 @@ public class UserService {
     public UserEntity register(UserRegistrationDto dto) {
         UserEntity user = userMapper.toEntity(dto);
         user.setPassword(passwordEncoder.encode(dto.getPassword()));
-        user.setRoles(Set.of("ROLE_USER"));
+        user.setRoles(Set.of(AppConstants.ROLE_USER));
         user.setBlocked(false);
         user.setCreatedAt(LocalDateTime.now());
 
@@ -52,7 +53,7 @@ public class UserService {
             syncDemographics(saved, dto);
             return saved;
         } catch (DuplicateKeyException ex) {
-            throw new IllegalArgumentException("Login or email is already taken.");
+            throw new IllegalArgumentException(AppConstants.LOGIN_OR_EMAIL_TAKEN);
         }
     }
 
@@ -93,7 +94,7 @@ public class UserService {
                 user.getLanguage(),
                 user.getGender() != null ? user.getGender().name() : null
         );
-        kafkaTemplate.send("user-profiles", user.getId(), event);
+        kafkaTemplate.send(AppConstants.TOPIC_USER_PROFILES, user.getId(), event);
         log.debug("Published user-profile event for user={}", user.getId());
         publishLoginEvent(user.getId());
     }
@@ -102,9 +103,9 @@ public class UserService {
         try {
             Map<String, Object> payload = new HashMap<>();
             payload.put("userId", userId);
-            payload.put("eventType", "LOGIN");
+            payload.put("eventType", AppConstants.EVENT_LOGIN);
             payload.put("timestamp", System.currentTimeMillis());
-            eventKafkaTemplate.send("user-events", userId, payload);
+            eventKafkaTemplate.send(AppConstants.TOPIC_USER_EVENTS, userId, payload);
         } catch (Exception e) {
             log.warn("Failed to publish LOGIN event for user={}: {}", userId, e.getMessage());
         }
@@ -124,7 +125,7 @@ public class UserService {
 
     public UserEntity update(String userId, UserUpdateDto dto) {
         UserEntity user = userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+                .orElseThrow(() -> new IllegalArgumentException(AppConstants.USER_NOT_FOUND));
 
         userMapper.updateEntityFromDto(dto, user);
         user.setTelegramChatId(dto.getTelegramChatId() != null && !dto.getTelegramChatId().isBlank()
@@ -136,7 +137,7 @@ public class UserService {
             syncDemographicsFromUpdate(saved, dto);
             return saved;
         } catch (DuplicateKeyException ex) {
-            throw new IllegalArgumentException("Email is already taken by another account.");
+            throw new IllegalArgumentException(AppConstants.EMAIL_TAKEN);
         }
     }
 
@@ -171,7 +172,7 @@ public class UserService {
 
     public UserEntity setBlocked(String userId, boolean blocked) {
         UserEntity user = userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+                .orElseThrow(() -> new IllegalArgumentException(AppConstants.USER_NOT_FOUND));
         user.setBlocked(blocked);
         return userRepository.save(user);
     }

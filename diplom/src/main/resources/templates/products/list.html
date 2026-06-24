@@ -70,7 +70,7 @@
             <!-- Изображение товара -->
             <a th:href="@{/products/{id}(id=${p.id})}"
                style="display: block; overflow: hidden; height: 240px"
-               th:aria-label="'View product: ' + ${p.name}">
+               th:aria-label="'Открыть товар: ' + ${p.name}">
                 <img th:if="${p.photoKey != null and !p.photoKey.isEmpty()}"
                      th:src="@{'/images/' + ${p.photoKey}}"
                      th:alt="${p.name}"

@@ -1,5 +1,6 @@
 package com.diplom.testservice.rest.dto;
 
+import com.diplom.testservice.constant.AppConstants;
 import com.diplom.testservice.persistance.entity.TestCriteria;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
@@ -9,12 +10,12 @@ import lombok.Data;
 @Data
 public class CreateTestDto {
 
-    @NotBlank(message = "Test name is required")
+    @NotBlank(message = AppConstants.TEST_NAME_REQUIRED)
     private String name;
 
     private String description;
 
-    @NotNull(message = "Criteria are required")
+    @NotNull(message = AppConstants.CRITERIA_REQUIRED)
     @Valid
     private TestCriteria criteria;
 

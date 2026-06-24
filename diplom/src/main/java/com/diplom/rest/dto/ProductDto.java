@@ -1,5 +1,6 @@
 package com.diplom.rest.dto;
 
+import com.diplom.constant.AppConstants;
 import jakarta.validation.constraints.*;
 import lombok.Data;
 
@@ -8,19 +9,19 @@ import java.math.BigDecimal;
 @Data
 public class ProductDto {
 
-    @NotBlank(message = "Product name is required")
+    @NotBlank(message = AppConstants.PRODUCT_NAME_REQUIRED)
     @Size(max = 200)
     private String name;
 
-    @NotNull(message = "Price is required")
-    @DecimalMin(value = "0.01", message = "Price must be greater than 0")
-    @Digits(integer = 10, fraction = 2, message = "Price format: up to 10 digits and 2 decimal places")
+    @NotNull(message = AppConstants.PRICE_REQUIRED)
+    @DecimalMin(value = "0.01", message = AppConstants.PRICE_POSITIVE)
+    @Digits(integer = 10, fraction = 2, message = AppConstants.PRICE_FORMAT_INVALID)
     private BigDecimal price;
 
-    @Size(max = 2000, message = "Description is too long (max 2000 characters)")
+    @Size(max = 2000, message = AppConstants.DESCRIPTION_TOO_LONG)
     private String description;
 
-    @NotNull(message = "Available quantity is required")
-    @Min(value = 0, message = "Quantity cannot be negative")
+    @NotNull(message = AppConstants.QUANTITY_REQUIRED)
+    @Min(value = 0, message = AppConstants.QUANTITY_NEGATIVE)
     private Integer availableQuantity;
 }

@@ -1,5 +1,6 @@
 package com.diplom.config;
 
+import com.diplom.constant.AppConstants;
 import com.diplom.persistance.entity.UserEntity;
 import com.diplom.persistance.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -21,7 +22,7 @@ public class MongoUserDetailsService implements UserDetailsService {
     @Override
     public UserDetails loadUserByUsername(String login) throws UsernameNotFoundException {
         UserEntity user = userRepository.findByLogin(login)
-                .orElseThrow(() -> new UsernameNotFoundException("User not found: " + login));
+                .orElseThrow(() -> new UsernameNotFoundException(AppConstants.USER_NOT_FOUND_PREFIX + login));
 
         Set<SimpleGrantedAuthority> authorities = user.getRoles().stream()
                 .map(SimpleGrantedAuthority::new)

@@ -1,5 +1,6 @@
 package com.diplom.rest.controller;
 
+import com.diplom.constant.AppConstants;
 import com.diplom.persistance.repository.UserTestParticipationRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -129,7 +130,7 @@ public class TestServiceProxyController {
         } catch (Exception e) {
             log.error("Proxy call to test-service failed: {}", e.getMessage());
             return ResponseEntity.status(HttpStatus.BAD_GATEWAY)
-                    .body("{\"error\":\"Test-service unavailable: " + e.getMessage() + "\"}");
+                    .body("{\"error\":\"" + AppConstants.TEST_SERVICE_UNAVAILABLE + e.getMessage() + "\"}");
         }
     }
 
@@ -145,7 +146,7 @@ public class TestServiceProxyController {
         } catch (Exception e) {
             log.error("Proxy call to test-service failed: {}", e.getMessage());
             return ResponseEntity.status(HttpStatus.BAD_GATEWAY)
-                    .body("{\"error\":\"Test-service unavailable: " + e.getMessage() + "\"}");
+                    .body("{\"error\":\"" + AppConstants.TEST_SERVICE_UNAVAILABLE + e.getMessage() + "\"}");
         }
     }
 }

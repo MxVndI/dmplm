@@ -11,5 +11,6 @@ public interface TestParticipantRepository extends MongoRepository<TestParticipa
     Optional<TestParticipantEntity> findByTestIdAndUserId(String testId, String userId);
     long countByTestId(String testId);
     long countByTestIdAndVariant(String testId, String variant);
+    long countByTestIdAndClusterIdAndVariant(String testId, Integer clusterId, String variant);
     void deleteByTestId(String testId);
 }

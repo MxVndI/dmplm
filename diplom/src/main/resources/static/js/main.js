@@ -1,6 +1,10 @@
 (function () {
     'use strict';
 
+    if (window.location.pathname.indexOf('/admin') === 0) {
+        return;
+    }
+
     var SESSION_KEY = 'ds_session';
     function getSessionId() {
         var sid = sessionStorage.getItem(SESSION_KEY);

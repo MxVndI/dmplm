@@ -1,5 +1,6 @@
 package com.diplom.participant.event;
 
+import com.diplom.participant.constant.AppConstants;
 import com.diplom.participant.domain.service.ParticipantService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -14,8 +15,8 @@ public class TestParticipantListener {
     private final ParticipantService participantService;
 
     @KafkaListener(
-            topics = "test-participants-result",
-            groupId = "diplom-participant-service-group",
+            topics = AppConstants.TOPIC_PARTICIPANTS_RESULT,
+            groupId = AppConstants.PARTICIPANT_GROUP_ID,
             containerFactory = "kafkaListenerContainerFactory"
     )
     public void onResult(TestParticipantEvent event) {
@@ -27,6 +28,7 @@ public class TestParticipantListener {
                 event.getTestId(),
                 event.getUserId(),
                 event.getVariant(),
+                event.getClusterId(),
                 event.getEnrolledAt()
         );
     }

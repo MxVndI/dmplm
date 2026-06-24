@@ -1,5 +1,6 @@
 package com.diplom.domain.service;
 
+import com.diplom.constant.AppConstants;
 import com.diplom.persistance.entity.OrderEntity;
 import com.diplom.persistance.entity.ProductEntity;
 import com.diplom.persistance.entity.UserTestParticipationEntity;
@@ -20,8 +21,6 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class CartService {
 
-    private static final String SESSION_CART_KEY = "shopCart";
-
     private final ProductRepository productRepository;
     private final OrderRepository orderRepository;
     private final ABTestService abTestService;
@@ -34,18 +33,18 @@ public class CartService {
 
     @SuppressWarnings("unchecked")
     public List<CartItem> getCart(jakarta.servlet.http.HttpSession session) {
-        Object raw = session.getAttribute(SESSION_CART_KEY);
+        Object raw = session.getAttribute(AppConstants.SESSION_CART_KEY);
         if (raw instanceof List<?>) return (List<CartItem>) raw;
         List<CartItem> cart = new ArrayList<>();
-        session.setAttribute(SESSION_CART_KEY, cart);
+        session.setAttribute(AppConstants.SESSION_CART_KEY, cart);
         return cart;
     }
 
     public void addItem(jakarta.servlet.http.HttpSession session, String productId, int quantity) {
         ProductEntity product = productRepository.findById(productId)
-                .orElseThrow(() -> new IllegalArgumentException("Product not found: " + productId));
+                .orElseThrow(() -> new IllegalArgumentException(AppConstants.PRODUCT_NOT_FOUND + productId));
         if (product.getAvailableQuantity() == null || product.getAvailableQuantity() < quantity) {
-            throw new IllegalArgumentException("Not enough stock for: " + product.getName());
+            throw new IllegalArgumentException(AppConstants.NOT_ENOUGH_STOCK + product.getName());
         }
 
         List<CartItem> cart = getCart(session);
@@ -59,17 +58,17 @@ public class CartService {
         } else {
             cart.add(new CartItem(productId, product.getName(), product.getPrice(), quantity));
         }
-        session.setAttribute(SESSION_CART_KEY, new ArrayList<>(cart));
+        session.setAttribute(AppConstants.SESSION_CART_KEY, new ArrayList<>(cart));
     }
 
     public void removeItem(jakarta.servlet.http.HttpSession session, String productId) {
         List<CartItem> cart = getCart(session);
         cart.removeIf(i -> i.productId().equals(productId));
-        session.setAttribute(SESSION_CART_KEY, cart);
+        session.setAttribute(AppConstants.SESSION_CART_KEY, cart);
     }
 
     public void clearCart(jakarta.servlet.http.HttpSession session) {
-        session.setAttribute(SESSION_CART_KEY, new ArrayList<>());
+        session.setAttribute(AppConstants.SESSION_CART_KEY, new ArrayList<>());
     }
 
     public BigDecimal cartTotal(List<CartItem> cart) {
@@ -79,7 +78,7 @@ public class CartService {
 
     public OrderEntity checkout(jakarta.servlet.http.HttpSession session, String userId) {
         List<CartItem> cart = getCart(session);
-        if (cart.isEmpty()) throw new IllegalArgumentException("Cart is empty.");
+        if (cart.isEmpty()) throw new IllegalArgumentException(AppConstants.CART_IS_EMPTY);
 
         for (CartItem item : cart) {
             productRepository.findById(item.productId()).ifPresent(p -> {
@@ -104,7 +103,7 @@ public class CartService {
         order.setUserId(userId);
         order.setItems(orderItems);
         order.setTotalPrice(cartTotal(cart));
-        order.setStatus("COMPLETED");
+        order.setStatus(AppConstants.ORDER_STATUS_COMPLETED);
         order.setCreatedAt(LocalDateTime.now());
         participation.ifPresent(p -> {
             order.setTestId(p.getTestId());
@@ -113,8 +112,8 @@ public class CartService {
 
         OrderEntity saved = orderRepository.save(order);
         clearCart(session);
-        log.info("Order {} placed by user {} — total ${}, variant={}",
-                saved.getId(), userId, saved.getTotalPrice(), saved.getVariant());
+        log.info("Заказ {} оформлен пользователем {} — сумма {}{}, вариант={}",
+                saved.getId(), userId, saved.getTotalPrice(), AppConstants.CURRENCY_RUB, saved.getVariant());
         return saved;
     }
 

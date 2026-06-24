@@ -1,5 +1,6 @@
 package com.diplom.testservice.domain.service;
 
+import com.diplom.testservice.constant.AppConstants;
 import com.diplom.testservice.mapper.TestConfigMapper;
 import com.diplom.testservice.rest.dto.CreateTestDto;
 import com.diplom.testservice.event.SelectionRequest;
@@ -25,8 +26,6 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class TestConfigService {
 
-    private static final String TOPIC_SELECTION_REQUESTS = "test-selection-requests";
-
     private final TestConfigRepository testConfigRepository;
     private final TestParticipantRepository testParticipantRepository;
     private final KafkaTemplate<String, SelectionRequest> kafkaTemplate;
@@ -47,17 +46,17 @@ public class TestConfigService {
 
     public TestConfigEntity findById(String id) {
         return testConfigRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Test not found: " + id));
+                .orElseThrow(() -> new IllegalArgumentException(AppConstants.TEST_NOT_FOUND + id));
     }
 
     public TestConfigEntity triggerSelection(String testId) {
         TestConfigEntity test = findById(testId);
         if (test.getStatus() == TestStatus.COMPLETED) {
-            throw new IllegalStateException("Cannot trigger selection on a completed test.");
+            throw new IllegalStateException(AppConstants.COMPLETED_TEST_SELECTION_FORBIDDEN);
         }
 
         SelectionRequest request = new SelectionRequest(testId, test.getName(), test.getCriteria());
-        kafkaTemplate.send(TOPIC_SELECTION_REQUESTS, testId, request);
+        kafkaTemplate.send(AppConstants.TOPIC_SELECTION_REQUESTS, testId, request);
 
         test.setStatus(TestStatus.RUNNING);
         test.setTriggeredAt(LocalDateTime.now());
@@ -85,15 +84,15 @@ public class TestConfigService {
 
     public Map<String, Long> getStats(String testId) {
         long total = testParticipantRepository.countByTestId(testId);
-        long variantA = testParticipantRepository.countByTestIdAndVariant(testId, "A");
-        long variantB = testParticipantRepository.countByTestIdAndVariant(testId, "B");
+        long variantA = testParticipantRepository.countByTestIdAndVariant(testId, AppConstants.VARIANT_A);
+        long variantB = testParticipantRepository.countByTestIdAndVariant(testId, AppConstants.VARIANT_B);
         return Map.of("total", total, "variantA", variantA, "variantB", variantB);
     }
 
     public TestConfigEntity update(String testId, CreateTestDto dto) {
         TestConfigEntity test = findById(testId);
         if (test.getStatus() == TestStatus.COMPLETED) {
-            throw new IllegalStateException("Cannot edit a completed test.");
+            throw new IllegalStateException(AppConstants.COMPLETED_TEST_EDIT_FORBIDDEN);
         }
         testConfigMapper.updateEntityFromDto(dto, test);
         return testConfigRepository.save(test);
@@ -117,13 +116,14 @@ public class TestConfigService {
         log.info("Deleted test '{}' (id={})", test.getName(), testId);
     }
 
-    public void onParticipantResult(String testId, String userId, String variant, java.time.Instant enrolledAt) {
+    public void onParticipantResult(String testId, String userId, String variant, Integer clusterId, java.time.Instant enrolledAt) {
         boolean alreadyEnrolled = testParticipantRepository.findByTestIdAndUserId(testId, userId).isPresent();
         if (!alreadyEnrolled) {
             TestParticipantEntity p = new TestParticipantEntity();
             p.setTestId(testId);
             p.setUserId(userId);
             p.setVariant(variant);
+            p.setClusterId(clusterId);
             p.setEnrolledAt(enrolledAt != null ? enrolledAt : java.time.Instant.now());
             testParticipantRepository.save(p);
             log.debug("Saved participant: userId={} variant={} testId={}", userId, variant, testId);

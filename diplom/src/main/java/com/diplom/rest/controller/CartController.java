@@ -1,5 +1,6 @@
 package com.diplom.rest.controller;
 
+import com.diplom.constant.AppConstants;
 import com.diplom.persistance.entity.OrderEntity;
 import com.diplom.persistance.entity.UserEntity;
 import com.diplom.domain.service.CartService;
@@ -42,30 +43,33 @@ public class CartController {
         } catch (IllegalArgumentException e) {
             ra.addFlashAttribute("cartError", e.getMessage());
         }
-        return "redirect:/cart";
+        return AppConstants.REDIRECT_CART;
     }
 
     @PostMapping("/remove")
     public String removeFromCart(@RequestParam String productId,
                                  HttpSession session) {
         cartService.removeItem(session, productId);
-        return "redirect:/cart";
+        return AppConstants.REDIRECT_CART;
     }
 
     @PostMapping("/checkout")
     public String checkout(HttpSession session,
                            @AuthenticationPrincipal UserDetails userDetails,
                            RedirectAttributes ra) {
-        if (userDetails == null) return "redirect:/auth/login";
+        if (userDetails == null) return AppConstants.REDIRECT_LOGIN;
         UserEntity user = userService.findByLogin(userDetails.getUsername())
-                .orElseThrow(() -> new IllegalStateException("User not found"));
+                .orElseThrow(() -> new IllegalStateException(AppConstants.USER_NOT_FOUND));
         try {
             OrderEntity order = cartService.checkout(session, user.getId());
             ra.addFlashAttribute("orderSuccess",
-                    "Order #" + order.getId() + " placed — total $" + order.getTotalPrice());
+                    AppConstants.ORDER_SUCCESS_PREFIX + order.getId()
+                            + AppConstants.ORDER_SUCCESS_MIDDLE
+                            + order.getTotalPrice()
+                            + AppConstants.CURRENCY_RUB);
         } catch (IllegalArgumentException e) {
             ra.addFlashAttribute("cartError", e.getMessage());
         }
-        return "redirect:/cart";
+        return AppConstants.REDIRECT_CART;
     }
 }

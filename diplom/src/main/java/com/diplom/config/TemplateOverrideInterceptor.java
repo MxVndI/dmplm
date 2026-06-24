@@ -1,5 +1,6 @@
 package com.diplom.config;
 
+import com.diplom.constant.AppConstants;
 import com.diplom.domain.service.TestTemplateService;
 import com.diplom.persistance.entity.TestTemplateEntity;
 import jakarta.servlet.http.HttpServletRequest;
@@ -29,7 +30,7 @@ public class TemplateOverrideInterceptor implements HandlerInterceptor {
                            ModelAndView mav) {
         if (mav == null) return;
         String viewName = mav.getViewName();
-        if (viewName == null || viewName.startsWith("redirect:") || viewName.startsWith("forward:")) return;
+        if (viewName == null || viewName.startsWith(AppConstants.REDIRECT_PREFIX) || viewName.startsWith(AppConstants.FORWARD_PREFIX)) return;
 
         String testId = (String) request.getAttribute("abTestId");
         String variant = (String) request.getAttribute("variant");
@@ -43,7 +44,7 @@ public class TemplateOverrideInterceptor implements HandlerInterceptor {
                 String html = templateService.getHtmlContent(tmpl.get());
                 mav.addObject("templateHtml", html);
                 mav.addObject("templateName", tmpl.get().getName());
-                mav.setViewName("user/test-template-page");
+                mav.setViewName(AppConstants.TEMPLATE_TEST_PAGE);
                 log.debug("Custom template override: test={} variant={} path={} → '{}'", testId, variant, path, tmpl.get().getName());
                 return;
             }
@@ -65,14 +66,14 @@ public class TemplateOverrideInterceptor implements HandlerInterceptor {
     }
 
     private String extractPageName(String viewName) {
-        if (viewName == null || viewName.isEmpty()) return "index";
+        if (viewName == null || viewName.isEmpty()) return AppConstants.DEFAULT_VIEW_NAME;
         int lastSlash = viewName.lastIndexOf('/');
         return lastSlash >= 0 ? viewName.substring(lastSlash + 1) : viewName;
     }
 
     private boolean templateExists(String templateName) {
         try {
-            String path = "classpath:/templates/" + templateName + ".html";
+            String path = AppConstants.TEMPLATES_CLASSPATH_PREFIX + templateName + AppConstants.HTML_EXTENSION;
             Resource resource = applicationContext.getResource(path);
             return resource.exists();
         } catch (Exception e) {

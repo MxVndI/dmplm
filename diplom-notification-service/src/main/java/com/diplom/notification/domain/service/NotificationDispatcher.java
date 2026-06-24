@@ -1,5 +1,6 @@
 package com.diplom.notification.domain.service;
 
+import com.diplom.notification.constant.AppConstants;
 import com.diplom.notification.persistance.entity.NotificationCampaignEntity;
 import com.diplom.notification.persistance.entity.NotificationDeliveryEntity;
 import com.diplom.notification.persistance.entity.CampaignStatus;
@@ -26,20 +27,20 @@ public class NotificationDispatcher {
     @Async
     public void dispatchCampaign(String campaignId) {
         NotificationCampaignEntity campaign = campaignRepository.findById(campaignId)
-                .orElseThrow(() -> new IllegalArgumentException("Campaign not found: " + campaignId));
+                .orElseThrow(() -> new IllegalArgumentException(AppConstants.CAMPAIGN_NOT_FOUND + campaignId));
 
         List<NotificationDeliveryEntity> pendingDeliveries =
                 deliveryRepository.findByCampaignIdAndStatusAndChannelOrderByCreatedAt(
                         campaignId, DeliveryStatus.PENDING, campaign.getChannel());
 
         switch (campaign.getChannel().toUpperCase()) {
-            case "EMAIL" -> dispatchEmail(campaign, pendingDeliveries);
-            case "TELEGRAM" -> dispatchTelegram(campaign, pendingDeliveries);
-            case "BOTH" -> {
+            case AppConstants.CHANNEL_EMAIL -> dispatchEmail(campaign, pendingDeliveries);
+            case AppConstants.CHANNEL_TELEGRAM -> dispatchTelegram(campaign, pendingDeliveries);
+            case AppConstants.CHANNEL_BOTH -> {
                 dispatchEmail(campaign, deliveryRepository.findByCampaignIdAndStatusAndChannelOrderByCreatedAt(
-                        campaignId, DeliveryStatus.PENDING, "EMAIL"));
+                        campaignId, DeliveryStatus.PENDING, AppConstants.CHANNEL_EMAIL));
                 dispatchTelegram(campaign, deliveryRepository.findByCampaignIdAndStatusAndChannelOrderByCreatedAt(
-                        campaignId, DeliveryStatus.PENDING, "TELEGRAM"));
+                        campaignId, DeliveryStatus.PENDING, AppConstants.CHANNEL_TELEGRAM));
             }
             default -> log.warn("Unknown notification channel: {}", campaign.getChannel());
         }
@@ -88,13 +89,13 @@ public class NotificationDispatcher {
 
     private void refreshCampaignCounters(NotificationCampaignEntity campaign) {
         long deliveredEmail = deliveryRepository.countByCampaignIdAndChannelAndStatus(
-                campaign.getId(), "EMAIL", DeliveryStatus.DELIVERED);
+                campaign.getId(), AppConstants.CHANNEL_EMAIL, DeliveryStatus.DELIVERED);
         long deliveredTelegram = deliveryRepository.countByCampaignIdAndChannelAndStatus(
-                campaign.getId(), "TELEGRAM", DeliveryStatus.DELIVERED);
+                campaign.getId(), AppConstants.CHANNEL_TELEGRAM, DeliveryStatus.DELIVERED);
         long failedEmail = deliveryRepository.countByCampaignIdAndChannelAndStatus(
-                campaign.getId(), "EMAIL", DeliveryStatus.FAILED);
+                campaign.getId(), AppConstants.CHANNEL_EMAIL, DeliveryStatus.FAILED);
         long failedTelegram = deliveryRepository.countByCampaignIdAndChannelAndStatus(
-                campaign.getId(), "TELEGRAM", DeliveryStatus.FAILED);
+                campaign.getId(), AppConstants.CHANNEL_TELEGRAM, DeliveryStatus.FAILED);
 
         campaign.setSentCount((int) (deliveredEmail + deliveredTelegram));
         campaign.setFailedCount((int) (failedEmail + failedTelegram));

@@ -1,6 +1,7 @@
 package com.diplom.selector.config;
 
 import com.diplom.selector.client.ClusteringServiceClient;
+import com.diplom.selector.constant.AppConstants;
 import com.diplom.selector.domain.model.SelectionRequest;
 import com.diplom.selector.domain.model.UserAggregateState;
 import com.diplom.selector.domain.model.UserEvent;
@@ -33,14 +34,7 @@ import org.springframework.context.annotation.Configuration;
 @RequiredArgsConstructor
 public class KafkaStreamsConfig {
 
-    public static final String AGGREGATE_STORE = "user-aggregate-store";
-    private static final String TOPIC_USER_EVENTS     = "user-events";
-    private static final String TOPIC_SEGMENT_CHANGES = "user-segment-changes";
-
-    private static final String USER_PROFILES_STORE     = "user-profiles-store";
-    private static final String TOPIC_USER_PROFILES     = "user-profiles";
-    private static final String TOPIC_SELECTION_REQUESTS = "test-selection-requests";
-    private static final String TOPIC_PARTICIPANTS_RESULT = "test-participants-result";
+    public static final String AGGREGATE_STORE = AppConstants.AGGREGATE_STORE;
 
     private final SegmentEvaluator segmentEvaluator;
     private final ClusteringServiceClient clusteringServiceClient;
@@ -64,56 +58,56 @@ public class KafkaStreamsConfig {
         JsonSerde<SelectionRequest>        requestSerde     = new JsonSerde<>(SelectionRequest.class);
         JsonSerde<TestParticipantEvent>    participantSerde = new JsonSerde<>(TestParticipantEvent.class);
 
-        long windowMillis = (long) visitWindowDays * 86_400_000L;
+        long windowMillis = (long) visitWindowDays * AppConstants.MILLIS_PER_DAY;
 
 
         StoreBuilder<KeyValueStore<String, UserAggregateState>> aggregateStore =
                 Stores.keyValueStoreBuilder(
-                        Stores.persistentKeyValueStore(AGGREGATE_STORE),
+                        Stores.persistentKeyValueStore(AppConstants.AGGREGATE_STORE),
                         Serdes.String(),
                         stateSerde);
         builder.addStateStore(aggregateStore);
 
         KStream<String, UserEvent> behavioralEvents = builder.stream(
-                TOPIC_USER_EVENTS,
+                AppConstants.TOPIC_USER_EVENTS,
                 Consumed.with(Serdes.String(), userEventSerde));
 
         KStream<String, UserSegmentChangedEvent> segmentChanges = behavioralEvents.process(
-                () -> new UserStateTransformer(segmentEvaluator, AGGREGATE_STORE, windowMillis),
+                () -> new UserStateTransformer(segmentEvaluator, AppConstants.AGGREGATE_STORE, windowMillis),
                 Named.as("segment-transformer"),
-                AGGREGATE_STORE);
+                AppConstants.AGGREGATE_STORE);
 
-        segmentChanges.to(TOPIC_SEGMENT_CHANGES, Produced.with(Serdes.String(), changedSerde));
+        segmentChanges.to(AppConstants.TOPIC_SEGMENT_CHANGES, Produced.with(Serdes.String(), changedSerde));
 
 
         builder.globalTable(
-                TOPIC_USER_PROFILES,
+                AppConstants.TOPIC_USER_PROFILES,
                 Consumed.with(Serdes.String(), userProfileSerde),
-                Materialized.<String, UserProfile, KeyValueStore<Bytes, byte[]>>as(USER_PROFILES_STORE)
+                Materialized.<String, UserProfile, KeyValueStore<Bytes, byte[]>>as(AppConstants.USER_PROFILES_STORE)
                         .withKeySerde(Serdes.String())
                         .withValueSerde(userProfileSerde));
 
         KStream<String, SelectionRequest> selectionRequests = builder.stream(
-                TOPIC_SELECTION_REQUESTS,
+                AppConstants.TOPIC_SELECTION_REQUESTS,
                 Consumed.with(Serdes.String(), requestSerde));
 
         KStream<String, TestParticipantEvent> participants = selectionRequests.process(
                 () -> new UserSelectionProcessor(
-                        USER_PROFILES_STORE,
+                        AppConstants.USER_PROFILES_STORE,
                         demographicServiceUrl,
                         failOpenOnDemographicError,
                         clusteringServiceClient,
-                        AGGREGATE_STORE),
+                        AppConstants.AGGREGATE_STORE),
                 Named.as("user-selection"),
-                AGGREGATE_STORE);
+                AppConstants.AGGREGATE_STORE);
 
-        participants.to(TOPIC_PARTICIPANTS_RESULT, Produced.with(Serdes.String(), participantSerde));
+        participants.to(AppConstants.TOPIC_PARTICIPANTS_RESULT, Produced.with(Serdes.String(), participantSerde));
 
         log.info("Streams topology built: " +
                 "[A] {{}, {}} → state-store '{}' → {} | " +
                 "[B] {} + globalTable({}) → {}",
-                TOPIC_USER_EVENTS, TOPIC_USER_PROFILES, AGGREGATE_STORE, TOPIC_SEGMENT_CHANGES,
-                TOPIC_SELECTION_REQUESTS, TOPIC_USER_PROFILES, TOPIC_PARTICIPANTS_RESULT);
+                AppConstants.TOPIC_USER_EVENTS, AppConstants.TOPIC_USER_PROFILES, AppConstants.AGGREGATE_STORE, AppConstants.TOPIC_SEGMENT_CHANGES,
+                AppConstants.TOPIC_SELECTION_REQUESTS, AppConstants.TOPIC_USER_PROFILES, AppConstants.TOPIC_PARTICIPANTS_RESULT);
 
         return builder;
     }

@@ -1,5 +1,6 @@
 package com.diplom.rest.controller;
 
+import com.diplom.constant.AppConstants;
 import com.diplom.mapper.ProductMapper;
 import com.diplom.rest.dto.ProductDto;
 import com.diplom.domain.service.ProductService;
@@ -49,7 +50,7 @@ public class AdminProductController {
     @GetMapping("/{id}/edit")
     public String editForm(@PathVariable String id, Model model) {
         ProductEntity product = productService.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Product not found: " + id));
+                .orElseThrow(() -> new IllegalArgumentException(AppConstants.PRODUCT_NOT_FOUND + id));
         model.addAttribute("product", product);
         model.addAttribute("dto", productMapper.toDto(product));
         return "admin/product-edit";
@@ -63,7 +64,7 @@ public class AdminProductController {
                          Model model) throws Exception {
         if (bindingResult.hasErrors()) {
             ProductEntity product = productService.findById(id)
-                    .orElseThrow(() -> new IllegalArgumentException("Product not found: " + id));
+                    .orElseThrow(() -> new IllegalArgumentException(AppConstants.PRODUCT_NOT_FOUND + id));
             model.addAttribute("product", product);
             return "admin/product-edit";
         }

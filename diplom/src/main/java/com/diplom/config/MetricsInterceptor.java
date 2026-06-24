@@ -1,9 +1,8 @@
 package com.diplom.config;
 
+import com.diplom.constant.AppConstants;
 import com.diplom.persistance.entity.UserEntity;
-import com.diplom.persistance.entity.UserTestParticipationEntity;
 import com.diplom.persistance.repository.UserRepository;
-import com.diplom.utils.AssignmentServiceClient;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -20,14 +19,13 @@ import java.util.Optional;
 public class MetricsInterceptor implements HandlerInterceptor {
 
     private final UserRepository userRepository;
-    private final AssignmentServiceClient assignmentServiceClient;
 
     @Override
     public void postHandle(HttpServletRequest request, HttpServletResponse response,
                            Object handler, ModelAndView mav) {
         if (mav == null || mav.getViewName() == null) return;
         String view = mav.getViewName();
-        if (view.startsWith("redirect:") || view.startsWith("forward:")) return;
+        if (view.startsWith(AppConstants.REDIRECT_PREFIX) || view.startsWith(AppConstants.FORWARD_PREFIX)) return;
 
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         if (auth == null || !auth.isAuthenticated()
@@ -37,18 +35,19 @@ public class MetricsInterceptor implements HandlerInterceptor {
             Optional<UserEntity> userOpt = userRepository.findByLogin(auth.getName());
             if (userOpt.isEmpty()) return;
             UserEntity user = userOpt.get();
-            mav.addObject("_trackUserId", user.getId());
+            mav.addObject(AppConstants.MODEL_TRACK_USER_ID, user.getId());
 
-            Optional<UserTestParticipationEntity> p = assignmentServiceClient.getAssignment(user.getId());
-            p.ifPresent(part -> {
-                mav.addObject("_trackTestId", part.getTestId());
-                mav.addObject("_trackVariant", part.getVariant());
-            });
+            Object abTestId = request.getAttribute(AppConstants.REQUEST_ATTRIBUTE_AB_TEST_ID);
+            Object variant = request.getAttribute(AppConstants.REQUEST_ATTRIBUTE_VARIANT);
+            if (abTestId instanceof String testId && variant instanceof String variantName) {
+                mav.addObject(AppConstants.MODEL_TRACK_TEST_ID, testId);
+                mav.addObject(AppConstants.MODEL_TRACK_VARIANT, variantName);
+            }
 
             try {
                 jakarta.servlet.http.HttpSession session = request.getSession(false);
                 if (session != null) {
-                    Object cart = session.getAttribute("shopCart");
+                    Object cart = session.getAttribute(AppConstants.SESSION_CART_KEY);
                     if (cart instanceof java.util.List<?> cartList) {
                         int totalQty = 0;
                         for (Object item : cartList) {
@@ -59,7 +58,7 @@ public class MetricsInterceptor implements HandlerInterceptor {
                                 totalQty += 1;
                             }
                         }
-                        mav.addObject("_cartCount", totalQty);
+                        mav.addObject(AppConstants.MODEL_CART_COUNT, totalQty);
                     }
                 }
             } catch (Exception ignored2) {}

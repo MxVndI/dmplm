@@ -1,6 +1,7 @@
 package com.diplom.selector.stream;
 
 import com.diplom.selector.client.ClusteringServiceClient;
+import com.diplom.selector.constant.AppConstants;
 import com.diplom.selector.domain.model.DemographicProfile;
 import com.diplom.selector.domain.model.SelectionRequest;
 import com.diplom.selector.domain.model.TestCriteria;
@@ -92,7 +93,7 @@ public class UserSelectionProcessor
             log.info("After demographic filtering: {} users for test '{}'", matching.size(), request.getTestId());
         }
 
-        Collections.shuffle(matching);
+        matching.sort(String::compareTo);
 
         if (criteria != null && criteria.getMaxParticipants() != null && criteria.getMaxParticipants() > 0) {
             int limit = Math.min(matching.size(), criteria.getMaxParticipants());
@@ -100,13 +101,24 @@ public class UserSelectionProcessor
         }
 
         Instant now = Instant.now();
-        for (String userId : matching) {
-            String variant = assignVariantUsingClustering(userId);
+        List<AssignmentCandidate> candidates = matching.stream()
+                .map(userId -> new AssignmentCandidate(userId, assignCluster(userId)))
+                .sorted(Comparator
+                        .comparingInt(AssignmentCandidate::clusterId)
+                        .thenComparing(AssignmentCandidate::userId))
+                .toList();
+
+        Map<Integer, VariantBalance> clusterBalances = new HashMap<>();
+        for (AssignmentCandidate candidate : candidates) {
+            VariantBalance balance = clusterBalances.computeIfAbsent(candidate.clusterId(), key -> new VariantBalance());
+            String variant = chooseVariant(request.getTestId(), candidate.userId(), candidate.clusterId(), balance);
+            balance.accept(variant);
+
             TestParticipantEvent event = new TestParticipantEvent(
-                    request.getTestId(), userId, variant, now);
+                    request.getTestId(), candidate.userId(), variant, candidate.clusterId(), now);
             context().forward(new Record<>(request.getTestId(), event, record.timestamp()));
         }
-        log.info("Forwarded {} participant events for test '{}' (via k-means clustering)", matching.size(), request.getTestId());
+        log.info("Forwarded {} participant events for test '{}' (stratified by k-means clusters)", matching.size(), request.getTestId());
     }
 
     private boolean matchesProfile(UserProfile p, TestCriteria c) {
@@ -187,15 +199,39 @@ public class UserSelectionProcessor
 
     private boolean nonEmpty(List<String> l) { return l != null && !l.isEmpty(); }
 
-    private String assignVariantUsingClustering(String userId) {
+    private int assignCluster(String userId) {
         try {
             UserAggregateState state = aggregateStore.get(userId);
             if (state != null) {
-                return clusteringClient.assignVariant(userId, state);
+                return clusteringClient.assignCluster(userId, state).clusterId();
             }
         } catch (Exception e) {
-            log.warn("Error assigning variant via clustering for user {}: {}", userId, e.getMessage());
+            log.warn("Error assigning cluster for user {}: {}", userId, e.getMessage());
         }
-        return Math.random() < 0.5 ? "A" : "B";
+        return AppConstants.FALLBACK_CLUSTER_ID;
+    }
+
+    private String chooseVariant(String testId, String userId, int clusterId, VariantBalance balance) {
+        if (balance.variantA < balance.variantB) return AppConstants.VARIANT_A;
+        if (balance.variantB < balance.variantA) return AppConstants.VARIANT_B;
+
+        int hash = Objects.hash(testId, userId, clusterId);
+        return Math.floorMod(hash, 2) == 0 ? AppConstants.VARIANT_A : AppConstants.VARIANT_B;
+    }
+
+    private record AssignmentCandidate(String userId, int clusterId) {
+    }
+
+    private static final class VariantBalance {
+        private long variantA;
+        private long variantB;
+
+        private void accept(String variant) {
+            if (AppConstants.VARIANT_A.equals(variant)) {
+                variantA++;
+            } else {
+                variantB++;
+            }
+        }
     }
 }
