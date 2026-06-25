@@ -1,4 +1,4 @@
-﻿package com.diplom.config;
+package com.diplom.config;
 
 import com.diplom.persistance.entity.ABTestEntity;
 import com.diplom.persistance.entity.Gender;
