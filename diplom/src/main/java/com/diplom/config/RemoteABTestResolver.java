@@ -1,6 +1,10 @@
 package com.diplom.config;
 
 import jakarta.servlet.http.HttpServletRequest;
+import com.diplom.domain.service.TestTemplateService;
+import com.diplom.persistance.entity.UserTestParticipationEntity;
+import com.diplom.persistance.repository.UserTestParticipationRepository;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
@@ -12,15 +16,19 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.nio.charset.StandardCharsets;
+import java.util.Comparator;
 import java.util.Base64;
 import java.util.Map;
 import java.util.Optional;
 
 @Slf4j
 @Component
+@RequiredArgsConstructor
 public class RemoteABTestResolver implements ABTestResolver {
 
     private final RestTemplate restTemplate = new RestTemplate();
+    private final UserTestParticipationRepository participationRepository;
+    private final TestTemplateService templateService;
 
     @Value("${app.ab-rule-service-url:}")
     private String abRuleServiceUrl;
@@ -33,11 +41,11 @@ public class RemoteABTestResolver implements ABTestResolver {
 
     @Override
     public Optional<ABResolution> resolve(HttpServletRequest request, String userId) {
+        String path = request.getRequestURI();
         if (abRuleServiceUrl == null || abRuleServiceUrl.isBlank()) {
-            return Optional.empty();
+            return resolveFromLocalParticipation(userId, path);
         }
         try {
-            String path = request.getRequestURI();
             String url = UriComponentsBuilder
                     .fromUriString(abRuleServiceUrl + "/api/ab/resolve")
                     .queryParam("userId", userId)
@@ -64,11 +72,24 @@ public class RemoteABTestResolver implements ABTestResolver {
                     return Optional.of(new ABResolution(abTestId, variant));
                 }
             }
-            return Optional.empty();
+            return resolveFromLocalParticipation(userId, path);
         } catch (Exception e) {
             log.warn("AB rule service unavailable for userId={} path={} ({}); using default template.",
-                    userId, request.getRequestURI(), e.getMessage());
-            return Optional.empty();
+                    userId, path, e.getMessage());
+            return resolveFromLocalParticipation(userId, path);
         }
+    }
+
+    private Optional<ABResolution> resolveFromLocalParticipation(String userId, String path) {
+        return participationRepository.findByUserId(userId).stream()
+                .filter(participation -> participation.getTestId() != null && participation.getVariant() != null)
+                .sorted(Comparator.comparing(
+                        UserTestParticipationEntity::getEnrolledAt,
+                        Comparator.nullsLast(Comparator.reverseOrder())))
+                .filter(participation -> templateService
+                        .findTemplateForPath(participation.getTestId(), participation.getVariant(), path)
+                        .isPresent())
+                .findFirst()
+                .map(participation -> new ABResolution(participation.getTestId(), participation.getVariant()));
     }
 }
