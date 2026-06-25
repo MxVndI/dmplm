@@ -10,6 +10,7 @@ import com.diplom.persistance.repository.UserRepository;
 import com.diplom.domain.service.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
@@ -30,6 +31,9 @@ public class DataInitializer implements CommandLineRunner {
     private final PasswordEncoder passwordEncoder;
     private final UserService userService;
 
+    @Value("${app.default-admin-password}")
+    private String defaultAdminPassword;
+
     @Override
     public void run(String... args) {
         seedAdmin();
@@ -49,12 +53,12 @@ public class DataInitializer implements CommandLineRunner {
 
     private void seedAdmin() {
         if (userRepository.existsByLogin("admin")) return;
-        UserEntity admin = buildUser("admin", "Admin1234!", "Админ", "Демо",
+        UserEntity admin = buildUser("admin", defaultAdminPassword, "Админ", "Демо",
                 "Россия", "русский", Gender.OTHER, 30, "+7 999 000-00-00",
                 "admin@diplom.local", Set.of("ROLE_USER", "ROLE_ADMIN"));
         UserEntity saved = userRepository.save(admin);
         userService.publishProfile(saved);
-        log.warn("Создан демонстрационный администратор: login=admin, password=Admin1234!. Пароль необходимо изменить.");
+        log.warn("Demo admin user created: login=admin. Change the default password in environment variables.");
     }
 
     private void seedUsers() {

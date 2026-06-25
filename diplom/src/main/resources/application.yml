@@ -35,14 +35,15 @@ server:
 app:
   s3:
     endpoint: ${S3_ENDPOINT:}
-    access-key: ${S3_ACCESS_KEY:minioadmin}
-    secret-key: ${S3_SECRET_KEY:minioadmin}
+    access-key: ${S3_ACCESS_KEY:}
+    secret-key: ${S3_SECRET_KEY:}
     region: ${S3_REGION:us-east-1}
     bucket: ${S3_BUCKET:diplom-shop}
     public-url-base: ${S3_PUBLIC_URL:}
   test-service-url: ${TEST_SERVICE_URL:http://localhost:8081}
   test-service-admin-username: ${TEST_SERVICE_ADMIN_USERNAME:admin}
-  test-service-admin-password: ${TEST_SERVICE_ADMIN_PASSWORD:Admin1234!}
+  test-service-admin-password: ${TEST_SERVICE_ADMIN_PASSWORD:}
+  default-admin-password: ${DEFAULT_ADMIN_PASSWORD:}
   notification-service-url: ${NOTIFICATION_SERVICE_URL:http://localhost:8083}
   demographic-service-url: ${DEMOGRAPHIC_SERVICE_URL:http://localhost:8084}
   assignment-service-url: ${ASSIGNMENT_SERVICE_URL:}

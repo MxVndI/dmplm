@@ -1,7 +1,0 @@
-com\diplom\demographic\domain\service\UserDemographicsEntityService.class
-com\diplom\demographic\rest\controller\DemographicsController.class
-com\diplom\demographic\rest\controller\HealthController.class
-com\diplom\demographic\DemographicServiceApplication.class
-com\diplom\demographic\config\DemoSeedConfig.class
-com\diplom\demographic\persistance\entity\UserDemographicsEntity.class
-com\diplom\demographic\persistance\repository\UserDemographicsRepository.class

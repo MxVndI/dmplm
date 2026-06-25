@@ -3,3 +3,11 @@
 /.vscode/
 /diplom/.vscode/
 /.deploy/
+/.env
+/.env.*
+!/.env.example
+/diplom/.env
+/diplom/.env.*
+!/diplom/.env.example
+target/
+**/target/

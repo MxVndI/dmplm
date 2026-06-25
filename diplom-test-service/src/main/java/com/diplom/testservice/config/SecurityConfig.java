@@ -45,7 +45,7 @@ public class SecurityConfig {
     @Bean
     public UserDetailsService userDetailsService(
             @Value("${app.security.admin.username:admin}") String adminUsername,
-            @Value("${app.security.admin.password:Admin1234!}") String adminPassword) {
+            @Value("${app.security.admin.password:}") String adminPassword) {
         return new InMemoryUserDetailsManager(
                 User.withUsername(adminUsername)
                         .password(passwordEncoder().encode(adminPassword))

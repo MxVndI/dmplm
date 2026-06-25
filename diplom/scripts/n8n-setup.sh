@@ -7,7 +7,7 @@ set -e
 N8N_URL="${N8N_URL:-http://localhost:5678}"
 TELEGRAM_BOT_TOKEN="${TELEGRAM_BOT_TOKEN}"
 ADMIN_EMAIL="${ADMIN_EMAIL:-admin@diplom.local}"
-ADMIN_PASSWORD="${ADMIN_PASSWORD:-Admin1234!}"
+ADMIN_PASSWORD="${ADMIN_PASSWORD:?ADMIN_PASSWORD is required}"
 
 echo "⏳ Waiting for n8n to be ready..."
 for i in {1..30}; do

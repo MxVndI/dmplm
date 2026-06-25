@@ -27,7 +27,7 @@ app:
   security:
     admin:
       username: ${TEST_SERVICE_ADMIN_USERNAME:admin}
-      password: ${TEST_SERVICE_ADMIN_PASSWORD:Admin1234!}
+      password: ${TEST_SERVICE_ADMIN_PASSWORD:}
 
 management:
   endpoints:

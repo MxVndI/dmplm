@@ -31,7 +31,7 @@ public class TestServiceProxyController {
     @Value("${app.test-service-admin-username:admin}")
     private String adminUsername;
 
-    @Value("${app.test-service-admin-password:Admin1234!}")
+    @Value("${app.test-service-admin-password:}")
     private String adminPassword;
 
     private String base() {
