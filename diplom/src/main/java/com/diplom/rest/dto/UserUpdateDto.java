@@ -16,23 +16,19 @@ public class UserUpdateDto {
     @Size(max = 100)
     private String lastName;
 
-    @NotBlank(message = AppConstants.COUNTRY_REQUIRED)
     @Size(max = 100)
     private String country;
 
-    @NotBlank(message = AppConstants.LANGUAGE_REQUIRED)
     @Size(max = 100)
     private String language;
 
-    @NotNull(message = AppConstants.GENDER_REQUIRED)
     private Gender gender;
 
-    @NotNull(message = AppConstants.AGE_REQUIRED)
     @Min(value = 1, message = AppConstants.AGE_POSITIVE)
     @Max(value = 150, message = AppConstants.AGE_INVALID)
     private Integer age;
 
-    @Pattern(regexp = "^\\+?[0-9\\s\\-()]{7,20}$", message = AppConstants.PHONE_INVALID)
+    @Pattern(regexp = "^$|^\\+?[0-9\\s\\-()]{7,20}$", message = AppConstants.PHONE_INVALID)
     private String phone;
 
     @NotBlank(message = AppConstants.EMAIL_REQUIRED)

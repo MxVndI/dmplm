@@ -35,22 +35,22 @@
 
             <div class="form-row">
                 <div class="form-group">
-                    <label for="country">Страна <span style="color: var(--color-error)">*</span></label>
-                    <input type="text" id="country" th:field="*{country}" required/>
+                    <label for="country">Страна</label>
+                    <input type="text" id="country" th:field="*{country}"/>
                     <span class="field-error" th:if="${#fields.hasErrors('country')}" th:errors="*{country}"></span>
                 </div>
                 <div class="form-group">
-                    <label for="language">Язык <span style="color: var(--color-error)">*</span></label>
-                    <input type="text" id="language" th:field="*{language}" required/>
+                    <label for="language">Язык</label>
+                    <input type="text" id="language" th:field="*{language}"/>
                     <span class="field-error" th:if="${#fields.hasErrors('language')}" th:errors="*{language}"></span>
                 </div>
             </div>
 
             <div class="form-row">
                 <div class="form-group">
-                    <label for="gender">Пол <span style="color: var(--color-error)">*</span></label>
-                    <select id="gender" th:field="*{gender}" required>
-                        <option value="">Выберите...</option>
+                    <label for="gender">Пол</label>
+                    <select id="gender" th:field="*{gender}">
+                        <option value="">Не указано</option>
                         <option value="MALE">Мужской</option>
                         <option value="FEMALE">Женский</option>
                         <option value="OTHER">Другое</option>
@@ -58,8 +58,8 @@
                     <span class="field-error" th:if="${#fields.hasErrors('gender')}" th:errors="*{gender}"></span>
                 </div>
                 <div class="form-group">
-                    <label for="age">Возраст <span style="color: var(--color-error)">*</span></label>
-                    <input type="number" id="age" th:field="*{age}" min="1" max="150" required/>
+                    <label for="age">Возраст</label>
+                    <input type="number" id="age" th:field="*{age}" min="1" max="150"/>
                     <span class="field-error" th:if="${#fields.hasErrors('age')}" th:errors="*{age}"></span>
                 </div>
             </div>

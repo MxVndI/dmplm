@@ -17,7 +17,7 @@
 
     <!-- Пустой список -->
     <div th:if="${orders == null or #lists.isEmpty(orders)}" class="admin-section">
-        <p class="text-muted">Вы еще не разместили ни одного заказа.</p>
+        <p class="text-muted">У вас еще нет заказов</p>
         <a th:href="@{/products}" class="btn btn-primary">Смотреть товары</a>
     </div>
 

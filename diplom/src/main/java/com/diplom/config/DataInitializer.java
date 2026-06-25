@@ -1,4 +1,4 @@
-package com.diplom.config;
+﻿package com.diplom.config;
 
 import com.diplom.persistance.entity.ABTestEntity;
 import com.diplom.persistance.entity.Gender;
@@ -94,120 +94,8 @@ public class DataInitializer implements CommandLineRunner {
         log.info("Создано демонстрационных пользователей: {}.", users.size());
     }
 
-    private static final int EXPECTED_PRODUCT_COUNT = 32;
-
     private void seedProducts() {
-        long count = productRepository.count();
-        if (count >= EXPECTED_PRODUCT_COUNT) {
-            log.info("Каталог уже заполнен: {} товар(ов), пропуск.", count);
-            return;
-        }
-        if (count > 0) {
-            productRepository.deleteAll();
-            log.info("Удалено старых товаров для повторного заполнения каталога: {}.", count);
-        }
-
-        List<ProductEntity> products = List.of(
-                buildProduct("Беспроводные наушники с шумоподавлением",
-                        new BigDecimal("14990.00"), 50,
-                        "Демонстрационный товар для каталога DiplomShop с описанием на русском языке."),
-                buildProduct("Механическая клавиатура с RGB-подсветкой",
-                        new BigDecimal("8990.00"), 120,
-                        "Демонстрационный товар для каталога DiplomShop с описанием на русском языке."),
-                buildProduct("Беспроводные TWS-наушники с ANC",
-                        new BigDecimal("7990.00"), 150,
-                        "Демонстрационный товар для каталога DiplomShop с описанием на русском языке."),
-                buildProduct("Игровая гарнитура 7.1",
-                        new BigDecimal("10900.00"), 45,
-                        "Демонстрационный товар для каталога DiplomShop с описанием на русском языке."),
-                buildProduct("USB-микрофон для стриминга",
-                        new BigDecimal("12900.00"), 25,
-                        "Демонстрационный товар для каталога DiplomShop с описанием на русском языке."),
-                buildProduct("Игровая мышь с подсветкой",
-                        new BigDecimal("5490.00"), 80,
-                        "Демонстрационный товар для каталога DiplomShop с описанием на русском языке."),
-                buildProduct("Коврик для мыши XL",
-                        new BigDecimal("1990.00"), 160,
-                        "Демонстрационный товар для каталога DiplomShop с описанием на русском языке."),
-                buildProduct("Веб-камера Full HD",
-                        new BigDecimal("4990.00"), 70,
-                        "Демонстрационный товар для каталога DiplomShop с описанием на русском языке."),
-                buildProduct("Портативная колонка",
-                        new BigDecimal("6990.00"), 90,
-                        "Демонстрационный товар для каталога DiplomShop с описанием на русском языке."),
-                buildProduct("Смарт-часы",
-                        new BigDecimal("12990.00"), 60,
-                        "Демонстрационный товар для каталога DiplomShop с описанием на русском языке."),
-                buildProduct("Фитнес-браслет",
-                        new BigDecimal("3490.00"), 100,
-                        "Демонстрационный товар для каталога DiplomShop с описанием на русском языке."),
-                buildProduct("Повербанк 20000 мА·ч",
-                        new BigDecimal("4490.00"), 120,
-                        "Демонстрационный товар для каталога DiplomShop с описанием на русском языке."),
-                buildProduct("Быстрое сетевое зарядное устройство",
-                        new BigDecimal("2490.00"), 170,
-                        "Демонстрационный товар для каталога DiplomShop с описанием на русском языке."),
-                buildProduct("Кабель USB-C 100 Вт",
-                        new BigDecimal("990.00"), 220,
-                        "Демонстрационный товар для каталога DiplomShop с описанием на русском языке."),
-                buildProduct("Док-станция USB-C",
-                        new BigDecimal("6990.00"), 70,
-                        "Демонстрационный товар для каталога DiplomShop с описанием на русском языке."),
-                buildProduct("Внешний SSD 1 ТБ",
-                        new BigDecimal("8990.00"), 80,
-                        "Демонстрационный товар для каталога DiplomShop с описанием на русском языке."),
-                buildProduct("Карта памяти 256 ГБ",
-                        new BigDecimal("2490.00"), 140,
-                        "Демонстрационный товар для каталога DiplomShop с описанием на русском языке."),
-                buildProduct("Wi-Fi роутер",
-                        new BigDecimal("5990.00"), 60,
-                        "Демонстрационный товар для каталога DiplomShop с описанием на русском языке."),
-                buildProduct("Умная лампа",
-                        new BigDecimal("1290.00"), 130,
-                        "Демонстрационный товар для каталога DiplomShop с описанием на русском языке."),
-                buildProduct("Умная розетка",
-                        new BigDecimal("990.00"), 160,
-                        "Демонстрационный товар для каталога DiplomShop с описанием на русском языке."),
-                buildProduct("Камера видеонаблюдения",
-                        new BigDecimal("3990.00"), 50,
-                        "Демонстрационный товар для каталога DiplomShop с описанием на русском языке."),
-                buildProduct("Робот-пылесос",
-                        new BigDecimal("34990.00"), 18,
-                        "Демонстрационный товар для каталога DiplomShop с описанием на русском языке."),
-                buildProduct("Электронная книга",
-                        new BigDecimal("11990.00"), 45,
-                        "Демонстрационный товар для каталога DiplomShop с описанием на русском языке."),
-                buildProduct("Планшет 10 дюймов",
-                        new BigDecimal("24990.00"), 35,
-                        "Демонстрационный товар для каталога DiplomShop с описанием на русском языке."),
-                buildProduct("Ноутбук для работы",
-                        new BigDecimal("54990.00"), 20,
-                        "Демонстрационный товар для каталога DiplomShop с описанием на русском языке."),
-                buildProduct("Игровой монитор 27 дюймов",
-                        new BigDecimal("29990.00"), 16,
-                        "Демонстрационный товар для каталога DiplomShop с описанием на русском языке."),
-                buildProduct("Монитор 4K",
-                        new BigDecimal("39990.00"), 14,
-                        "Демонстрационный товар для каталога DiplomShop с описанием на русском языке."),
-                buildProduct("Саундбар",
-                        new BigDecimal("17990.00"), 30,
-                        "Демонстрационный товар для каталога DiplomShop с описанием на русском языке."),
-                buildProduct("Геймпад",
-                        new BigDecimal("4990.00"), 75,
-                        "Демонстрационный товар для каталога DiplomShop с описанием на русском языке."),
-                buildProduct("VR-очки",
-                        new BigDecimal("29990.00"), 12,
-                        "Демонстрационный товар для каталога DiplomShop с описанием на русском языке."),
-                buildProduct("Фотоаппарат компактный",
-                        new BigDecimal("45990.00"), 10,
-                        "Демонстрационный товар для каталога DiplomShop с описанием на русском языке."),
-                buildProduct("Стабилизатор для смартфона",
-                        new BigDecimal("7990.00"), 55,
-                        "Демонстрационный товар для каталога DiplomShop с описанием на русском языке.")
-        );
-
-        productRepository.saveAll(products);
-        log.info("Создано товаров: {}.", products.size());
+        log.info("Автозаполнение каталога отключено: товары добавляются вручную через админ-панель.");
     }
 
     private void seedABTests() {
@@ -278,3 +166,4 @@ public class DataInitializer implements CommandLineRunner {
         log.info("Повторно опубликовано профилей пользователей в Kafka: {}.", allUsers.size());
     }
 }
+
