@@ -52,6 +52,15 @@ public class TestServiceProxyController {
         return h;
     }
 
+    private ResponseEntity<String> relay(ResponseEntity<String> response) {
+        MediaType contentType = response.getHeaders().getContentType();
+        ResponseEntity.BodyBuilder builder = ResponseEntity.status(response.getStatusCode());
+        if (contentType != null) {
+            builder.contentType(contentType);
+        }
+        return builder.body(response.getBody());
+    }
+
     @GetMapping
     public ResponseEntity<String> getAll() {
         return forward(HttpMethod.GET, base(), null);
@@ -121,7 +130,7 @@ public class TestServiceProxyController {
     private ResponseEntity<String> forward(HttpMethod method, String url, String body) {
         try {
             HttpEntity<String> entity = new HttpEntity<>(body, jsonHeaders());
-            return restTemplate.exchange(url, method, entity, String.class);
+            return relay(restTemplate.exchange(url, method, entity, String.class));
         } catch (HttpClientErrorException | HttpServerErrorException e) {
             log.warn("Proxy received error from test-service: {} {}", e.getStatusCode(), e.getMessage());
             return ResponseEntity.status(e.getStatusCode())
@@ -137,7 +146,7 @@ public class TestServiceProxyController {
     private ResponseEntity<String> forwardWithAuth(HttpMethod method, String url, String body) {
         try {
             HttpEntity<String> entity = new HttpEntity<>(body, jsonHeadersWithAuth());
-            return restTemplate.exchange(url, method, entity, String.class);
+            return relay(restTemplate.exchange(url, method, entity, String.class));
         } catch (HttpClientErrorException | HttpServerErrorException e) {
             log.warn("Proxy received error from test-service: {} {}", e.getStatusCode(), e.getMessage());
             return ResponseEntity.status(e.getStatusCode())
