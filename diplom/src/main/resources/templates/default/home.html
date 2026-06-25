@@ -21,8 +21,8 @@
         </p>
         <div class="home-hero__actions">
             <a th:href="@{/products}" class="btn btn-primary">Смотреть каталог</a>
-            <a sec:authorize="isAuthenticated()" th:href="@{/button-test}" class="btn btn-accent">Пройти тест кнопок</a>
-            <a sec:authorize="!isAuthenticated()" th:href="@{/auth/login}" class="btn btn-accent">Войти и пройти тест</a>
+            <a sec:authorize="isAuthenticated()" th:href="@{/button-test}" class="btn btn-accent">Пройти опрос</a>
+            <a sec:authorize="!isAuthenticated()" th:href="@{/auth/login}" class="btn btn-accent">Войти и пройти опрос</a>
         </div>
     </div>
     <aside class="home-hero__panel">

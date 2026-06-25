@@ -29,7 +29,7 @@ public class UserRegistrationDto {
     @Min(value = 1, message = AppConstants.AGE_POSITIVE)
     @Max(value = 150, message = AppConstants.AGE_INVALID)
     private Integer age;
-    @Pattern(regexp = "^\\+?[0-9\\s\\-()]{7,20}$", message = AppConstants.PHONE_INVALID)
+    @Pattern(regexp = "^$|^\\+?[0-9\\s\\-()]{7,20}$", message = AppConstants.PHONE_INVALID)
     private String phone;
     @NotBlank(message = AppConstants.EMAIL_REQUIRED)
     @Email(message = AppConstants.EMAIL_INVALID)

@@ -1,0 +1,43 @@
+name: Deploy DiplomShop
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+concurrency:
+  group: diplomshop-production
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    name: Deploy to VPS
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check deploy key
+        id: deploy_key
+        run: |
+          if [ -n "${{ secrets.VPS_SSH_KEY }}" ]; then
+            echo "enabled=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+            echo "Secret VPS_SSH_KEY is not set. Deployment is skipped."
+          fi
+
+      - name: Deploy over SSH
+        if: steps.deploy_key.outputs.enabled == 'true'
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: 104.171.128.57
+          username: root
+          key: ${{ secrets.VPS_SSH_KEY }}
+          port: 22
+          script_stop: true
+          script: |
+            cd /opt/diplomshop
+            git fetch origin main
+            git reset --hard origin/main
+            docker compose up -d --build shop test selector participant demographic notification clustering
+            docker compose ps

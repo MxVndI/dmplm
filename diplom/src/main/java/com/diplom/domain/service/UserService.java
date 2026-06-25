@@ -46,6 +46,9 @@ public class UserService {
         user.setRoles(Set.of(AppConstants.ROLE_USER));
         user.setBlocked(false);
         user.setCreatedAt(LocalDateTime.now());
+        if (user.getPhone() != null && user.getPhone().isBlank()) {
+            user.setPhone(null);
+        }
 
         try {
             UserEntity saved = userRepository.save(user);

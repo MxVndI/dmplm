@@ -3,7 +3,6 @@
       xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <body>
 
-<!-- Навигация -->
 <nav th:fragment="navbar" class="navbar" role="navigation" aria-label="Основная навигация">
     <div class="container">
         <a th:href="@{/}" class="navbar-brand">DiplomShop</a>
@@ -24,7 +23,7 @@
             </li>
 
             <li sec:authorize="hasRole('ADMIN')">
-                <a th:href="@{/admin/config-tests}" title="A/B тестирование">
+                <a th:href="@{/admin/config-tests}" title="A/B-тестирование">
                     Тесты <span class="nav-badge">Т</span>
                 </a>
             </li>
@@ -39,11 +38,6 @@
                 <a th:href="@{/admin/notifications}" title="Уведомления">
                     Уведомления <span class="nav-badge">У</span>
                 </a>
-            </li>
-
-
-            <li sec:authorize="isAuthenticated()">
-                <a th:href="@{/button-test}" class="nav-test-link" title="Тест кнопок">Тест кнопок</a>
             </li>
 
             <li sec:authorize="isAuthenticated()">
@@ -68,15 +62,15 @@
             </li>
         </ul>
     </div>
+
     <div class="header-research-card" sec:authorize="isAuthenticated()">
         <div class="header-research-card__text">
-            <strong>Участвуйте в исследовании цвета</strong>
-            <span>Помогите понять, какие цвета лучше работают в интерфейсе. Тест займёт меньше минуты.</span>
+            <strong>Опрос</strong>
+            <span>Помогите понять, какой вариант кнопки лучше воспринимается в интерфейсе. Это займёт меньше минуты.</span>
         </div>
-        <a th:href="@{/button-test}" class="header-research-card__button">Пройти тест →</a>
+        <a th:href="@{/button-test}" class="header-research-card__button">Пройти опрос →</a>
     </div>
 
-    <!--/* Контекст отслеживания для main.js — пользователю не показывается */-->
     <script th:inline="javascript">
     window.__tracking = {
         userId:  /*[[${_trackUserId}]]*/ null,
