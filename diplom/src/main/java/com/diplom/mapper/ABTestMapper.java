@@ -6,10 +6,6 @@ import org.mapstruct.Mapper;
 
 @Mapper(componentModel = "spring")
 public interface ABTestMapper {
-
-    // Persistence to Domain
     ABTest persistenceToDomain(ABTestEntity entity);
-
-    // Domain to Persistence
     ABTestEntity domainToPersistence(ABTest domain);
 }

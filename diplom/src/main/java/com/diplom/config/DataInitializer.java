@@ -2,10 +2,8 @@ package com.diplom.config;
 
 import com.diplom.persistance.entity.ABTestEntity;
 import com.diplom.persistance.entity.Gender;
-import com.diplom.persistance.entity.ProductEntity;
 import com.diplom.persistance.entity.UserEntity;
 import com.diplom.persistance.repository.ABTestRepository;
-import com.diplom.persistance.repository.ProductRepository;
 import com.diplom.persistance.repository.UserRepository;
 import com.diplom.domain.service.UserService;
 import lombok.RequiredArgsConstructor;
@@ -15,7 +13,6 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Set;
@@ -26,7 +23,6 @@ import java.util.Set;
 public class DataInitializer implements CommandLineRunner {
 
     private final UserRepository userRepository;
-    private final ProductRepository productRepository;
     private final ABTestRepository abTestRepository;
     private final PasswordEncoder passwordEncoder;
     private final UserService userService;
@@ -148,16 +144,6 @@ public class DataInitializer implements CommandLineRunner {
         u.setRoles(roles);
         u.setCreatedAt(LocalDateTime.now());
         return u;
-    }
-
-    private ProductEntity buildProduct(String name, BigDecimal price, int qty, String description) {
-        ProductEntity p = new ProductEntity();
-        p.setName(name);
-        p.setPrice(price);
-        p.setAvailableQuantity(qty);
-        p.setDescription(description);
-        p.setCreatedAt(LocalDateTime.now());
-        return p;
     }
 
     private void republishAllUserProfiles() {

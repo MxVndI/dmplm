@@ -6,10 +6,6 @@ import org.mapstruct.Mapper;
 
 @Mapper(componentModel = "spring")
 public interface UserTestParticipationMapper {
-
-    // Persistence to Domain
     UserTestParticipation persistenceToDomain(UserTestParticipationEntity entity);
-
-    // Domain to Persistence
     UserTestParticipationEntity domainToPersistence(UserTestParticipation domain);
 }

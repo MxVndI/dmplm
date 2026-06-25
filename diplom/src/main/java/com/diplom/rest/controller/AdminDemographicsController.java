@@ -63,7 +63,6 @@ public class AdminDemographicsController {
             try {
                 Map<String, Object> body = new LinkedHashMap<>();
                 body.put("userId", user.getId());
-                // Basic demographic data from user profile
                 if (user.getAge() != null)      body.put("age", user.getAge());
                 if (user.getCountry() != null && !user.getCountry().isBlank())   body.put("country", user.getCountry());
                 if (user.getLanguage() != null && !user.getLanguage().isBlank()) body.put("language", user.getLanguage());

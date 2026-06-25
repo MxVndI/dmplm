@@ -6,10 +6,6 @@ import org.mapstruct.Mapper;
 
 @Mapper(componentModel = "spring")
 public interface OrderMapper {
-
-    // Persistence to Domain
     Order persistenceToDomain(OrderEntity entity);
-
-    // Domain to Persistence
     OrderEntity domainToPersistence(Order domain);
 }

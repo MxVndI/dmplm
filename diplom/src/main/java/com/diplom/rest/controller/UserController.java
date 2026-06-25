@@ -51,7 +51,6 @@ public class UserController {
 
         UserUpdateDto dto = userMapper.toUpdateDto(user);
 
-        // Pre-populate demographic fields from demographic-service
         try {
             var resp = restTemplate.exchange(
                     demographicServiceUrl + "/api/demographics/" + user.getId(),

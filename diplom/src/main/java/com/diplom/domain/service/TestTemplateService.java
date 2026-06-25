@@ -54,7 +54,7 @@ public class TestTemplateService {
         for (TestTemplateEntity t : candidates) {
             String pat = t.getPagePattern();
             if (pat != null && pat.endsWith("/*")) {
-                String prefix = pat.substring(0, pat.length() - 1); // /foo/
+                String prefix = pat.substring(0, pat.length() - 1);
                 if (normPath.startsWith(prefix) && !normPath.substring(prefix.length()).contains("/")) {
                     return Optional.of(t);
                 }
@@ -63,7 +63,7 @@ public class TestTemplateService {
         for (TestTemplateEntity t : candidates) {
             String pat = t.getPagePattern();
             if (pat != null && pat.endsWith("/**")) {
-                String prefix = pat.substring(0, pat.length() - 2); // /foo/
+                String prefix = pat.substring(0, pat.length() - 2);
                 if (normPath.startsWith(prefix)) return Optional.of(t);
             }
         }

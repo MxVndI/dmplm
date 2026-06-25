@@ -35,11 +35,10 @@ public class ABTestController {
         LocalDateTime expires = null;
         if (expiresAt != null && !expiresAt.isBlank()) {
             try {
-                // datetime-local sends "yyyy-MM-ddTHH:mm" (no seconds)
                 expires = LocalDateTime.parse(expiresAt,
                         DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm"));
             } catch (DateTimeParseException e) {
-                expires = LocalDateTime.parse(expiresAt); // ISO fallback
+                expires = LocalDateTime.parse(expiresAt);
             }
         }
         abTestService.createTest(name, description, expires);
@@ -62,7 +61,6 @@ public class ABTestController {
     public String listParticipants(@PathVariable String testId, Model model) {
         List<UserTestParticipationEntity> participations = abTestService.findParticipationsByTest(testId);
 
-        // Enrich participations with user details for display
         List<Map<String, Object>> enriched = participations.stream().map(p -> {
             Map<String, Object> entry = new HashMap<>();
             entry.put("participation", p);

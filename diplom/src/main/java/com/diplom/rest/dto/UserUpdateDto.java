@@ -39,7 +39,6 @@ public class UserUpdateDto {
     @Pattern(regexp = "^(-?[0-9]{5,20})?$", message = AppConstants.TELEGRAM_CHAT_ID_INVALID)
     private String telegramChatId;
 
-    // ── Optional demographic fields ───────────────────────────────────────────
     @Pattern(regexp = "^(LOW|MEDIUM|HIGH)?$", message = AppConstants.INCOME_LEVEL_INVALID)
     private String incomeLevel;
 

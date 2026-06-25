@@ -11,8 +11,6 @@ import org.mapstruct.NullValuePropertyMappingStrategy;
 
 @Mapper(componentModel = "spring")
 public interface ProductMapper {
-
-    // ── DTO ↔ Entity (direct) ─────────────────────────────────────────────
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "photoKey", ignore = true)
     @Mapping(target = "photoUrl", ignore = true)
@@ -27,8 +25,6 @@ public interface ProductMapper {
     @Mapping(target = "photoUrl", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
     void updateEntityFromDto(ProductDto dto, @MappingTarget ProductEntity entity);
-
-    // ── Legacy domain-layer mappings (kept for backwards compatibility) ───
     Product restToDomain(ProductDto dto);
     ProductDto domainToRest(Product domain);
     Product persistenceToDomain(ProductEntity entity);

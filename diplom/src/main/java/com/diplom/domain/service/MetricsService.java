@@ -237,7 +237,7 @@ public class MetricsService {
         sig.put("available", true);
         sig.put("variantA", vA.get("variant"));
         sig.put("variantB", vB.get("variant"));
-        sig.put("conversionA", Math.round(pA * 10000.0) / 100.0);   // percent, 2 dec
+        sig.put("conversionA", Math.round(pA * 10000.0) / 100.0);
         sig.put("conversionB", Math.round(pB * 10000.0) / 100.0);
         sig.put("nA", nA);
         sig.put("nB", nB);

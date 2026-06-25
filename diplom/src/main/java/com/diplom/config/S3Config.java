@@ -34,15 +34,11 @@ public class S3Config {
                 .credentialsProvider(StaticCredentialsProvider.create(
                         AwsBasicCredentials.create(accessKey, secretKey)
                 ))
-                // Path-style + chunked-encoding off is the safe combo for MinIO and
-                // other S3-compatible servers that don't fully implement AWS quirks.
                 .serviceConfiguration(S3Configuration.builder()
                         .pathStyleAccessEnabled(true)
                         .chunkedEncodingEnabled(false)
                         .build());
 
-        // pathStyleAccessEnabled(true) in serviceConfiguration already enables path-style
-        // access; setting forcePathStyle on the builder too causes a conflict in SDK v2.
         if (endpoint != null && !endpoint.isBlank()) {
             builder.endpointOverride(URI.create(endpoint));
         }

@@ -6,10 +6,6 @@ import org.mapstruct.Mapper;
 
 @Mapper(componentModel = "spring")
 public interface UserEventMapper {
-
-    // Persistence to Domain
     UserEvent persistenceToDomain(UserEventEntity entity);
-
-    // Domain to Persistence
     UserEventEntity domainToPersistence(UserEvent domain);
 }

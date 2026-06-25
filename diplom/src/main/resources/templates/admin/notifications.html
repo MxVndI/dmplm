@@ -7,7 +7,6 @@
     <link rel="stylesheet" th:href="@{/css/styles.css}"/>
     <meta id="csrf-token"  th:content="${_csrf.token}"      content=""/>
     <meta id="csrf-header" th:content="${_csrf.headerName}" content="X-CSRF-TOKEN"/>
-    <!-- Передаём активные тесты в JS -->
     <script th:inline="javascript">
         window.__activeTests = /*[[${activeTests}]]*/ [];
     </script>
@@ -40,7 +39,6 @@
 <div th:replace="~{fragments/nav :: navbar}"></div>
 <div id="toast"></div>
 
-<!-- Модальное окно: создать кампанию -->
 <div class="modal-backdrop" id="createModal">
     <div class="modal">
         <button class="modal-close" onclick="closeModal('createModal')">×</button>
@@ -109,7 +107,6 @@
     </div>
 </div>
 
-<!-- Модальное окно: статистика -->
 <div class="modal-backdrop" id="statsModal">
     <div class="modal">
         <button class="modal-close" onclick="closeModal('statsModal')">×</button>
@@ -118,7 +115,6 @@
     </div>
 </div>
 
-<!-- Модальное окно: A/B пара -->
 <div class="modal-backdrop" id="abModal">
     <div class="modal" style="max-width:780px">
         <button class="modal-close" onclick="closeModal('abModal')">×</button>
@@ -181,7 +177,6 @@
     </div>
 </div>
 
-<!-- Модальное окно: сравнение A/B -->
 <div class="modal-backdrop" id="abStatsModal">
     <div class="modal" style="max-width:700px">
         <button class="modal-close" onclick="closeModal('abStatsModal')">×</button>
@@ -200,7 +195,6 @@
     </div>
 </div>
 
-<!-- ── Основной контент ── -->
 <div class="page-wrapper">
     <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem;margin-bottom:1.5rem">
         <div>
@@ -215,7 +209,6 @@
         </div>
     </div>
 
-    <!-- Инструкция -->
     <div class="how-to">
         <strong>📖 Как создать рассылку:</strong>
         <ol>
@@ -237,21 +230,18 @@
 
 <script th:inline="javascript">
     const API = '/admin/api/proxy/campaigns';
-    // Read CSRF from XSRF-TOKEN cookie (set by CookieCsrfTokenRepository)
     function readCsrf() {
         var m = document.cookie.match(/(?:^|;\s*)XSRF-TOKEN=([^;]+)/);
         return m ? decodeURIComponent(m[1]) : (document.getElementById('csrf-token')?.getAttribute('content') || '');
     }
     const csrfHeader = 'X-XSRF-TOKEN';
 
-    // Populate test selectors from server-side data
     function populateTestSelects() {
         const tests = window.__activeTests || [];
         const selectors = ['f-testId-select','ab-testid-select','abs-testid-select'];
         selectors.forEach(function(id) {
             const sel = document.getElementById(id);
             if (!sel) return;
-            // clear old options except first
             while (sel.options.length > 1) sel.remove(1);
             tests.forEach(function(t) {
                 const opt = document.createElement('option');
@@ -470,7 +460,7 @@
                 data.map(function(item) {
                     var c = item.campaign;
                     var total = (item.sent||0) + (item.failed||0);
-                    var pct = total > 0 ₽ Math.round(item.sent/total*100) : 0;
+                    var pct = total > 0 ? Math.round(item.sent/total*100) : 0;
                     var color = c.testVariant === 'A' ? '#1d4ed8' : '#7e22ce';
                     var bg    = c.testVariant === 'A' ? '#eff6ff' : '#fdf4ff';
                     return '<div style="background:'+bg+';border:1.5px solid '+color+'30;border-radius:.75rem;padding:1.25rem">' +

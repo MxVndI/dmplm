@@ -85,7 +85,7 @@ public class AdminPresetController {
         } catch (IOException e) {
             log.error("Failed to read preset {}: {}", id, e.getMessage());
             return ResponseEntity.internalServerError()
-                    .body("<!-- preset not found -->");
+                    .body("preset not found");
         }
     }
 }
